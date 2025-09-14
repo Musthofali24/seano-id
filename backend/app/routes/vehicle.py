@@ -1,0 +1,68 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from typing import List
+
+from app.database import get_db
+from app.models.vehicle import Vehicle
+from app.schemas.vehicle import VehicleCreate, VehicleUpdate, VehicleResponse
+
+router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
+
+
+# Create Vehicle
+@router.post("/", response_model=VehicleResponse)
+async def create_vehicle(vehicle: VehicleCreate, db: AsyncSession = Depends(get_db)):
+    new_vehicle = Vehicle(**vehicle.dict())
+    db.add(new_vehicle)
+    await db.commit()
+    await db.refresh(new_vehicle)
+    return new_vehicle
+
+
+# Get All Vehicles
+@router.get("/", response_model=List[VehicleResponse])
+async def get_vehicles(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Vehicle))
+    return result.scalars().all()
+
+
+# Get Vehicle by ID
+@router.get("/{vehicle_id}", response_model=VehicleResponse)
+async def get_vehicle(vehicle_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Vehicle).where(Vehicle.id == vehicle_id))
+    vehicle = result.scalars().first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    return vehicle
+
+
+# Update Vehicle
+@router.put("/{vehicle_id}", response_model=VehicleResponse)
+async def update_vehicle(
+    vehicle_id: int, update: VehicleUpdate, db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Vehicle).where(Vehicle.id == vehicle_id))
+    vehicle = result.scalars().first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    for key, value in update.dict(exclude_unset=True).items():
+        setattr(vehicle, key, value)
+
+    await db.commit()
+    await db.refresh(vehicle)
+    return vehicle
+
+
+# Delete Vehicle
+@router.delete("/{vehicle_id}")
+async def delete_vehicle(vehicle_id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Vehicle).where(Vehicle.id == vehicle_id))
+    vehicle = result.scalars().first()
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    await db.delete(vehicle)
+    await db.commit()
+    return {"detail": "Vehicle deleted successfully"}
