@@ -10,6 +10,7 @@ from app.schemas.sensor import SensorCreate, SensorUpdate, SensorResponse
 
 router = APIRouter(prefix="/sensors", tags=["Sensors"])
 
+# Post Data
 @router.post("/", response_model=SensorResponse)
 async def create_sensor(sensor: SensorCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sensor).where(Sensor.code == sensor.code))
@@ -23,11 +24,13 @@ async def create_sensor(sensor: SensorCreate, db: AsyncSession = Depends(get_db)
     await db.refresh(new_sensor)
     return new_sensor
 
+# Get All Data
 @router.get("/", response_model=List[SensorResponse])
 async def get_sensors(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sensor))
     return result.scalars().all()
 
+# Get Data by Id
 @router.get("/{sensor_id}", response_model=SensorResponse)
 async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
@@ -36,6 +39,7 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Sensor not found")
     return sensor
 
+# Update Data
 @router.put("/{sensor_id}", response_model=SensorResponse)
 async def update_sensor(sensor_id: int, update: SensorUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
@@ -50,6 +54,7 @@ async def update_sensor(sensor_id: int, update: SensorUpdate, db: AsyncSession =
     await db.refresh(sensor)
     return sensor
 
+# Delete Data
 @router.delete("/{sensor_id}")
 async def delete_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
