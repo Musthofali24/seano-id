@@ -1,8 +1,18 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from .database import Base, engine
 from .routes import sensor, sensor_log, vehicle
 
 app = FastAPI(title="SEANO Backend API")
+
+# ✅ Tambah CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # untuk testing: izinkan semua origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Register Routers
 app.include_router(sensor.router, prefix="/sensors", tags=["Sensors"])

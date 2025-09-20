@@ -13,16 +13,28 @@ from app.schemas.sensor_log import (
 
 router = APIRouter(prefix="/sensor-logs", tags=["Sensor Logs"])
 
-# Create Sensor Log
-@router.post("/", response_model=SensorLogResponse)
-async def create_sensor_log(
-    log:SensorLogCreate, db:AsyncSession = Depends(get_db)
-) :
-    new_log = SensorLog(**log.dict())
-    db.add(new_log)
+@router.post("/", response_model=List[SensorLogResponse])
+async def create_sensor_logs(
+    logs: List[SensorLogCreate], db: AsyncSession = Depends(get_db)
+):
+    new_logs = [SensorLog(**log.dict()) for log in logs]
+    db.add_all(new_logs)
     await db.commit()
-    await db.refresh(new_log)
-    return new_log
+    for log in new_logs:
+        await db.refresh(log)
+    return new_logs
+
+
+# Create Sensor Log
+# @router.post("/", response_model=SensorLogResponse)
+# async def create_sensor_log(
+#     log:SensorLogCreate, db:AsyncSession = Depends(get_db)
+# ) :
+#     new_log = SensorLog(**log.dict())
+#     db.add(new_log)
+#     await db.commit()
+#     await db.refresh(new_log)
+#     return new_log
 
 # Get All Logs
 @router.get("/", response_model=List[SensorLogResponse])

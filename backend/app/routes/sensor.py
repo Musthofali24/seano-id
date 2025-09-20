@@ -38,7 +38,6 @@ async def get_sensor(sensor_id: int, db: AsyncSession = Depends(get_db)):
     if not sensor:
         raise HTTPException(status_code=404, detail="Sensor not found")
     return sensor
-
 # Update Data
 @router.put("/{sensor_id}", response_model=SensorResponse)
 async def update_sensor(sensor_id: int, update: SensorUpdate, db: AsyncSession = Depends(get_db)):

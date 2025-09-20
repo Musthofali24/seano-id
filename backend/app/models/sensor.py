@@ -10,7 +10,5 @@ class Sensor(Base):
     name = Column(String(50), nullable=False)             # ex: GPS, CTD
     code = Column(String(10), unique=True, nullable=False) # ex: GPGGA, CTD01
     description = Column(Text)
-    unit = Column(String(50))                              # ex: m, °C, PSU
-    data_format = Column(JSONB)                            # ex: {"lat": "float", "lon": "float"}
-    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
