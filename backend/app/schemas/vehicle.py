@@ -11,13 +11,13 @@ class VehicleCreate(VehicleBase):
     pass
 
 class VehicleUpdate(BaseModel):
-    name: Optional[str]
-    description: Optional[str]
-    status: Optional[str]
+    name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None
 
 class VehicleResponse(VehicleBase):
     id: int
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True

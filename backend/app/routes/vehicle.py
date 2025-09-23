@@ -7,8 +7,7 @@ from app.database import get_db
 from app.models.vehicle import Vehicle
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate, VehicleResponse
 
-router = APIRouter(prefix="/vehicles", tags=["Vehicles"])
-
+router = APIRouter(tags=["Vehicles"])
 
 # Create Vehicle
 @router.post("/", response_model=VehicleResponse)

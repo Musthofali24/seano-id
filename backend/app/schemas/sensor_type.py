@@ -1,24 +1,20 @@
-# app/schemas/sensor.py
+# app/schemas/sensor_type.py
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class SensorBase(BaseModel):
+class SensorTypeBase(BaseModel):
     name: str
-    sensor_type_id: int
     description: Optional[str] = None
-    is_active: bool = True
 
-class SensorCreate(SensorBase):
+class SensorTypeCreate(SensorTypeBase):
     pass
 
-class SensorUpdate(BaseModel):
+class SensorTypeUpdate(BaseModel):
     name: Optional[str] = None
-    sensor_type_id: Optional[int] = None
     description: Optional[str] = None
-    is_active: Optional[bool] = None
 
-class SensorResponse(SensorBase):
+class SensorTypeResponse(SensorTypeBase):
     id: int
     created_at: datetime
     updated_at: Optional[datetime]

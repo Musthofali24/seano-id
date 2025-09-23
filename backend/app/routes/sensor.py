@@ -8,16 +8,11 @@ from app.database import get_db
 from app.models.sensor import Sensor
 from app.schemas.sensor import SensorCreate, SensorUpdate, SensorResponse
 
-router = APIRouter(prefix="/sensors", tags=["Sensors"])
+router = APIRouter(tags=["Sensors"])
 
 # Post Data
 @router.post("/", response_model=SensorResponse)
 async def create_sensor(sensor: SensorCreate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Sensor).where(Sensor.code == sensor.code))
-    db_sensor = result.scalars().first()
-    if db_sensor:
-        raise HTTPException(status_code=400, detail="Sensor with this code already exists")
-
     new_sensor = Sensor(**sensor.dict())
     db.add(new_sensor)
     await db.commit()
