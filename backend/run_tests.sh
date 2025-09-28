@@ -5,17 +5,17 @@
 
 set -e
 
-echo "🧪 Setting up test environment..."
+echo "Setting up test environment..."
 
 # Install test dependencies jika belum ada
-echo "📦 Installing test dependencies..."
+echo "Installing test dependencies..."
 pip install -r requirements-test.txt
 
 # Set environment variables untuk testing
 export TESTING=1
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-echo "🚀 Running tests..."
+echo "Running tests..."
 
 if [ $# -eq 0 ]; then
     # Run all tests
@@ -38,4 +38,4 @@ else
     exit 1
 fi
 
-echo "✅ Tests completed!"
+echo "Tests completed!"
