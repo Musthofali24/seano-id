@@ -16,3 +16,4 @@ class Vehicle(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     point = relationship("Point", back_populates="vehicles")
+    vehicle_logs = relationship("VehicleLog", back_populates="vehicle", cascade="all, delete-orphan")
