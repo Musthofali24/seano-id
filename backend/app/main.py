@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import Base, engine
-from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log
+from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log, point
 
 app = FastAPI(title="SEANO Backend API")
 
@@ -20,6 +20,7 @@ app.include_router(sensor_type.router, prefix="/sensor-types", tags=["Sensor Typ
 app.include_router(sensor_log.router, prefix="/sensor-logs", tags=["Sensor Logs"])
 app.include_router(vehicle.router, prefix="/vehicles", tags=["Vehicles"])
 app.include_router(raw_log.router, prefix="/raw-logs", tags=["Raw Logs"])
+app.include_router(point.router, prefix="/points", tags=["Points"])
 
 # Auto create tables at startup
 @app.on_event("startup")
@@ -29,7 +30,7 @@ async def startup():
 
 @app.get("/")
 async def root():
-    return {"message": "SEANO Backend is running 🚀"}
+    return {"message": "SEANO Backend is running"}
 
 @app.get("/health")
 async def health():

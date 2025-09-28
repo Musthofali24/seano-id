@@ -12,7 +12,7 @@ router = APIRouter(tags=["Vehicles"])
 # Create Vehicle
 @router.post("/", response_model=VehicleResponse)
 async def create_vehicle(vehicle: VehicleCreate, db: AsyncSession = Depends(get_db)):
-    new_vehicle = Vehicle(**vehicle.dict())
+    new_vehicle = Vehicle(**vehicle.model_dump())
     db.add(new_vehicle)
     await db.commit()
     await db.refresh(new_vehicle)
