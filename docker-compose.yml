@@ -1,16 +1,19 @@
 services:
   db:
-    image: postgres:15
-    container_name: seano_postgres
+    image: timescale/timescaledb:latest-pg15
+    container_name: seano_timescaledb
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: da25f4bcdfe0147
       POSTGRES_DB: seano_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - seano_net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -31,6 +34,9 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+    networks:
+      - seano_net
 
-volumes:
-  postgres_data:
+networks:
+  seano_net:
+    driver: bridge
