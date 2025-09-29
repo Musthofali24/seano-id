@@ -29,7 +29,10 @@ class TestVehicle(TestBase):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     status = Column(String(20), default="idle")
+    user_id = Column(Integer, nullable=True)  # Simplified - no FK constraint for tests
+    points_id = Column(Integer, nullable=True)  # Simplified - no FK constraint for tests
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 class TestSensorType(TestBase):
     __tablename__ = "sensor_types"
@@ -59,6 +62,36 @@ class TestSensorLog(TestBase):
     sensor_id = Column(Integer, nullable=False)   # Simplified - no FK constraint for tests
     data = Column(JSON, nullable=False)  # Use JSON instead of JSONB for SQLite compatibility
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class TestVehicleLog(TestBase):
+    __tablename__ = "vehicle_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vehicle_id = Column(Integer, nullable=False)  # Simplified - no FK constraint for tests
+    battery_voltage = Column(Integer)  # Simplified for testing
+    battery_current = Column(Integer)  # Simplified for testing
+    rssi = Column(Integer)
+    mode = Column(Text)
+    latitude = Column(Integer)  # Simplified for testing
+    longitude = Column(Integer)  # Simplified for testing
+    heading = Column(Integer)  # Simplified for testing
+    armed = Column(Boolean, default=False)
+    guided = Column(Boolean, default=False)
+    system_status = Column(Text)
+    speed = Column(Integer)  # Simplified for testing
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class TestUser(TestBase):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(100), nullable=False, unique=True, index=True)
+    password_hash = Column(Text) 
+    full_name = Column(String(100), nullable=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    verification_token = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 TestingSessionLocal = sessionmaker(
     autocommit=False,

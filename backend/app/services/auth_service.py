@@ -12,24 +12,21 @@ from ..database import get_db
 from ..models.user import User
 from .email_service import send_verification_email
 
-# Security
 security = HTTPBearer()
+
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 def hash_password(password: str) -> str:
-    """Hash password using bcrypt"""
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash"""
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
-    """Create JWT access token"""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -79,6 +76,14 @@ async def authenticate_user(email: str, password: str, db: AsyncSession) -> User
     
     if not user or not verify_password(password, user.password_hash):
         return None
+    
+    # Check if email is verified
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Please verify your email address before logging in"
+        )
+    
     return user
 
 async def create_user(email: str, password: str, full_name: str = None, db: AsyncSession = None) -> User:

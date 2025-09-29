@@ -9,7 +9,7 @@ from ..models.user import User
 from ..schemas.user import UserUpdate, UserResponse
 from ..services.auth_service import get_authenticated_user, hash_password
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["Users"])
 
 # User Management Routes
 @router.get("/", response_model=List[UserResponse])

@@ -5,12 +5,18 @@ from typing import List
 
 from app.database import get_db
 from app.models.point import Point
+from app.models.user import User
 from app.schemas.point import PointCreate, PointUpdate, PointResponse
+from app.services.auth_service import get_authenticated_user
 
 router = APIRouter(tags=["Points"])
 
 @router.post("/", response_model=PointResponse)
-async def create_point(point: PointCreate, db: AsyncSession = Depends(get_db)):
+async def create_point(
+    point: PointCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     new_point = Point(**point.model_dump())
     db.add(new_point)
     await db.commit()
@@ -18,12 +24,19 @@ async def create_point(point: PointCreate, db: AsyncSession = Depends(get_db)):
     return new_point
 
 @router.get("/", response_model=List[PointResponse])
-async def get_points(db: AsyncSession = Depends(get_db)):
+async def get_points(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(Point).order_by(Point.created_at.desc()))
     return result.scalars().all()
 
 @router.get("/{point_id}", response_model=PointResponse)
-async def get_point(point_id: int, db: AsyncSession = Depends(get_db)):
+async def get_point(
+    point_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(Point).where(Point.id == point_id))
     point = result.scalars().first()
     if not point:
@@ -31,7 +44,12 @@ async def get_point(point_id: int, db: AsyncSession = Depends(get_db)):
     return point
 
 @router.put("/{point_id}", response_model=PointResponse)
-async def update_point(point_id: int, point_update: PointUpdate, db: AsyncSession = Depends(get_db)):
+async def update_point(
+    point_id: int, 
+    point_update: PointUpdate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(Point).where(Point.id == point_id))
     point = result.scalars().first()
     if not point:
@@ -46,7 +64,11 @@ async def update_point(point_id: int, point_update: PointUpdate, db: AsyncSessio
     return point
 
 @router.delete("/{point_id}")
-async def delete_point(point_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_point(
+    point_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(Point).where(Point.id == point_id))
     point = result.scalars().first()
     if not point:

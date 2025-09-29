@@ -10,11 +10,8 @@ class TestSensorLogEndpoints:
     @pytest.mark.asyncio
     async def test_create_sensor_logs(self, client: AsyncClient):
         """Test creating multiple sensor logs."""
-        # Create test vehicle first
         vehicle_response = await client.post("/vehicles/", json={"name": "Test Vehicle"})
         vehicle_id = vehicle_response.json()["id"]
-        
-        # Create test sensor type and sensor
         sensor_type_response = await client.post("/sensor-types/", json={"name": "Test Sensor Type"})
         sensor_type_id = sensor_type_response.json()["id"]
         
@@ -24,7 +21,6 @@ class TestSensorLogEndpoints:
         })
         sensor_id = sensor_response.json()["id"]
         
-        # Create sensor logs
         logs_data = [
             {
                 "vehicle_id": vehicle_id,
@@ -44,7 +40,6 @@ class TestSensorLogEndpoints:
         data = response.json()
         assert len(data) == 2
         
-        # Check first log
         first_log = data[0]
         assert first_log["vehicle_id"] == vehicle_id
         assert first_log["sensor_id"] == sensor_id
@@ -55,12 +50,9 @@ class TestSensorLogEndpoints:
 
     @pytest.mark.asyncio
     async def test_create_single_sensor_log(self, client: AsyncClient):
-        """Test creating a single sensor log."""
-        # Create test vehicle first
         vehicle_response = await client.post("/vehicles/", json={"name": "Single Test Vehicle"})
         vehicle_id = vehicle_response.json()["id"]
         
-        # Create test sensor type and sensor
         sensor_type_response = await client.post("/sensor-types/", json={"name": "Single Test Sensor Type"})
         sensor_type_id = sensor_type_response.json()["id"]
         
@@ -70,7 +62,6 @@ class TestSensorLogEndpoints:
         })
         sensor_id = sensor_response.json()["id"]
         
-        # Create single sensor log
         log_data = [{
             "vehicle_id": vehicle_id,
             "sensor_id": sensor_id,
@@ -91,7 +82,6 @@ class TestSensorLogEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_all_sensor_logs_empty(self, client: AsyncClient):
-        """Test getting all sensor logs when database is empty."""
         response = await client.get("/sensor-logs/")
         
         assert response.status_code == 200
@@ -100,12 +90,9 @@ class TestSensorLogEndpoints:
 
     @pytest.mark.asyncio
     async def test_get_all_sensor_logs_with_data(self, client: AsyncClient):
-        """Test getting all sensor logs when data exists."""
-        # Create test vehicle first
         vehicle_response = await client.post("/vehicles/", json={"name": "Log Test Vehicle"})
         vehicle_id = vehicle_response.json()["id"]
         
-        # Create test sensor type and sensor
         sensor_type_response = await client.post("/sensor-types/", json={"name": "Log Test Sensor Type"})
         sensor_type_id = sensor_type_response.json()["id"]
         
@@ -114,8 +101,7 @@ class TestSensorLogEndpoints:
             "sensor_type_id": sensor_type_id
         })
         sensor_id = sensor_response.json()["id"]
-        
-        # Create multiple sensor logs
+
         logs_data = [
             {
                 "vehicle_id": vehicle_id,
@@ -131,26 +117,22 @@ class TestSensorLogEndpoints:
         
         await client.post("/sensor-logs/", json=logs_data)
         
-        # Get all logs
         response = await client.get("/sensor-logs/")
         
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 2
         
-        # Should contain both logs (order may vary in SQLite)
         values = [log["data"]["value"] for log in data]
         assert 100 in values
         assert 200 in values
 
     @pytest.mark.asyncio
     async def test_get_sensor_log_by_id(self, client: AsyncClient):
-        """Test getting a specific sensor log by ID."""
-        # Create test vehicle first
+        
         vehicle_response = await client.post("/vehicles/", json={"name": "ID Test Vehicle"})
         vehicle_id = vehicle_response.json()["id"]
         
-        # Create test sensor type and sensor
         sensor_type_response = await client.post("/sensor-types/", json={"name": "ID Test Sensor Type"})
         sensor_type_id = sensor_type_response.json()["id"]
         
@@ -160,7 +142,6 @@ class TestSensorLogEndpoints:
         })
         sensor_id = sensor_response.json()["id"]
         
-        # Create sensor log
         log_data = [{
             "vehicle_id": vehicle_id,
             "sensor_id": sensor_id,

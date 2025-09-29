@@ -6,12 +6,18 @@ from datetime import datetime
 
 from app.database import get_db
 from app.models.vehicle_log import VehicleLog
+from app.models.user import User
 from app.schemas.vehicle_log import VehicleLogCreate, VehicleLogResponse
+from app.services.auth_service import get_authenticated_user
 
 router = APIRouter(tags=["Vehicle Logs"])
 
 @router.post("/", response_model=VehicleLogResponse)
-async def create_vehicle_log(log: VehicleLogCreate, db: AsyncSession = Depends(get_db)):
+async def create_vehicle_log(
+    log: VehicleLogCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     new_log = VehicleLog(**log.model_dump())
     db.add(new_log)
     await db.commit()
@@ -21,6 +27,7 @@ async def create_vehicle_log(log: VehicleLogCreate, db: AsyncSession = Depends(g
 @router.get("/", response_model=List[VehicleLogResponse])
 async def get_vehicle_logs(
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
     vehicle_id: Optional[int] = Query(None),
     start: Optional[datetime] = Query(None),
     end: Optional[datetime] = Query(None),
@@ -41,7 +48,11 @@ async def get_vehicle_logs(
     return result.scalars().all()
 
 @router.get("/{log_id}", response_model=VehicleLogResponse)
-async def get_vehicle_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def get_vehicle_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(VehicleLog).where(VehicleLog.id == log_id))
     log = result.scalars().first()
     if not log:
@@ -49,7 +60,11 @@ async def get_vehicle_log(log_id: int, db: AsyncSession = Depends(get_db)):
     return log
 
 @router.get("/latest/{vehicle_id}", response_model=VehicleLogResponse)
-async def get_latest_vehicle_log(vehicle_id: int, db: AsyncSession = Depends(get_db)):
+async def get_latest_vehicle_log(
+    vehicle_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(
         select(VehicleLog)
         .where(VehicleLog.vehicle_id == vehicle_id)
@@ -62,7 +77,11 @@ async def get_latest_vehicle_log(vehicle_id: int, db: AsyncSession = Depends(get
     return log
 
 @router.delete("/{log_id}")
-async def delete_vehicle_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_vehicle_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(VehicleLog).where(VehicleLog.id == log_id))
     log = result.scalars().first()
     if not log:

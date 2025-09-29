@@ -19,7 +19,7 @@ from ..services.auth_service import (
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=RegisterResponse)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):

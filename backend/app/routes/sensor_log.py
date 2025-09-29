@@ -6,16 +6,20 @@ from datetime import datetime
 
 from app.database import get_db
 from app.models.sensor_log import SensorLog
+from app.models.user import User
 from app.schemas.sensor_log import (
     SensorLogCreate,
     SensorLogResponse
 )
+from app.services.auth_service import get_authenticated_user
 
 router = APIRouter(tags=["Sensor Logs"])
 
 @router.post("/", response_model=List[SensorLogResponse])
 async def create_sensor_logs(
-    logs: List[SensorLogCreate], db: AsyncSession = Depends(get_db)
+    logs: List[SensorLogCreate], 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
 ):
     new_logs = [SensorLog(**log.model_dump()) for log in logs]
     db.add_all(new_logs)
@@ -28,6 +32,7 @@ async def create_sensor_logs(
 @router.get("/", response_model=List[SensorLogResponse])
 async def get_sensor_logs(
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
     vehicle_id: Optional[int] = Query(None),
     sensor_id: Optional[int] = Query(None),
     start: Optional[datetime] = Query(None),
@@ -49,7 +54,11 @@ async def get_sensor_logs(
 
 # Get Sensor log by ID
 @router.get("/{log_id}", response_model=SensorLogResponse)
-async def get_sensor_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def get_sensor_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(SensorLog).where(SensorLog.id == log_id))
     log = result.scalars().first()
     if not log:
@@ -58,7 +67,11 @@ async def get_sensor_log(log_id: int, db: AsyncSession = Depends(get_db)):
 
 # Delete log
 @router.delete("/{log_id}")
-async def delete_sensor_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_sensor_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(SensorLog).where(SensorLog.id == log_id))
     log = result.scalars().first()
     if not log:

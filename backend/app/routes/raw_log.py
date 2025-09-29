@@ -5,12 +5,18 @@ from typing import List
 
 from app.database import get_db
 from app.models.raw_log import RawLog
+from app.models.user import User
 from app.schemas.raw_log import RawLogCreate, RawLogResponse
+from app.services.auth_service import get_authenticated_user
 
 router = APIRouter(tags=["Raw Logs"])
 
 @router.post("/", response_model=RawLogResponse)
-async def create_raw_log(log: RawLogCreate, db: AsyncSession = Depends(get_db)):
+async def create_raw_log(
+    log: RawLogCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     new_log = RawLog(**log.model_dump())
     db.add(new_log)
     await db.commit()
@@ -18,12 +24,19 @@ async def create_raw_log(log: RawLogCreate, db: AsyncSession = Depends(get_db)):
     return new_log
 
 @router.get("/", response_model=List[RawLogResponse])
-async def get_raw_logs(db: AsyncSession = Depends(get_db)):
+async def get_raw_logs(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(RawLog).order_by(RawLog.created_at.desc()))
     return result.scalars().all()
 
 @router.get("/{log_id}", response_model=RawLogResponse)
-async def get_raw_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def get_raw_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(RawLog).where(RawLog.id == log_id))
     log = result.scalars().first()
     if not log:
@@ -31,7 +44,11 @@ async def get_raw_log(log_id: int, db: AsyncSession = Depends(get_db)):
     return log
 
 @router.delete("/{log_id}")
-async def delete_raw_log(log_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_raw_log(
+    log_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user)
+):
     result = await db.execute(select(RawLog).where(RawLog.id == log_id))
     log = result.scalars().first()
     if not log:
