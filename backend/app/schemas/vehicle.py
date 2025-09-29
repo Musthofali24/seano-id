@@ -6,6 +6,7 @@ class VehicleBase(BaseModel):
     name: str
     description: Optional[str] = None
     status: Optional[str] = "idle"   # idle, mission, maintenance
+    user_id: int  # Required - vehicle must belong to a user
     points_id: Optional[int] = None
 
 class VehicleCreate(VehicleBase):
@@ -15,6 +16,7 @@ class VehicleUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    user_id: Optional[int] = None
     points_id: Optional[int] = None
 
 class VehicleResponse(VehicleBase):

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, ForeignKey, Numeric, Boolean, String, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, Numeric, Boolean, Text, DateTime
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -10,13 +11,13 @@ class VehicleLog(Base):
     battery_voltage = Column(Numeric(5, 2))  
     battery_current = Column(Numeric(6, 2))  
     rssi = Column(Integer)  
-    mode = Column(String(50))  
+    mode = Column(Text)  
     latitude = Column(Numeric(10, 8))  
     longitude = Column(Numeric(11, 8))
     heading = Column(Numeric(5, 2))  
     armed = Column(Boolean, default=False)  
     guided = Column(Boolean, default=False)  
-    system_status = Column(String(50))  
+    system_status = Column(Text)  
     speed = Column(Numeric(6, 2))  
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
