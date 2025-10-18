@@ -1,14 +1,36 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import Base, engine
-from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log, point, vehicle_log, user, auth
+from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log, point, vehicle_log, user, auth, mqtt, websocket
+from .services.mqtt_service import mqtt_listener
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Startup
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    
+    # Start MQTT listener as background task
+    mqtt_task = asyncio.create_task(mqtt_listener.start_listener())
+    logger.info("MQTT listener started")
+    
     yield
+    
+    # Shutdown
+    await mqtt_listener.stop_listener()
+    mqtt_task.cancel()
+    try:
+        await mqtt_task
+    except asyncio.CancelledError:
+        pass
+    logger.info("MQTT listener stopped")
 
 app = FastAPI(title="SEANO Backend API", lifespan=lifespan)
 
@@ -29,4 +51,6 @@ app.include_router(vehicle.router, prefix="/vehicles", tags=["Vehicles"])
 app.include_router(raw_log.router, prefix="/raw-logs", tags=["Raw Logs"])
 app.include_router(point.router, prefix="/points", tags=["Points"])
 app.include_router(vehicle_log.router, prefix="/vehicle-logs", tags=["Vehicle Logs"])
+app.include_router(mqtt.router, prefix="/api", tags=["MQTT"])
+app.include_router(websocket.router, prefix="/api", tags=["WebSocket"])
 
