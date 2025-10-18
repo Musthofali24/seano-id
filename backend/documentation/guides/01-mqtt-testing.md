@@ -2,16 +2,24 @@
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Start Backend dengan Docker
 
 ```bash
-pip install -r requirements.txt
+cd /home/almus2610/seano_projects
+docker-compose up -d
 ```
 
-### 2. Start Backend (MQTT Subscriber)
+### 2. Verify Backend Running
 
 ```bash
-uvicorn app.main:app --reload
+# Check containers
+docker-compose ps
+
+# Check backend logs
+docker-compose logs backend
+
+# Check MQTT status
+curl http://localhost:8000/api/mqtt/status
 ```
 
 Backend akan otomatis:
@@ -22,27 +30,48 @@ Backend akan otomatis:
 
 ### 3. Test dengan Jetson Simulator
 
-Di terminal kedua:
+Di terminal lain (tidak perlu di dalam container):
 
 ```bash
+cd /home/almus2610/seano_projects/backend
 python jetson_simulator.py
 ```
 
 ### 4. Monitor Data
 
-- Check logs di backend untuk melihat data yang diterima
+- Check backend logs: `docker-compose logs -f backend`
 - Check database untuk memastikan data tersimpan
 - Check API: `http://localhost:8000/api/mqtt/status`
+- Check WebSocket: `http://localhost:8000/api/ws/stats`
 
 ## Production Flow
 
 ```
-Jetson --MQTT--> Backend --Store--> Database
+Jetson --MQTT--> Backend (Docker) --Store--> Database (Docker)
 ```
 
 1. **Jetson** publish data ke topics
-2. **Backend** subscribe dan terima data
-3. **Database** simpan data otomatis
+2. **Backend** (running in Docker) subscribe dan terima data
+3. **Database** (PostgreSQL in Docker) simpan data otomatis
+
+## Docker Commands
+
+```bash
+# Start semua services
+docker-compose up -d
+
+# Stop semua services
+docker-compose down
+
+# Restart backend saja
+docker-compose restart backend
+
+# Check logs
+docker-compose logs -f backend
+
+# Check status containers
+docker-compose ps
+```
 
 ## Topics
 

@@ -22,7 +22,6 @@ MQTT_PASSWORD = "Seanoraspi24*"
 async def publish_test_data():
     """Simulate data that would be published by Jetson devices"""
     
-    # Setup SSL context for secure connection
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_REQUIRED
@@ -37,8 +36,8 @@ async def publish_test_data():
         ) as client:
             print("Connected to MQTT broker")
             
-            # Test with vehicle_id = 1
-            vehicle_id = 1
+            # Test with vehicle_id = 2
+            vehicle_id = 2
             
             # Test raw log
             raw_log_data = f"Raw log test message at {datetime.now()}"
@@ -74,15 +73,12 @@ async def publish_test_data():
             await client.publish(f"seano/{vehicle_id}/vehicle_log", json.dumps(vehicle_log_data))
             print(f"Published vehicle log for vehicle {vehicle_id}: {vehicle_log_data}")
             
-            # Test with another vehicle_id = 2
             vehicle_id = 2
-            
-            # Test raw log for vehicle 2
+
             raw_log_data = f"Raw log test message for vehicle 2 at {datetime.now()}"
             await client.publish(f"seano/{vehicle_id}/raw_log", raw_log_data)
             print(f"Published raw log for vehicle {vehicle_id}: {raw_log_data}")
             
-            # Test vehicle log for vehicle 2
             vehicle_log_data = {
                 "battery_voltage": 11.8,
                 "battery_current": 3.1,

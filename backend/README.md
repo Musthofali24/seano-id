@@ -11,16 +11,16 @@ cp .env.example .env
 # Edit .env dengan konfigurasi yang sesuai
 ```
 
-### 2. Install Dependencies
+### 2. Start with Docker
 
 ```bash
-pip install -r requirements.txt
+docker-compose up --build -d
 ```
 
-### 3. Run Backend
+### 3. Verify Running
 
 ```bash
-uvicorn app.main:app --reload
+curl http://localhost:8000/api/mqtt/status
 ```
 
 ### 4. Test MQTT (Development)
@@ -84,14 +84,17 @@ Backend subscribe ke:
 ## Development
 
 ```bash
+# Check logs
+docker-compose logs -f backend
+
 # Run tests
 ./run_tests.sh
 
-# Format code
-black app/
+# Restart services
+docker-compose restart backend
 
 # Start with Docker
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 ## Production Deployment
