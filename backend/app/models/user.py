@@ -16,3 +16,4 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     vehicles = relationship("Vehicle", back_populates="user")
+    roles = relationship("UserRole", back_populates="user")

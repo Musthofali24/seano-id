@@ -17,13 +17,10 @@ async def start_mqtt_listener():
     if mqtt_listener.running:
         raise HTTPException(status_code=400, detail="MQTT listener is already running")
     
-    # Note: In production, you might want to handle this differently
-    # as the listener is automatically started with the application
     return {"message": "MQTT listener start requested"}
 
 @router.post("/mqtt/stop")
 async def stop_mqtt_listener():
-    """Stop MQTT listener manually"""
     if not mqtt_listener.running:
         raise HTTPException(status_code=400, detail="MQTT listener is not running")
     

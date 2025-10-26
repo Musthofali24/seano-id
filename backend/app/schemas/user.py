@@ -46,3 +46,11 @@ class ResendVerificationRequest(BaseModel):
 
 class ResendVerificationResponse(BaseModel):
     message: str = "verification email sent"
+
+class RegisterEmailRequest(BaseModel):
+    email: EmailStr
+
+class SetCredentialRequest(BaseModel):
+    token: str
+    username: str
+    password: str

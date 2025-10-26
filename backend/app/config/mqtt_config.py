@@ -14,6 +14,6 @@ class MQTTSettings(BaseSettings):
     class Config:
         env_file = ".env"
         env_prefix = "MQTT_"
-        extra = "ignore"  # Ignore extra fields from .env
+        extra = "ignore"
 
 mqtt_settings = MQTTSettings()

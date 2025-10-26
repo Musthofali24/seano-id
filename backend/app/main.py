@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import Base, engine
-from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log, point, vehicle_log, user, auth, mqtt, websocket
+from .routes import sensor, sensor_type, sensor_log, vehicle, raw_log, point, vehicle_log, user, role, auth, mqtt, websocket
 from .services.mqtt_service import mqtt_listener
 
 # Setup logging
@@ -44,6 +44,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(user.router)
+app.include_router(role.router, prefix="/roles")
 app.include_router(sensor.router, prefix="/sensors", tags=["Sensors"])
 app.include_router(sensor_type.router, prefix="/sensor-types", tags=["Sensor Types"])
 app.include_router(sensor_log.router, prefix="/sensor-logs", tags=["Sensor Logs"])

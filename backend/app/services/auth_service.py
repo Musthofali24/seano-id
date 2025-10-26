@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import os
 import secrets
 
+from app.models.role import Role, UserRole
 from ..database import get_db
 from ..models.user import User
 from .email_service import send_verification_email
@@ -52,7 +53,7 @@ async def get_current_user(
         user_id_str = payload.get("sub")
         if user_id_str is None:
             raise credentials_exception
-        user_id = int(user_id_str)  # Convert string to int
+        user_id = int(user_id_str) 
     except (jwt.PyJWTError, ValueError, TypeError):
         raise credentials_exception
     
@@ -114,6 +115,49 @@ async def create_user(email: str, password: str, full_name: str = None, db: Asyn
     await db.refresh(user)
     
     return user
+
+async def create_user_email_only(email: str, db: AsyncSession):
+    """Buat user baru hanya dengan email & kirim link verifikasi"""
+    existing = await db.scalar(select(User).where(User.email == email))
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+
+    token = generate_verification_token()
+    new_user = User(email=email, is_Verified=False, verification_token=token)
+    db.add(new_user)
+    await db.commit()
+
+    await send_verification_email(email, token)
+
+async def verify_email_token(token: str, db: AsyncSession):
+    user = await db.scalar(select(User).where(User.verification_token == token))
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired token.")
+    return user
+
+async def set_user_credentials(token: str, username: str, password: str, db: AsyncSession):
+    """Set usernamer & password setelah verifikasi"""
+    user = await db.scalar(select(User).where(User.verification_token == token))
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid token.")
+    
+    user.username = username
+    user.password_hash = hash_password(password)
+    user.is_verified = True
+    user.verification_token = None
+    await db.commit()
+
+    result = await db.execute(select(Role).where(Role.name == "user"))
+    default_role = result.scalar_one_or_none()
+    if default_role:
+        default_role = Role(name="user", description="Default user role")    
+        db.add(default_role)
+        await db.commit()
+        await db.refresh(default_role)
+    user_role = UserRole(user_id=user.id, role_id=default_role.id)
+    db.add(user_role)
+    await db.commit()
 
 def generate_verification_token() -> str:
     """Generate a secure random verification token"""
