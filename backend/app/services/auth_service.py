@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import bcrypt
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import secrets
 
@@ -124,16 +124,22 @@ async def create_user_email_only(email: str, db: AsyncSession):
     
 
     token = generate_verification_token()
-    new_user = User(email=email, is_Verified=False, verification_token=token)
+    new_user = User(email=email, is_verified=False, verification_token=token, verification_sent_at=datetime.now(timezone.utc))
     db.add(new_user)
     await db.commit()
 
-    await send_verification_email(email, token)
+    await send_verification_email(email, token, "User")
 
 async def verify_email_token(token: str, db: AsyncSession):
     user = await db.scalar(select(User).where(User.verification_token == token))
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired token.")
+
+    if user.verification_sent_at:
+        now = datetime.now(timezone.utc)
+        if now - user.verification_sent_at > timedelta(hours=24):
+            raise HTTPException(status_code=400, detail="Verification token has expired.")
+
     return user
 
 async def set_user_credentials(token: str, username: str, password: str, db: AsyncSession):
@@ -150,8 +156,8 @@ async def set_user_credentials(token: str, username: str, password: str, db: Asy
 
     result = await db.execute(select(Role).where(Role.name == "user"))
     default_role = result.scalar_one_or_none()
-    if default_role:
-        default_role = Role(name="user", description="Default user role")    
+    if not default_role:
+        default_role = Role(name="user", description="Default user role")
         db.add(default_role)
         await db.commit()
         await db.refresh(default_role)
@@ -255,6 +261,7 @@ async def resend_verification_email(email: str, db: AsyncSession) -> bool:
     # Generate new verification token
     verification_token = generate_verification_token()
     user.verification_token = verification_token
+    user.verification_sent_at = datetime.now(timezone.utc)
     
     await db.commit()
     

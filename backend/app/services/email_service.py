@@ -13,12 +13,15 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", SMTP_USERNAME)
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://192.168.1.11:5173")
 
-def create_verification_email_body(verification_token: str, user_name: str) -> tuple[str, str]:
+
+def create_verification_email_body(
+    verification_token: str, user_name: str
+) -> tuple[str, str]:
     """Create HTML and text email body for verification"""
     verification_url = f"{FRONTEND_URL}/verify-email?token={verification_token}"
-    
+
     # HTML version
     html_body = f"""
     <!DOCTYPE html>
@@ -64,7 +67,7 @@ def create_verification_email_body(verification_token: str, user_name: str) -> t
     </body>
     </html>
     """
-    
+
     # Text version
     text_body = f"""
     Hi {user_name},
@@ -79,46 +82,58 @@ def create_verification_email_body(verification_token: str, user_name: str) -> t
     
     This is an automated message, please do not reply.
     """
-    
+
     return html_body, text_body
 
-async def send_verification_email(to_email: str, verification_token: str, user_name: str) -> bool:
+
+async def send_verification_email(
+    to_email: str, verification_token: str, user_name: str
+) -> bool:
     """Send verification email to user"""
     try:
-        # Check if email configuration is available
         if not SMTP_USERNAME or not SMTP_PASSWORD:
-            logger.warning("Email configuration not found. Verification email not sent.")
-            # In development, just log the token
-            logger.info(f"Development mode: Verification token for {to_email}: {verification_token}")
+            logger.warning(
+                "Email configuration not found. Verification email not sent."
+            )
+            logger.info(
+                f"Development mode: Verification token for {to_email}: {verification_token}"
+            )
             return True
-        
+
         # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = "Verify Your Email Address"
-        msg['From'] = FROM_EMAIL
-        msg['To'] = to_email
-        
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Verify Your Email Address"
+        msg["From"] = FROM_EMAIL
+        msg["To"] = to_email
+
         # Create email body
-        html_body, text_body = create_verification_email_body(verification_token, user_name)
-        
+        html_body, text_body = create_verification_email_body(
+            verification_token, user_name
+        )
+
         # Attach parts
-        text_part = MIMEText(text_body, 'plain')
-        html_part = MIMEText(html_body, 'html')
-        
+        text_part = MIMEText(text_body, "plain")
+        html_part = MIMEText(html_body, "html")
+
         msg.attach(text_part)
         msg.attach(html_part)
-        
+
         # Send email
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
             server.send_message(msg)
-        
+
+        logger.info(
+            f"[DEBUG] Email sent to {to_email}. Verification link: {FRONTEND_URL}/verify-email?token={verification_token}"
+        )
         logger.info(f"Verification email sent successfully to {to_email}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Failed to send verification email to {to_email}: {str(e)}")
         # In development, still log the token for testing
-        logger.info(f"Development mode: Verification token for {to_email}: {verification_token}")
+        logger.info(
+            f"Development mode: Verification token for {to_email}: {verification_token}"
+        )
         return True  # Return True in development mode
