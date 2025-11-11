@@ -1,0 +1,823 @@
+import React from "react";
+import {
+  MapContainer,
+  TileLayer,
+  FeatureGroup,
+  Marker,
+  Popup,
+  useMapEvents,
+  Polyline,
+} from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
+import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
+import L from "leaflet";
+import "leaflet-draw";
+import { FaHome, FaEdit } from "react-icons/fa";
+
+// Fix default markers
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+const MissionMap = ({
+  darkMode,
+  activeMission,
+  homeLocation,
+  setHomeLocation,
+  isSettingHome,
+  setIsSettingHome,
+  waypoints,
+  setWaypoints,
+  generatedPaths,
+  setGeneratedPaths,
+  planningMode,
+  hasGeneratedWaypoints,
+  setHasGeneratedWaypoints,
+  isEditingWaypoints,
+  editingWaypoint,
+  setEditingWaypoint,
+  featureGroupRef,
+  setFeatureGroupRef,
+  missionParams,
+  setActiveMission,
+  getActualWaypointCount,
+}) => {
+  // Home icon definition
+  const homeIcon = L.divIcon({
+    html: `<div style="background-color: #018190; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-size: 14px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+    </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    className: "custom-home-marker",
+  });
+
+  // Drawing event handlers
+  const onDrawCreated = (e) => {
+    const { layerType, layer } = e;
+
+    // PATH PLANNING - Handle polyline (sequential waypoint navigation)
+    if (layerType === "polyline") {
+      const latLngs = layer.getLatLngs();
+      const newWaypoints = latLngs.map((latlng, index) => ({
+        id: Date.now() + index,
+        name: `WP${waypoints.length + index + 1}`,
+        type: "path",
+        lat: latlng.lat,
+        lng: latlng.lng,
+        altitude: 0, // Fixed for USV
+        speed: missionParams.speed,
+        delay: missionParams.delay,
+        loiter: missionParams.loiter,
+        radius: missionParams.radius,
+        action: missionParams.action,
+      }));
+
+      setWaypoints((prev) => [...prev, ...newWaypoints]);
+
+      if (activeMission) {
+        setActiveMission((prev) => ({
+          ...prev,
+          waypoints: getActualWaypointCount([...waypoints, ...newWaypoints]),
+        }));
+      }
+    }
+
+    // ZONE PLANNING - Handle polygon (area coverage mission)
+    else if (layerType === "polygon") {
+      const latLngs = layer.getLatLngs()[0]; // Polygon returns nested array
+      const bounds = layer.getBounds();
+      const center = bounds.getCenter();
+
+      const zoneWaypointId = Date.now();
+      const zoneWaypoint = {
+        id: zoneWaypointId,
+        name: `Zone${waypoints.filter((wp) => wp.type === "zone").length + 1}`,
+        type: "zone",
+        shape: "polygon",
+        lat: center.lat,
+        lng: center.lng,
+        bounds: {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        },
+        vertices: latLngs.map((latlng) => ({
+          lat: latlng.lat,
+          lng: latlng.lng,
+        })),
+        altitude: 0,
+        speed: missionParams.speed,
+        pattern: "zigzag", // Coverage pattern for zone
+        coverage: 80, // Coverage percentage
+        overlap: 20, // Line overlap percentage
+      };
+
+      // Store waypoint ID in the layer for future reference during edits
+      layer.waypointId = zoneWaypointId;
+      layer.options = layer.options || {};
+      layer.options.waypointId = zoneWaypointId;
+
+      // Also store the leaflet layer ID for reverse lookup
+      const leafletLayerId = layer._leaflet_id;
+
+      setWaypoints((prev) => [...prev, { ...zoneWaypoint, leafletLayerId }]);
+
+      if (activeMission) {
+        setActiveMission((prev) => ({
+          ...prev,
+          waypoints: getActualWaypointCount([...waypoints, zoneWaypoint]),
+        }));
+      }
+    }
+
+    // ZONE PLANNING - Handle rectangle (rectangular area coverage)
+    else if (layerType === "rectangle") {
+      const bounds = layer.getBounds();
+      const center = bounds.getCenter();
+
+      const zoneWaypointId = Date.now() + 1; // Ensure different ID from polygon if created at same time
+      const zoneWaypoint = {
+        id: zoneWaypointId,
+        name: `Zone${waypoints.filter((wp) => wp.type === "zone").length + 1}`,
+        type: "zone",
+        shape: "rectangle",
+        lat: center.lat,
+        lng: center.lng,
+        bounds: {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        },
+        altitude: 0,
+        speed: missionParams.speed,
+        pattern: "zigzag", // Coverage pattern for zone
+        coverage: 80, // Coverage percentage
+        overlap: 20, // Line overlap percentage
+      };
+
+      // Store waypoint ID in the layer for future reference during edits
+      layer.waypointId = zoneWaypointId;
+      layer.options = layer.options || {};
+      layer.options.waypointId = zoneWaypointId;
+
+      // Also store the leaflet layer ID for reverse lookup
+      const leafletLayerId = layer._leaflet_id;
+
+      setWaypoints((prev) => [...prev, { ...zoneWaypoint, leafletLayerId }]);
+
+      if (activeMission) {
+        setActiveMission((prev) => ({
+          ...prev,
+          waypoints: getActualWaypointCount([...waypoints, zoneWaypoint]),
+        }));
+      }
+    }
+  };
+
+  const onDrawDeleted = (e) => {
+    // Get deleted layers
+    const deletedLayers = e.layers;
+
+    if (deletedLayers.getLayers().length > 0) {
+      // When shapes are deleted from map, clear all waypoints and generated paths
+      setWaypoints([]);
+      setGeneratedPaths([]);
+      setHasGeneratedWaypoints(false);
+
+      // Update mission waypoints count
+      if (activeMission) {
+        setActiveMission((prev) => ({
+          ...prev,
+          waypoints: 0,
+        }));
+      }
+    }
+  };
+
+  // Handle when shapes are edited (resized, moved, etc.)
+  const onDrawEdited = (e) => {
+    const layers = e.layers;
+
+    layers.eachLayer((layer) => {
+      // Get layer type and updated geometry
+      const layerType = layer.constructor.name.toLowerCase();
+
+      // Check different ways to identify polygon/rectangle layers
+      const isPolygon =
+        layerType === "polygon" ||
+        layerType.includes("polygon") ||
+        layer instanceof L.Polygon ||
+        (layer.getLatLngs && typeof layer.getLatLngs === "function");
+
+      const isRectangle =
+        layerType === "rectangle" ||
+        layerType.includes("rectangle") ||
+        layer instanceof L.Rectangle;
+
+      if (isPolygon || isRectangle) {
+        // Get updated bounds and center
+        const bounds = layer.getBounds();
+        const center = bounds.getCenter();
+
+        let updatedData = {
+          lat: center.lat,
+          lng: center.lng,
+          bounds: {
+            north: bounds.getNorth(),
+            south: bounds.getSouth(),
+            east: bounds.getEast(),
+            west: bounds.getWest(),
+          },
+        };
+
+        // For polygon, also update vertices
+        if (
+          isPolygon &&
+          layer.getLatLngs &&
+          typeof layer.getLatLngs === "function"
+        ) {
+          try {
+            const latLngs = layer.getLatLngs()[0]; // Get first ring for polygon
+            updatedData.vertices = latLngs.map((latlng) => ({
+              lat: latlng.lat,
+              lng: latlng.lng,
+            }));
+          } catch (error) {
+            // Fallback: create vertices from bounds for rectangle-like shapes
+            updatedData.vertices = [
+              { lat: bounds.getNorth(), lng: bounds.getWest() },
+              { lat: bounds.getNorth(), lng: bounds.getEast() },
+              { lat: bounds.getSouth(), lng: bounds.getEast() },
+              { lat: bounds.getSouth(), lng: bounds.getWest() },
+            ];
+            return error;
+          }
+        } else {
+          // For rectangle or when getLatLngs is not available, create vertices from bounds
+          updatedData.vertices = [
+            { lat: bounds.getNorth(), lng: bounds.getWest() },
+            { lat: bounds.getNorth(), lng: bounds.getEast() },
+            { lat: bounds.getSouth(), lng: bounds.getEast() },
+            { lat: bounds.getSouth(), lng: bounds.getWest() },
+          ];
+        }
+
+        // Get the layer's waypoint ID and leaflet ID
+        const layerWaypointId = layer.options?.waypointId || layer.waypointId;
+        const layerLeafletId = layer._leaflet_id;
+
+        // Update the corresponding zone waypoint AND clear generated waypoints in one operation
+        setWaypoints((prev) => {
+          const zoneWaypoints = prev.filter((wp) => wp.type === "zone");
+          const hasExistingPaths = prev.some((wp) => wp.type === "path");
+
+          if (zoneWaypoints.length === 0) {
+            return prev;
+          }
+
+          // Find the matching zone waypoint
+          let matchingZone = zoneWaypoints[0];
+
+          if (layerLeafletId || layerWaypointId) {
+            const idMatch = zoneWaypoints.find(
+              (zone) =>
+                zone.leafletLayerId === layerLeafletId ||
+                zone.id === layerWaypointId
+            );
+            if (idMatch) {
+              matchingZone = idMatch;
+            }
+          }
+
+          if (matchingZone) {
+            // Create completely new waypoint object to force React re-render
+            const updatedZone = {
+              // Keep existing properties
+              id: matchingZone.id,
+              name: matchingZone.name,
+              type: matchingZone.type,
+              shape: matchingZone.shape,
+              altitude: matchingZone.altitude,
+              speed: matchingZone.speed,
+              pattern: matchingZone.pattern,
+              coverage: matchingZone.coverage,
+              overlap: matchingZone.overlap,
+              // Apply new geometry data
+              ...updatedData,
+              leafletLayerId: layerLeafletId,
+              // Force new timestamp to ensure change detection
+              lastModified: Date.now(),
+              editCount: (matchingZone.editCount || 0) + 1,
+            };
+
+            // Update zone data AND remove generated waypoints in one operation
+            let updated = prev.map((wp) =>
+              wp.id === matchingZone.id ? updatedZone : wp
+            );
+
+            // Remove generated path waypoints if they exist
+            if (hasExistingPaths) {
+              updated = updated.filter((wp) => wp.type !== "path");
+
+              // Show user notification
+              setTimeout(() => {
+                alert(
+                  "Zone has been modified! Generated waypoints have been cleared. Please click 'Generate Waypoints' again to create new waypoints for the updated zone."
+                );
+              }, 100);
+            }
+
+            return updated;
+          } else {
+            return prev;
+          }
+        });
+
+        // Also clear generated paths and reset state if zone was edited
+        setGeneratedPaths([]);
+        setHasGeneratedWaypoints(false);
+      }
+    });
+  };
+
+  // Update waypoint position when dragged
+  const handleWaypointDrag = (waypointId, newPosition) => {
+    setWaypoints((prev) => {
+      const updatedWaypoints = prev.map((wp) =>
+        wp.id === waypointId
+          ? { ...wp, lat: newPosition.lat, lng: newPosition.lng }
+          : wp
+      );
+
+      // Update generated paths if this waypoint belongs to a path
+      const updatedWaypoint = updatedWaypoints.find(
+        (wp) => wp.id === waypointId
+      );
+      if (updatedWaypoint && updatedWaypoint.type === "path") {
+        regeneratePathsFromWaypoints(updatedWaypoints);
+      }
+
+      return updatedWaypoints;
+    });
+  };
+
+  // Utility function to regenerate paths from current waypoints
+  const regeneratePathsFromWaypoints = (currentWaypoints) => {
+    const pathWaypoints = currentWaypoints.filter((wp) => wp.type === "path");
+
+    if (pathWaypoints.length > 1) {
+      const pathCoordinates = pathWaypoints.map((wp) => [wp.lat, wp.lng]);
+      setGeneratedPaths((prev) => {
+        // Remove existing generated coverage paths and add new one
+        const otherPaths = prev.filter(
+          (path) => path.zoneName !== "Generated Coverage"
+        );
+        return [
+          ...otherPaths,
+          {
+            id: Date.now(),
+            zoneName: "Generated Coverage",
+            coordinates: pathCoordinates,
+            color: "#018190",
+          },
+        ];
+      });
+    } else {
+      // Remove generated coverage paths if less than 2 waypoints
+      setGeneratedPaths((prev) =>
+        prev.filter((path) => path.zoneName !== "Generated Coverage")
+      );
+    }
+  };
+
+  // Component to handle map clicks for setting home location
+  const MapClickHandler = () => {
+    useMapEvents({
+      click: (e) => {
+        if (isSettingHome && activeMission) {
+          setHomeLocation(e.latlng);
+          setIsSettingHome(false);
+        }
+        // Clear editing waypoint when clicking on empty space
+        if (isEditingWaypoints && editingWaypoint) {
+          setEditingWaypoint(null);
+        }
+      },
+    });
+    return null;
+  };
+
+  return (
+    <div
+      className="w-full overflow-hidden z-30"
+      style={{ height: "700px", position: "relative" }}
+    >
+      <style jsx global>{`
+        .leaflet-draw-toolbar {
+          display: block !important;
+        }
+        .leaflet-draw-toolbar a {
+          background-color: #fff !important;
+          border: 1px solid #ccc !important;
+          border-radius: 4px !important;
+          cursor: pointer !important;
+        }
+        .leaflet-draw-toolbar a:hover {
+          background-color: #f0f0f0 !important;
+        }
+        .leaflet-draw-actions {
+          display: block !important;
+        }
+        .leaflet-draw-actions a {
+          background-color: #fff !important;
+          color: #333 !important;
+          border: 1px solid #ccc !important;
+        }
+      `}</style>
+      <MapContainer
+        center={[-6.86, 108.103]}
+        zoom={15}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom={true}
+        worldCopyJump={false}
+        maxBounds={[
+          [-85, -180],
+          [85, 180],
+        ]}
+        maxBoundsViscosity={1.0}
+        minZoom={3}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={
+            darkMode
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          }
+          noWrap={true}
+        />
+
+        {activeMission && (
+          <FeatureGroup
+            key={`mission-${activeMission.id || "default"}`}
+            ref={(featureGroupInstance) => {
+              if (
+                featureGroupInstance &&
+                featureGroupInstance !== featureGroupRef
+              ) {
+                setFeatureGroupRef(featureGroupInstance);
+              }
+            }}
+          >
+            <EditControl
+              position="topright"
+              onCreated={onDrawCreated}
+              onDeleted={onDrawDeleted}
+              onEdited={onDrawEdited}
+              draw={{
+                // Path Planning Mode - hanya polyline (requires home location)
+                polyline:
+                  planningMode === "path" &&
+                  homeLocation &&
+                  !hasGeneratedWaypoints &&
+                  !waypoints.some((wp) => wp.type === "path") &&
+                  activeMission
+                    ? {
+                        shapeOptions: {
+                          color: "#018190",
+                          weight: 3,
+                        },
+                        allowIntersection: false,
+                        repeatMode: false,
+                        drawError: {
+                          color: "#e74c3c",
+                          timeout: 1000,
+                        },
+                      }
+                    : false,
+
+                // Zone Planning Mode - polygon & rectangle (requires home location)
+                polygon:
+                  planningMode === "zone" &&
+                  homeLocation &&
+                  !hasGeneratedWaypoints &&
+                  !waypoints.some((wp) => wp.type === "path") &&
+                  activeMission
+                    ? {
+                        shapeOptions: {
+                          color: "#f59e0b",
+                          weight: 2,
+                          fillColor: "#fbbf24",
+                          fillOpacity: 0.2,
+                        },
+                        allowIntersection: false,
+                        repeatMode: false,
+                        drawError: {
+                          color: "#e74c3c",
+                          timeout: 1000,
+                        },
+                      }
+                    : false,
+                rectangle:
+                  planningMode === "zone" &&
+                  homeLocation &&
+                  !hasGeneratedWaypoints &&
+                  !waypoints.some((wp) => wp.type === "path") &&
+                  activeMission
+                    ? {
+                        shapeOptions: {
+                          color: "#10b981",
+                          weight: 2,
+                          fillColor: "#34d399",
+                          fillOpacity: 0.2,
+                        },
+                        repeatMode: false,
+                      }
+                    : false,
+
+                // Always disabled tools
+                marker: false,
+                circle: false,
+                circlemarker: false,
+              }}
+              edit={{
+                featureGroup: featureGroupRef,
+                // Enable editing if featureGroup exists
+                edit: featureGroupRef
+                  ? {
+                      selectedPathOptions: {
+                        maintainColor: false,
+                        opacity: 0.6,
+                        dashArray: "10, 10",
+                      },
+                    }
+                  : false,
+                // Control remove/delete based on waypoint state
+                remove:
+                  featureGroupRef &&
+                  !(
+                    hasGeneratedWaypoints ||
+                    waypoints.some((wp) => wp.type === "path")
+                  )
+                    ? {
+                        selectedPathOptions: {
+                          opacity: 0.6,
+                          dashArray: "10, 10",
+                        },
+                      }
+                    : false,
+              }}
+            />
+          </FeatureGroup>
+        )}
+
+        {/* Generated Paths Visualization */}
+        {generatedPaths.map((path) => (
+          <Polyline
+            key={path.id}
+            positions={path.coordinates}
+            pathOptions={{
+              color: path.color,
+              weight: 3,
+              opacity: 0.8,
+              dashArray: "5, 5", // Dashed line to differentiate from manual polylines
+            }}
+          >
+            <Popup>
+              <div className="text-center">
+                <strong>Generated Path</strong>
+                <br />
+                <small>From: {path.zoneName}</small>
+                <br />
+                <small>Points: {path.coordinates.length}</small>
+              </div>
+            </Popup>
+          </Polyline>
+        ))}
+
+        {/* Waypoint Markers with Numbers */}
+        {waypoints
+          .filter((wp) => wp.type === "path") // Only show path waypoints (not zones)
+          .map((waypoint, index) => (
+            <Marker
+              key={waypoint.id}
+              position={[waypoint.lat, waypoint.lng]}
+              draggable={isEditingWaypoints} // Enable dragging only in edit mode
+              eventHandlers={{
+                dragend: (e) => {
+                  if (isEditingWaypoints) {
+                    const marker = e.target;
+                    const position = marker.getLatLng();
+                    handleWaypointDrag(waypoint.id, position);
+                  }
+                },
+              }}
+              icon={L.divIcon({
+                html: `<div style="
+                  background: ${isEditingWaypoints ? "#ff6b35" : "#018190"}; 
+                  color: white; 
+                  width: 24px; 
+                  height: 24px; 
+                  border-radius: 50%; 
+                  display: flex; 
+                  align-items: center; 
+                  justify-content: center; 
+                  font-size: 11px; 
+                  font-weight: bold; 
+                  border: 2px solid white;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  ${
+                    isEditingWaypoints
+                      ? "cursor: move; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);"
+                      : ""
+                  }
+                " class="waypoint-marker ${
+                  isEditingWaypoints ? "editable" : ""
+                }">${index + 1}</div>`,
+                className: `custom-waypoint-marker ${
+                  isEditingWaypoints ? "edit-mode" : ""
+                }`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+              })}
+            >
+              <Popup>
+                <div className="text-center min-w-[180px]">
+                  <strong>WP{index + 1}</strong>
+                  <br />
+                  <small>Waypoint {index + 1}</small>
+
+                  {editingWaypoint === waypoint.id ? (
+                    // Edit form
+                    <div className="mt-2 space-y-2">
+                      <div className="text-left">
+                        <label className="text-xs font-medium">
+                          Altitude (m):
+                        </label>
+                        <input
+                          type="number"
+                          value={waypoint.altitude}
+                          onChange={(e) => {
+                            const newAltitude = parseFloat(e.target.value) || 0;
+                            setWaypoints((prev) =>
+                              prev.map((wp) =>
+                                wp.id === waypoint.id
+                                  ? { ...wp, altitude: newAltitude }
+                                  : wp
+                              )
+                            );
+                          }}
+                          className="w-full mt-1 px-2 py-1 text-xs border rounded"
+                          step="0.1"
+                        />
+                      </div>
+                      <div className="text-left">
+                        <label className="text-xs font-medium">
+                          Speed (m/s):
+                        </label>
+                        <input
+                          type="number"
+                          value={waypoint.speed}
+                          onChange={(e) => {
+                            const newSpeed = parseFloat(e.target.value) || 2.5;
+                            setWaypoints((prev) =>
+                              prev.map((wp) =>
+                                wp.id === waypoint.id
+                                  ? { ...wp, speed: newSpeed }
+                                  : wp
+                              )
+                            );
+                          }}
+                          className="w-full mt-1 px-2 py-1 text-xs border rounded"
+                          step="0.1"
+                          min="0.1"
+                        />
+                      </div>
+                      <div className="flex gap-1 mt-2">
+                        <button
+                          onClick={() => setEditingWaypoint(null)}
+                          className="flex-1 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Display mode
+                    <div className="mt-1">
+                      <small>Lat: {waypoint.lat.toFixed(6)}</small>
+                      <br />
+                      <small>Lng: {waypoint.lng.toFixed(6)}</small>
+                      <br />
+                      <small>Alt: {waypoint.altitude}m</small>
+                      <br />
+                      <small>Speed: {waypoint.speed}m/s</small>
+
+                      {isEditingWaypoints && (
+                        <div className="mt-2 space-y-1">
+                          <div className="text-xs text-gray-600">
+                            <strong>Drag to move</strong>
+                          </div>
+                          <button
+                            onClick={() => setEditingWaypoint(waypoint.id)}
+                            className="w-full px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                          >
+                            Edit Parameters
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+
+        {/* Edit Mode Notification */}
+        {isEditingWaypoints && (
+          <div
+            className="leaflet-top leaflet-center"
+            style={{
+              marginTop: "10px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="bg-orange-600 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+              <div className="flex items-center gap-2">
+                <FaEdit size={12} />
+                <span>Edit Mode: Drag waypoints to move them</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Set Home Location Button */}
+        {activeMission && !homeLocation && (
+          <div
+            className="leaflet-top leaflet-right"
+            style={{ marginTop: "1px", marginRight: "40px" }}
+          >
+            <div className="leaflet-control leaflet-bar">
+              <button
+                onClick={() => setIsSettingHome(!isSettingHome)}
+                className={`${
+                  isSettingHome
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                } p-2 text-sm border border-gray-300 rounded transition-colors`}
+                style={{
+                  display: "block",
+                  textDecoration: "none",
+                  lineHeight: "1.4",
+                  textAlign: "center",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+                title={
+                  isSettingHome
+                    ? "Click on map to set home"
+                    : "Set Home Location"
+                }
+              >
+                <FaHome />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Map click handler for setting home location */}
+        <MapClickHandler />
+
+        {/* Home location marker with custom home icon */}
+        {homeLocation && (
+          <Marker
+            position={[homeLocation.lat, homeLocation.lng]}
+            icon={homeIcon}
+          >
+            <Popup>
+              <strong>Home Location</strong>
+              <br />
+              {homeLocation.lat.toFixed(4)}, {homeLocation.lng.toFixed(4)}
+            </Popup>
+          </Marker>
+        )}
+      </MapContainer>
+    </div>
+  );
+};
+
+export default MissionMap;
