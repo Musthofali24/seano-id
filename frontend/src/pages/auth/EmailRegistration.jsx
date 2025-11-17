@@ -18,6 +18,8 @@ export default function EmailRegistration({ darkMode, toggleDarkMode }) {
 
     if (result.success) {
       setMessage(result.message);
+      // Save email to localStorage for registration flow protection
+      localStorage.setItem("registrationEmail", email);
       setTimeout(() => {
         navigate("/auth/email-verification", { state: { email } });
       }, 100);
@@ -35,7 +37,7 @@ export default function EmailRegistration({ darkMode, toggleDarkMode }) {
       <div className="w-full p-10 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <Link to="/landing">
+          <Link to="/">
             <img src={SeanoLogo} className="w-12" alt="logo" />
           </Link>
           <button

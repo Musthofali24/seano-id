@@ -4,6 +4,7 @@ from app.database import AsyncSessionLocal
 from sqlalchemy import select
 import bcrypt
 
+
 async def seed_users():
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(User))
@@ -19,7 +20,9 @@ async def seed_users():
             return
 
         password = "Seano2025*"
-        hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
+            "utf-8"
+        )
 
         admin_user = User(
             email="seanousv@gmail.com",
@@ -29,10 +32,12 @@ async def seed_users():
         )
 
         session.add(admin_user)
-        await session.flush() 
+        await session.flush()
 
         user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
         session.add(user_role)
 
         await session.commit()
-        print(f"[SUCCESS] Admin user seeded (email: seanousv@gmail.com, pass: {password})")
+        print(
+            f"[SUCCESS] Admin user seeded (email: seanousv@gmail.com, pass: {password})"
+        )

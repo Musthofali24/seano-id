@@ -10,7 +10,8 @@ const DataCard = ({
 }) => {
   return (
     <div
-      className={`bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl p-6 ${className}`}
+      className={`bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl p-6 mx-4
+         ${className}`}
     >
       {showHeader && (
         <div className="flex items-center justify-between mb-4">

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Token</title></head>
+<body>
+<h2>Check Token in LocalStorage</h2>
+<pre id="output"></pre>
+<script>
+const token = localStorage.getItem('token');
+const user = localStorage.getItem('user');
+document.getElementById('output').textContent = 
+  'Token: ' + (token || 'NOT FOUND') + '\n\n' +
+  'User: ' + (user || 'NOT FOUND');
+</script>
+</body>
+</html>

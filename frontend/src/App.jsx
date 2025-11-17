@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
+import RegistrationRoute from "./components/RegistrationRoute";
 
 // Layout Components
 import { Header, Sidebar } from "./components/Layout";
@@ -21,7 +22,6 @@ import Alerts from "./pages/Alerts";
 import Telemetry from "./pages/Telemetry";
 import Sensor from "./pages/Sensor";
 import SensorType from "./pages/SensorType";
-import Point from "./pages/Point";
 import Notification from "./pages/Notification";
 import User from "./pages/User";
 import Role from "./pages/Role";
@@ -77,7 +77,6 @@ function App() {
     });
   };
 
-  // Toggle sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => {
       const newState = !prev;
@@ -86,7 +85,6 @@ function App() {
     });
   };
 
-  // Public routes (no authentication required)
   const publicRoutes = [
     "/",
     "/auth/login",
@@ -96,7 +94,6 @@ function App() {
     "/verify-email",
   ];
 
-  // Check if current route is protected (dashboard, tracking, etc.)
   const protectedRoutes = [
     "/dashboard/user",
     "/tracking",
@@ -105,7 +102,6 @@ function App() {
     "/data",
     "/sensor",
     "/sensor-type",
-    "/point",
     "/logs",
     "/settings",
     "/vehicle",
@@ -155,10 +151,12 @@ function App() {
             path="/auth/set-account"
             element={
               <PublicRoute>
-                <SetAccount
-                  darkMode={darkMode}
-                  toggleDarkMode={toggleDarkMode}
-                />
+                <RegistrationRoute requiredStep="set-account">
+                  <SetAccount
+                    darkMode={darkMode}
+                    toggleDarkMode={toggleDarkMode}
+                  />
+                </RegistrationRoute>
               </PublicRoute>
             }
           />
@@ -166,10 +164,12 @@ function App() {
             path="/auth/email-verification"
             element={
               <PublicRoute>
-                <CheckEmailVerification
-                  darkMode={darkMode}
-                  toggleDarkMode={toggleDarkMode}
-                />
+                <RegistrationRoute requiredStep="email-verification">
+                  <CheckEmailVerification
+                    darkMode={darkMode}
+                    toggleDarkMode={toggleDarkMode}
+                  />
+                </RegistrationRoute>
               </PublicRoute>
             }
           />
@@ -177,10 +177,12 @@ function App() {
             path="/verify-email"
             element={
               <PublicRoute>
-                <VerifyEmail
-                  darkMode={darkMode}
-                  toggleDarkMode={toggleDarkMode}
-                />
+                <RegistrationRoute requiredStep="verify-email">
+                  <VerifyEmail
+                    darkMode={darkMode}
+                    toggleDarkMode={toggleDarkMode}
+                  />
+                </RegistrationRoute>
               </PublicRoute>
             }
           />
@@ -283,14 +285,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SensorType darkMode={darkMode} />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/point"
-                element={
-                  <ProtectedRoute>
-                    <Point darkMode={darkMode} />
                   </ProtectedRoute>
                 }
               />

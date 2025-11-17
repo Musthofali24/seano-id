@@ -34,6 +34,8 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
 
     if (result.success) {
       setMessage(result.message);
+      // Clear registration data from localStorage
+      localStorage.removeItem("registrationEmail");
       setTimeout(() => navigate("/auth/login"), 2000);
     } else {
       setMessage(result.error);
@@ -49,7 +51,7 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
       <div className="w-full p-10 flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center">
-          <Link to="/landing">
+          <Link to="/">
             <img src={SeanoLogo} className="w-12" alt="Seano Logo" />
           </Link>
 

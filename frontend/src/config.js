@@ -74,15 +74,6 @@ export const API_ENDPOINTS = {
     STATS: `${API_BASE_URL}/raw-logs/stats`
   },
 
-  // Point endpoints
-  POINTS: {
-    LIST: `${API_BASE_URL}/points/`,
-    BY_ID: id => `${API_BASE_URL}/points/${id}`,
-    CREATE: `${API_BASE_URL}/points/`,
-    UPDATE: id => `${API_BASE_URL}/points/${id}`,
-    DELETE: id => `${API_BASE_URL}/points/${id}`
-  },
-
   // Vehicle Logs endpoints
   VEHICLE_LOGS: {
     LIST: `${API_BASE_URL}/vehicle-logs/`,

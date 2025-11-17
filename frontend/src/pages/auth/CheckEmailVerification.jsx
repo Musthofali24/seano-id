@@ -15,7 +15,7 @@ export default function CheckEmailVerification({ darkMode, toggleDarkMode }) {
           <div>
             <h1 className="text-2xl font-semibold">
               <Link
-                to="/landing"
+                to="/"
                 className="text-gray-900 font-semibold dark:text-white"
               >
                 <img src={SeanoLogo} className="w-12" alt="Seano Logo" />

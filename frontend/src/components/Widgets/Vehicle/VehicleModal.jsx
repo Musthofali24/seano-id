@@ -1,71 +1,105 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "../../UI";
-import { Dropdown } from "../";
+import { useAuthContext } from "../../../hooks/useAuthContext";
 
-const VehicleModal = ({ isOpen, onClose, onSubmit }) => {
-  const [selectedPoint, setSelectedPoint] = useState("");
+const VehicleModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
+  const { user } = useAuthContext();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    code: "",
+    description: "",
+    status: "idle",
+  });
 
-  const pointsOptions = [
+  // Status options
+  const statusOptions = [
+    { id: "idle", name: "Idle", description: "Vehicle is not in use" },
     {
-      id: "point1",
-      name: "Waduk Jatigede",
-      description: "Main monitoring point",
-      image: "🏞️",
+      id: "on_mission",
+      name: "On Mission",
+      description: "Vehicle is currently on a mission",
     },
     {
-      id: "point2",
-      name: "Waduk Cirata",
-      description: "Secondary monitoring point",
-      image: "🌊",
+      id: "maintenance",
+      name: "Maintenance",
+      description: "Vehicle is under maintenance",
     },
-    {
-      id: "point3",
-      name: "Waduk Saguling",
-      description: "Patrol route checkpoint",
-      image: "⛵",
-    },
-    {
-      id: "point4",
-      name: "Pantai Pangandaran",
-      description: "Coastal monitoring area",
-      image: "🏖️",
-    },
-    {
-      id: "point5",
-      name: "Pelabuhan Cirebon",
-      description: "Port area surveillance",
-      image: "🚢",
-    },
+    { id: "offline", name: "Offline", description: "Vehicle is offline" },
   ];
 
-  const handleSubmit = (e) => {
+  // Populate form when editing
+  useEffect(() => {
+    console.log("VehicleModal useEffect - editData:", editData);
+    console.log("VehicleModal useEffect - isOpen:", isOpen);
+
+    if (editData) {
+      const newFormData = {
+        name: editData.name || "",
+        code: editData.code || "",
+        description: editData.description || "",
+        status: editData.statusRaw || editData.status || "idle",
+      };
+      console.log("Setting form data:", newFormData);
+      setFormData(newFormData);
+    } else {
+      setFormData({
+        name: "",
+        code: "",
+        description: "",
+        status: "idle",
+      });
+    }
+  }, [editData, isOpen]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    setLoading(true);
+
+    console.log("=== VEHICLE MODAL SUBMIT ===");
+    console.log("Current user from context:", user);
+    console.log("Form data:", formData);
 
     const vehicleData = {
-      name: formData.get("name"),
-      description: formData.get("description"),
-      status: "offline", // Default status
-      points_id: selectedPoint,
+      name: formData.name,
+      code: formData.code,
+      description: formData.description || null,
+      status: formData.status,
+      user_id: user?.id || 1, // Use logged in user ID, default to 1
     };
 
-    onSubmit(vehicleData);
+    console.log("Prepared vehicle data to submit:", vehicleData);
 
-    // Reset form
-    e.target.reset();
-    setSelectedPoint("");
+    try {
+      await onSubmit(vehicleData, editData?.id);
+
+      // Close modal on success (parent will handle refresh)
+      onClose();
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
-    setSelectedPoint("");
+    setFormData({
+      name: "",
+      code: "",
+      description: "",
+      status: "idle",
+    });
     onClose();
   };
-
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add New Vehicle"
+      title={editData ? "Edit Vehicle" : "Add New Vehicle"}
       size="md"
     >
       <form onSubmit={handleSubmit}>
@@ -78,10 +112,38 @@ const VehicleModal = ({ isOpen, onClose, onSubmit }) => {
             <input
               type="text"
               name="name"
+              value={formData.name}
+              onChange={handleInputChange}
               required
               placeholder="Enter vehicle name"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
+          </div>
+
+          {/* Registration Code */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+              Registration Code {editData ? "" : "*"}
+            </label>
+            <input
+              type="text"
+              name="code"
+              value={formData.code || ""}
+              onChange={handleInputChange}
+              required={!editData}
+              readOnly={editData}
+              placeholder={!editData ? "e.g. USV-003" : ""}
+              className={`w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent ${
+                editData
+                  ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
+                  : "bg-transparent"
+              }`}
+            />
+            {editData && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Registration code cannot be changed
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -91,73 +153,32 @@ const VehicleModal = ({ isOpen, onClose, onSubmit }) => {
             </label>
             <textarea
               name="description"
+              value={formData.description}
+              onChange={handleInputChange}
               rows="3"
               placeholder="Enter vehicle description"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
             />
           </div>
 
-          {/* Points Dropdown */}
+          {/* Status Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Points *
+              Status *
             </label>
-            <Dropdown
-              items={pointsOptions}
-              selectedItem={selectedPoint}
-              onItemChange={setSelectedPoint}
-              placeholder="Select monitoring point"
-              className="w-full"
-              renderSelectedItem={(item) => (
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{item.image}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {item.name}
-                  </span>
-                </div>
-              )}
-              renderItem={(item, isSelected) => (
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{item.image}</span>
-                  <div className="flex-1">
-                    <div className="text-gray-900 dark:text-white font-medium">
-                      {item.name}
-                    </div>
-                    <div className="text-gray-600 dark:text-gray-300 text-sm">
-                      {item.description}
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <div className="text-blue-600 dark:text-white">
-                      <svg
-                        className="w-4 h-4"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              )}
-            />
-          </div>
-
-          {/* Status (Disabled) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Status
-            </label>
-            <input
-              type="text"
-              value="Offline"
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-400 cursor-not-allowed"
-            />
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-fourth focus:border-transparent"
+            >
+              {statusOptions.map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -166,15 +187,21 @@ const VehicleModal = ({ isOpen, onClose, onSubmit }) => {
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 px-4 py-2 text-white bg-red-600 border border-red-500 rounded-xl hover:bg-red-700 transition-colors"
+            disabled={loading}
+            className="flex-1 px-4 py-2 text-white bg-red-600 border border-red-500 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2 bg-fourth text-white rounded-xl hover:bg-blue-700 transition-colors"
+            disabled={loading}
+            className="flex-1 px-4 py-2 bg-fourth text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add Vehicle
+            {loading
+              ? "Saving..."
+              : editData
+              ? "Update Vehicle"
+              : "Add Vehicle"}
           </button>
         </div>
       </form>

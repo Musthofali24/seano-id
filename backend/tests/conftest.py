@@ -22,52 +22,73 @@ engine = create_async_engine(
 # Create test-specific base and models
 TestBase = declarative_base()
 
+
 class TestVehicle(TestBase):
     __tablename__ = "vehicles"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     status = Column(String(20), default="idle")
     user_id = Column(Integer, nullable=True)  # Simplified - no FK constraint for tests
-    points_id = Column(Integer, nullable=True)  # Simplified - no FK constraint for tests
+    # points_id removed
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
 
 class TestSensorType(TestBase):
     __tablename__ = "sensor_types"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
 
 class TestSensor(TestBase):
     __tablename__ = "sensors"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), nullable=False)
-    sensor_type_id = Column(Integer, nullable=False)  # Simplified - no FK constraint for tests
+    sensor_type_id = Column(
+        Integer, nullable=False
+    )  # Simplified - no FK constraint for tests
     description = Column(Text)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
 
 class TestSensorLog(TestBase):
     __tablename__ = "sensor_logs"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    vehicle_id = Column(Integer, nullable=False)  # Simplified - no FK constraint for tests
-    sensor_id = Column(Integer, nullable=False)   # Simplified - no FK constraint for tests
-    data = Column(JSON, nullable=False)  # Use JSON instead of JSONB for SQLite compatibility
+    vehicle_id = Column(
+        Integer, nullable=False
+    )  # Simplified - no FK constraint for tests
+    sensor_id = Column(
+        Integer, nullable=False
+    )  # Simplified - no FK constraint for tests
+    data = Column(
+        JSON, nullable=False
+    )  # Use JSON instead of JSONB for SQLite compatibility
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
 
 class TestVehicleLog(TestBase):
     __tablename__ = "vehicle_logs"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    vehicle_id = Column(Integer, nullable=False)  # Simplified - no FK constraint for tests
+    vehicle_id = Column(
+        Integer, nullable=False
+    )  # Simplified - no FK constraint for tests
     battery_voltage = Column(Integer)  # Simplified for testing
     battery_current = Column(Integer)  # Simplified for testing
     rssi = Column(Integer)
@@ -81,17 +102,21 @@ class TestVehicleLog(TestBase):
     speed = Column(Integer)  # Simplified for testing
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+
 class TestUser(TestBase):
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), nullable=False, unique=True, index=True)
-    password_hash = Column(Text) 
+    password_hash = Column(Text)
     full_name = Column(String(100), nullable=True)
     is_verified = Column(Boolean, default=False, nullable=False)
     verification_token = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
 
 TestingSessionLocal = sessionmaker(
     autocommit=False,
@@ -100,6 +125,7 @@ TestingSessionLocal = sessionmaker(
     class_=AsyncSession,
 )
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
@@ -107,27 +133,30 @@ def event_loop():
     yield loop
     loop.close()
 
+
 @pytest.fixture
 async def db_session():
     """Create a fresh database for each test."""
     async with engine.begin() as conn:
         await conn.run_sync(TestBase.metadata.create_all)
-    
+
     async with TestingSessionLocal() as session:
         yield session
-    
+
     async with engine.begin() as conn:
         await conn.run_sync(TestBase.metadata.drop_all)
+
 
 @pytest.fixture
 async def client(db_session):
     """Create a test client with dependency override."""
+
     async def override_get_db():
         yield db_session
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    
+
     app.dependency_overrides.clear()

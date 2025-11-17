@@ -131,12 +131,6 @@ export const menuGroups = [
         text: "Sensor Type",
         size: sizeIcon,
       },
-      {
-        href: "/point",
-        icon: IoLocationOutline,
-        text: "Point",
-        size: sizeIcon,
-      },
     ],
   },
   {
@@ -1136,62 +1130,6 @@ export const getTelemetryCards = (hasData = true) => [
     description: "Current navigation target",
   },
 ];
-
-// Point Widget Data - Similar to other widget data patterns
-export const getPointWidgetData = (stats, points) => {
-  return [
-    {
-      title: "Total Points",
-      value: points.length > 0 ? stats.total : 0,
-      icon: <FaLocationDot size={26} className="text-blue-500" />,
-      trendIcon: <FaArrowRight className="text-gray-400" />,
-      trendText:
-        points.length === 0
-          ? "No data available"
-          : `${stats.total} locations tracked`,
-    },
-    {
-      title: "Active Points",
-      value: points.length > 0 ? stats.active : 0,
-      icon: <HiOutlineStatusOnline size={26} className="text-green-500" />,
-      trendIcon: <FaArrowRight className="text-gray-400" />,
-      trendText:
-        points.length === 0
-          ? "No data available"
-          : `${stats.active} points active`,
-    },
-    {
-      title: "Inactive Points",
-      value: points.length > 0 ? stats.inactive : 0,
-      icon: <HiOutlineStatusOffline size={26} className="text-red-500" />,
-      trendIcon: <FaArrowRight className="text-gray-400" />,
-      trendText:
-        points.length === 0
-          ? "No data available"
-          : `${stats.inactive} points inactive`,
-    },
-    {
-      title: "Coverage",
-      value: points.length > 0 ? `${stats.coverage}%` : "0%",
-      icon: <TbGps size={26} className="text-purple-500" />,
-      trendIcon: <FaArrowRight className="text-gray-400" />,
-      trendText:
-        points.length === 0
-          ? "No data available"
-          : `${stats.coverage}% coverage`,
-    },
-    {
-      title: "Top Region",
-      value: points.length > 0 ? stats.topRegion : "N/A",
-      icon: <MdNavigation size={26} className="text-cyan-500" />,
-      trendIcon: <FaArrowRight className="text-gray-400" />,
-      trendText:
-        points.length === 0
-          ? "No data available"
-          : `Most points in ${stats.topRegion}`,
-    },
-  ];
-};
 
 // User Widget Data - Similar to other widget data patterns
 export const getUserWidgetData = (stats, users) => {

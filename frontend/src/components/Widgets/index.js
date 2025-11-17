@@ -46,9 +46,6 @@ export {
 // User Management Widgets
 export { UserModal, UserTable } from './User'
 
-// Point Management Widgets
-export { PointModal, PointTable } from './Point'
-
 // Role Management Widgets
 export { RoleModal, RoleTable } from './Role'
 
