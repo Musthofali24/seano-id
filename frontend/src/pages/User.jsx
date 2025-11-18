@@ -13,8 +13,6 @@ const User = () => {
   useTitle("User");
   const { userData, loading, stats, actions } = useUserData();
   const [showModal, setShowModal] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
 
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && userData.length === 0;
@@ -26,6 +24,26 @@ const User = () => {
       setShowModal(false);
     }
     return result;
+  };
+
+  const handleEditUser = (user) => {
+    console.log("Editing user:", user);
+    // TODO: Implement edit functionality
+  };
+
+  const handleDeleteUser = (id, name) => {
+    console.log("Deleting user:", id, name);
+    // TODO: Implement delete functionality
+  };
+
+  const handleViewUser = (user) => {
+    console.log("Viewing user:", user);
+    // TODO: Implement view functionality
+  };
+
+  const handleBulkDeleteUsers = (ids) => {
+    console.log("Bulk deleting users:", ids);
+    // TODO: Implement bulk delete functionality
   };
 
   return (
@@ -56,10 +74,11 @@ const User = () => {
       {/* Users Table */}
       <UserTable
         userData={userData}
-        page={page}
-        setPage={setPage}
-        pageSize={pageSize}
         loading={loading}
+        onEdit={handleEditUser}
+        onDelete={handleDeleteUser}
+        onView={handleViewUser}
+        onBulkDelete={handleBulkDeleteUsers}
       />
 
       {/* Add User Modal */}

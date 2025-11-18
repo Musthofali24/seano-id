@@ -37,6 +37,7 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 // Other
 import Landing from "./pages/Landing";
 import ErrorPage from "./components/Error/ErrorPage";
+import Profile from "./pages/Profile";
 
 function App() {
   const location = useLocation();
@@ -100,6 +101,7 @@ function App() {
     "/missions",
     "/telemetry",
     "/data",
+    "/profile",
     "/sensor",
     "/sensor-type",
     "/logs",
@@ -301,6 +303,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Settings darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile darkMode={darkMode} />
                   </ProtectedRoute>
                 }
               />

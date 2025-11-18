@@ -16,8 +16,6 @@ const Permission = () => {
   useTitle("Permission");
   const { permissionData, loading, stats, actions } = usePermissionData();
   const [showModal, setShowModal] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
 
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton =
@@ -30,6 +28,26 @@ const Permission = () => {
       setShowModal(false);
     }
     return result;
+  };
+
+  const handleEditPermission = (permission) => {
+    // TODO: Implement edit permission functionality
+    console.log("Edit permission:", permission);
+  };
+
+  const handleDeletePermission = (permissionId, permissionName) => {
+    // TODO: Implement delete permission functionality
+    console.log("Delete permission:", permissionId, permissionName);
+  };
+
+  const handleViewPermission = (permission) => {
+    // TODO: Implement view permission functionality
+    console.log("View permission:", permission);
+  };
+
+  const handleBulkDeletePermissions = (selectedIds) => {
+    // TODO: Implement bulk delete permissions functionality
+    console.log("Bulk delete permissions:", selectedIds);
   };
 
   return (
@@ -63,10 +81,11 @@ const Permission = () => {
       {/* Permissions Table */}
       <PermissionTable
         permissionData={permissionData}
-        page={page}
-        setPage={setPage}
-        pageSize={pageSize}
         loading={loading}
+        onEdit={handleEditPermission}
+        onDelete={handleDeletePermission}
+        onView={handleViewPermission}
+        onBulkDelete={handleBulkDeletePermissions}
       />
 
       {/* Add Permission Modal */}

@@ -13,8 +13,6 @@ const Role = () => {
   useTitle("Role");
   const { roleData, loading, stats, actions } = useRoleData();
   const [showModal, setShowModal] = useState(false);
-  const [page, setPage] = useState(1);
-  const pageSize = 10;
 
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && roleData.length === 0;
@@ -26,6 +24,26 @@ const Role = () => {
       setShowModal(false);
     }
     return result;
+  };
+
+  const handleEditRole = (role) => {
+    // TODO: Implement edit role functionality
+    console.log("Edit role:", role);
+  };
+
+  const handleDeleteRole = (roleId, roleName) => {
+    // TODO: Implement delete role functionality
+    console.log("Delete role:", roleId, roleName);
+  };
+
+  const handleViewRole = (role) => {
+    // TODO: Implement view role functionality
+    console.log("View role:", role);
+  };
+
+  const handleBulkDeleteRoles = (selectedIds) => {
+    // TODO: Implement bulk delete roles functionality
+    console.log("Bulk delete roles:", selectedIds);
   };
 
   return (
@@ -56,10 +74,11 @@ const Role = () => {
       {/* Roles Table */}
       <RoleTable
         roleData={roleData}
-        page={page}
-        setPage={setPage}
-        pageSize={pageSize}
         loading={loading}
+        onEdit={handleEditRole}
+        onDelete={handleDeleteRole}
+        onView={handleViewRole}
+        onBulkDelete={handleBulkDeleteRoles}
       />
 
       {/* Add Role Modal */}

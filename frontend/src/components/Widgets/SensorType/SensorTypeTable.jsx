@@ -1,28 +1,17 @@
-import { useEffect } from "react";
-import { TbCategory } from "react-icons/tb";
-import { TableSkeleton } from "../../Skeleton";
+import { useState } from "react";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
-import useLoadingTimeout from "../../../hooks/useLoadingTimeout";
 
 const SensorTypeTable = ({
   sensorTypeData,
-  page,
-  setPage,
-  pageSize,
   loading = false,
+  onEdit,
+  onDelete,
+  onView,
+  onBulkDelete,
 }) => {
-  const { loading: timeoutLoading, stopLoading } = useLoadingTimeout(
-    loading,
-    5000
-  );
-
-  useEffect(() => {
-    if (!loading || sensorTypeData.length > 0) {
-      stopLoading();
-    }
-  }, [loading, sensorTypeData.length, stopLoading]);
-
-  const shouldShowSkeleton = timeoutLoading && loading;
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const transformedData = sensorTypeData.map((sensorType) => {
     return {
@@ -31,9 +20,10 @@ const SensorTypeTable = ({
       code: sensorType.code || `ST-${String(sensorType.id).padStart(3, "0")}`,
       description: sensorType.description || "No description",
       status: sensorType.is_active ? "Active" : "Inactive",
+      statusRaw: sensorType.is_active,
       statusColor: sensorType.is_active
-        ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
-        : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30",
+        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
       created: sensorType.created_at
         ? new Date(sensorType.created_at).toLocaleDateString()
         : "Unknown",
@@ -56,189 +46,215 @@ const SensorTypeTable = ({
     return "📋";
   }
 
-  if (shouldShowSkeleton) {
-    return <TableSkeleton />;
+  // Handle select all checkbox
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(transformedData.map((row) => row.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  // Handle individual checkbox
+  const handleSelectOne = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  // Define columns for DataTable
+  const columns = [
+    {
+      header: (
+        <input
+          type="checkbox"
+          checked={
+            selectedIds.length === transformedData.length &&
+            transformedData.length > 0
+          }
+          onChange={handleSelectAll}
+          className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
+          style={{
+            backgroundImage:
+              selectedIds.length === transformedData.length &&
+              transformedData.length > 0
+                ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
+                : "none",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+      ),
+      accessorKey: "checkbox",
+      className: "w-12 text-center",
+      cellClassName: "text-center",
+      sortable: false,
+      cell: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.id)}
+          onChange={() => handleSelectOne(row.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
+          style={{
+            backgroundImage: selectedIds.includes(row.id)
+              ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
+              : "none",
+            backgroundSize: "100% 100%",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+      ),
+    },
+    {
+      header: "Sensor Type",
+      accessorKey: "name",
+      cell: (row) => (
+        <div className="flex items-center gap-3">
+          <span className="text-lg">{row.typeIcon}</span>
+          <div>
+            <div className="font-medium text-gray-900 dark:text-white">
+              {row.name}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {row.code}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      cell: (row) => (
+        <span
+          className={`px-4 py-1 text-xs font-medium rounded-full ${row.statusColor}`}
+        >
+          {row.status}
+        </span>
+      ),
+    },
+    {
+      header: "Description",
+      accessorKey: "description",
+      cell: (row) => (
+        <span className="text-sm text-gray-600 dark:text-gray-300 truncate block max-w-xs">
+          {row.description}
+        </span>
+      ),
+    },
+    {
+      header: "Created",
+      accessorKey: "created",
+      cell: (row) => (
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {row.created}
+        </span>
+      ),
+    },
+    {
+      header: "Last Updated",
+      accessorKey: "updated",
+      cell: (row) => (
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {row.updated}
+        </span>
+      ),
+    },
+    {
+      header: "Actions",
+      accessorKey: "actions",
+      className: "text-center w-40",
+      cellClassName: "text-center whitespace-nowrap",
+      sortable: false,
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-3 w-full h-full">
+          {onView && (
+            <button
+              onClick={() => onView(row)}
+              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20"
+              title="View sensor type"
+            >
+              <FaEye size={16} />
+            </button>
+          )}
+          {onEdit && (
+            <button
+              onClick={() => onEdit(row)}
+              className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              title="Edit sensor type"
+            >
+              <FaEdit size={16} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(row.id, row.name)}
+              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Delete sensor type"
+            >
+              <FaTrash size={16} />
+            </button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  if (loading && transformedData.length === 0) {
+    return (
+      <DataCard title="Sensor Type Management">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </DataCard>
+    );
   }
 
   return (
-    <div className="px-4">
-      <DataCard
-        headerContent={
-          <div className="flex items-center justify-between w-full">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
-              <TbCategory size={20} /> Sensor Type Overview
-            </h2>
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-              View All
+    <DataCard title="Sensor Type Management">
+      {selectedIds.length > 0 && (
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="font-semibold text-fourth">
+              {selectedIds.length}
+            </span>{" "}
+            sensor type(s) selected
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (onBulkDelete) {
+                  onBulkDelete(selectedIds);
+                  setSelectedIds([]);
+                }
+              }}
+              className="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
+            >
+              <FaTrash size={14} />
+              Delete Selected
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-3 py-1.5 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors"
+            >
+              Clear Selection
             </button>
           </div>
-        }
-      >
-        <div className="overflow-x-auto scrollbar-hide">
-          <table className="min-w-full text-sm text-left">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
-                <th className="py-3 px-2">Sensor Type</th>
-                <th className="py-3 px-0 max-w-xs whitespace-nowrap">Status</th>
-                <th className="py-3 px-2">Description</th>
-                <th className="py-3 px-2">Created</th>
-                <th className="py-3 px-2">Last Updated</th>
-                <th className="py-3 px-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sensorTypeData.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-12">
-                    <div className="text-6xl mb-4 text-gray-400 dark:text-gray-500">
-                      <TbCategory size={64} className="mx-auto" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
-                      No sensor types found
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Waiting for API data or no sensor types available
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                transformedData
-                  .slice((page - 1) * pageSize, page * pageSize)
-                  .map((sensorType) => (
-                    <tr
-                      key={sensorType.id}
-                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                    >
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg">{sensorType.typeIcon}</span>
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
-                              {sensorType.name}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {sensorType.code}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-0">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${sensorType.statusColor}`}
-                        >
-                          {sensorType.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 max-w-xs">
-                        <span className="text-gray-600 dark:text-gray-300 truncate block">
-                          {sensorType.description}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="text-gray-600 dark:text-gray-300">
-                          {sensorType.created}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <span className="text-gray-600 dark:text-gray-300">
-                          {sensorType.updated}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2">
-                        <div className="flex items-center gap-1">
-                          <button
-                            className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors"
-                            title="View Details"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                              <path
-                                fillRule="evenodd"
-                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            className="p-1 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded transition-colors"
-                            title="Edit Sensor Type"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
-                          <button
-                            className="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
-                            title="Delete Sensor Type"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 102 0v-1a1 1 0 10-2 0v1zm4 0a1 1 0 102 0v-1a1 1 0 10-2 0v1z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
         </div>
-
-        {/* Pagination */}
-        {sensorTypeData.length > pageSize && (
-          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Showing{" "}
-              {Math.min((page - 1) * pageSize + 1, sensorTypeData.length)} to{" "}
-              {Math.min(page * pageSize, sensorTypeData.length)} of{" "}
-              {sensorTypeData.length} sensor types
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <span className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400">
-                Page {page} of {Math.ceil(sensorTypeData.length / pageSize)}
-              </span>
-              <button
-                onClick={() =>
-                  setPage(
-                    Math.min(
-                      Math.ceil(sensorTypeData.length / pageSize),
-                      page + 1
-                    )
-                  )
-                }
-                disabled={page === Math.ceil(sensorTypeData.length / pageSize)}
-                className="px-3 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </DataCard>
-    </div>
+      )}
+      <DataTable
+        columns={columns}
+        data={transformedData}
+        searchPlaceholder="Search sensor types by name, code, or status..."
+        searchKeys={["name", "code", "status"]}
+        pageSize={10}
+        showPagination={true}
+        emptyMessage="No sensor types found. Click 'Add Sensor Type' to create one."
+      />
+    </DataCard>
   );
 };
 

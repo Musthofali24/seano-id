@@ -4,6 +4,9 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaChevronDown,
+  FaSortUp,
+  FaSortDown,
+  FaSort,
 } from "react-icons/fa";
 
 const DataTable = ({
@@ -19,6 +22,7 @@ const DataTable = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [isPageSizeOpen, setIsPageSizeOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const dropdownRef = useRef(null);
 
   // Close dropdown when clicking outside
@@ -49,12 +53,58 @@ const DataTable = ({
     });
   }, [data, searchQuery, searchKeys]);
 
+  // Sort data
+  const sortedData = useMemo(() => {
+    if (!sortConfig.key) return filteredData;
+
+    const sorted = [...filteredData].sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      // Handle null/undefined values
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+
+      // Compare values
+      if (aValue < bValue) {
+        return sortConfig.direction === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    return sorted;
+  }, [filteredData, sortConfig]);
+
+  // Handle sorting
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort icon
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return <FaSort className="text-gray-400" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <FaSortUp className="text-fourth" />
+    ) : (
+      <FaSortDown className="text-fourth" />
+    );
+  };
+
   // Pagination
-  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const totalPages = Math.ceil(sortedData.length / pageSize);
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, currentPage, pageSize]);
+    return sortedData.slice(start, start + pageSize);
+  }, [sortedData, currentPage, pageSize]);
 
   // Reset to first page when search changes
   const handleSearch = (value) => {
@@ -145,9 +195,25 @@ const DataTable = ({
                   key={index}
                   className={`px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider align-middle ${
                     column.className || ""
+                  } ${
+                    column.sortable !== false
+                      ? "cursor-pointer select-none hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      : ""
                   }`}
+                  onClick={() => {
+                    if (column.sortable !== false && column.accessorKey) {
+                      handleSort(column.accessorKey);
+                    }
+                  }}
                 >
-                  {column.header}
+                  <div className="flex items-center gap-2">
+                    <span>{column.header}</span>
+                    {column.sortable !== false && column.accessorKey && (
+                      <span className="text-sm">
+                        {getSortIcon(column.accessorKey)}
+                      </span>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>

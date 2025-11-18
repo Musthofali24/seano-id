@@ -104,17 +104,11 @@ const Data = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Section with Title, Filters, and Action Buttons */}
+      {/* Header Section with Title and Action Buttons */}
       <DataHeader
-        vehicles={vehicles}
-        missions={missions}
-        filters={filters}
-        onFilterChange={handleFilterChange}
         onRefreshData={handleRefreshData}
-        onResetFilters={handleResetFilters}
         isRefreshing={isRefreshing}
         lastRefresh={lastRefresh}
-        hasActiveFilters={hasActiveFilters}
       />
 
       {/* Data Statistics Cards */}
@@ -127,6 +121,8 @@ const Data = () => {
       {/* Advanced Filters Section */}
       <div className="px-4">
         <DataFilters
+          vehicles={vehicles}
+          missions={missions}
           filters={filters}
           onFilterChange={handleFilterChange}
           onResetFilters={handleResetFilters}

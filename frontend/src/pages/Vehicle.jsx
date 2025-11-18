@@ -207,6 +207,29 @@ const Vehicle = () => {
     setVehicleToDelete(null);
   };
 
+  const handleBulkDelete = async (selectedIds) => {
+    if (!selectedIds || selectedIds.length === 0) return;
+
+    const confirmBulk = window.confirm(
+      `Are you sure you want to delete ${selectedIds.length} vehicle(s)? This action cannot be undone.`
+    );
+
+    if (!confirmBulk) return;
+
+    try {
+      // Delete all selected vehicles
+      await Promise.all(
+        selectedIds.map((id) => axios.delete(API_ENDPOINTS.VEHICLES.DELETE(id)))
+      );
+
+      toast.success(`${selectedIds.length} vehicle(s) deleted successfully!`);
+      refreshVehicles();
+    } catch (error) {
+      console.error("Error bulk deleting vehicles:", error);
+      toast.error("Failed to delete some vehicles");
+    }
+  };
+
   const handleCloseModal = () => {
     setShowVehicleModal(false);
     setEditingVehicle(null);
@@ -246,6 +269,7 @@ const Vehicle = () => {
         loading={loading}
         onEdit={handleEditVehicle}
         onDelete={handleDeleteVehicle}
+        onBulkDelete={handleBulkDelete}
       />
 
       {/* Vehicle Modal */}

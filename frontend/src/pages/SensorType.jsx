@@ -14,9 +14,7 @@ import { TbCategory } from "react-icons/tb";
 
 const SensorType = () => {
   useTitle("Sensor Type");
-  const [page, setPage] = useState(1);
   const [showAddSensorTypeModal, setShowAddSensorTypeModal] = useState(false);
-  const pageSize = 8;
   const { sensorTypes, loading, stats, addSensorType } = useSensorTypesData();
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton =
@@ -29,6 +27,26 @@ const SensorType = () => {
     addSensorType(sensorTypeData);
     setShowAddSensorTypeModal(false);
     // Add your API call or data handling logic here
+  };
+
+  const handleEditSensorType = (sensorType) => {
+    console.log("Editing sensor type:", sensorType);
+    // TODO: Implement edit functionality
+  };
+
+  const handleDeleteSensorType = (id, name) => {
+    console.log("Deleting sensor type:", id, name);
+    // TODO: Implement delete functionality
+  };
+
+  const handleViewSensorType = (sensorType) => {
+    console.log("Viewing sensor type:", sensorType);
+    // TODO: Implement view functionality
+  };
+
+  const handleBulkDeleteSensorTypes = (ids) => {
+    console.log("Bulk deleting sensor types:", ids);
+    // TODO: Implement bulk delete functionality
   };
 
   return (
@@ -59,10 +77,11 @@ const SensorType = () => {
 
       <SensorTypeTable
         sensorTypeData={sensorTypes}
-        page={page}
-        setPage={setPage}
-        pageSize={pageSize}
         loading={loading}
+        onEdit={handleEditSensorType}
+        onDelete={handleDeleteSensorType}
+        onView={handleViewSensorType}
+        onBulkDelete={handleBulkDeleteSensorTypes}
       />
 
       {/* SensorType Modal */}
