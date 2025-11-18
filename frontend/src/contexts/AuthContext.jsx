@@ -110,7 +110,7 @@ export function AuthProvider({ children }) {
         // User data is already in login response
         console.log("Got user data from login response:", data.user);
         setUser(data.user);
-        navigate("/dashboard/user");
+        navigate("/dashboard");
         return { success: true };
       }
 
@@ -127,13 +127,13 @@ export function AuthProvider({ children }) {
         setUser(userData);
 
         // Redirect to dashboard
-        navigate("/dashboard/user");
+        navigate("/dashboard");
         return { success: true };
       }
 
       // If still no user data, just redirect anyway
       console.log("No user data available, redirecting anyway");
-      navigate("/dashboard/user");
+      navigate("/dashboard");
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);

@@ -57,7 +57,7 @@ const RoleTable = ({ roleData, page, setPage, pageSize, loading = false }) => {
           </div>
         }
       >
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto scrollbar-hide">
           <table className="min-w-full text-sm text-left">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">

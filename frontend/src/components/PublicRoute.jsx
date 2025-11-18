@@ -12,7 +12,7 @@ const PublicRoute = ({ children }) => {
 
   // If user is already logged in, redirect to dashboard
   if (user) {
-    return <Navigate to="/dashboard/user" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // User not logged in, allow access to public route

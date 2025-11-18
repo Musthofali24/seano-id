@@ -83,7 +83,7 @@ const MissionModals = ({
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
               Load Mission
             </h3>
-            <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
               {[
                 {
                   id: 1,

@@ -50,7 +50,7 @@ const sizeIcon = 18;
 
 // Dashboard menu (root level)
 export const dashboardLink = {
-  href: "/dashboard/user",
+  href: "/dashboard",
   icon: FaChartBar,
   text: "Dashboard",
   size: sizeIcon,

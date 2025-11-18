@@ -16,7 +16,7 @@ const TableSkeleton = ({ rows = 2 }) => {
           </div>
         }
       >
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="overflow-x-auto scrollbar-hide">
           <table className="min-w-full text-sm text-left">
             {/* Table Header */}
             <thead>

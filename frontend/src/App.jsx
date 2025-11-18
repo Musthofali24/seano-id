@@ -95,7 +95,7 @@ function App() {
   ];
 
   const protectedRoutes = [
-    "/dashboard/user",
+    "/dashboard",
     "/tracking",
     "/missions",
     "/telemetry",
@@ -224,7 +224,7 @@ function App() {
             <Routes>
               {/* Protected Routes */}
               <Route
-                path="/dashboard/user"
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <Dashboard darkMode={darkMode} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCompass,
   FaWifi,
@@ -8,7 +8,7 @@ import {
 import { MdAirlineSeatFlat, MdSpeed } from "react-icons/md";
 import useVehicleData from "../../../hooks/useVehicleData";
 
-const TelemetryPanel = ({ selectedVehicle = null }) => {
+const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
   const { vehicles, loading } = useVehicleData();
   const [showTimeout, setShowTimeout] = useState(false);
 
@@ -270,6 +270,6 @@ const TelemetryPanel = ({ selectedVehicle = null }) => {
       </div>
     </div>
   );
-};
+});
 
 export default TelemetryPanel;

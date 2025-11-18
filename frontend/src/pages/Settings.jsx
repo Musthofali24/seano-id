@@ -7,14 +7,11 @@ const Settings = () => {
 
   return (
     <div>
-      <Title
-        title="Application Settings"
-        subtitle="Configure system preferences and user settings"
-      />
-      <div className="p-4">
-        <p className="text-gray-500 dark:text-gray-400">
-          Settings configuration will be displayed here.
-        </p>
+      <div className="flex items-center justify-between p-4">
+        <Title
+          title="Application Settings"
+          subtitle="Configure system preferences and user settings"
+        />
       </div>
     </div>
   );

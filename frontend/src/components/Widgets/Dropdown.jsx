@@ -72,7 +72,7 @@ const Dropdown = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto custom-scrollbar">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto scrollbar-hide">
           {items.length === 0 ? (
             <div className="px-4 py-3 text-gray-600 dark:text-gray-400 text-sm">
               No items available

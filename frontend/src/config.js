@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://72.61.141.126:8000'
+export const API_BASE_URL = 'https://api.seano.cloud'
 
 export const API_ENDPOINTS = {
   AUTH: {

@@ -12,7 +12,7 @@ import {
 import { MdAutoMode, MdGpsFixed, MdGpsNotFixed } from "react-icons/md";
 import useVehicleData from "../../../hooks/useVehicleData";
 
-const VehicleStatusPanel = ({ selectedVehicle }) => {
+const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   const { vehicles, loading } = useVehicleData();
   const [showTimeout, setShowTimeout] = useState(false);
   const [activeActions, setActiveActions] = useState({
@@ -420,6 +420,6 @@ const VehicleStatusPanel = ({ selectedVehicle }) => {
       </div>
     </div>
   );
-};
+});
 
 export default VehicleStatusPanel;

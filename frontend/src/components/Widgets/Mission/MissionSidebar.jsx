@@ -380,7 +380,7 @@ const MissionSidebar = ({
 
   return (
     <aside
-      className={`fixed top-14 z-30 h-screen w-72 bg-white border-r border-gray-200 dark:border-gray-700 duration-300 dark:bg-black p-4 overflow-y-auto custom-scrollbar ${
+      className={`fixed top-14 z-30 h-screen w-72 bg-white border-r border-gray-200 dark:border-gray-700 duration-300 dark:bg-black p-4 overflow-y-auto scrollbar-hide ${
         isSidebarOpen ? "md:left-64 left-16" : "left-16"
       }`}
     >
@@ -604,7 +604,7 @@ const MissionSidebar = ({
             </select>
           )}
         </div>
-        <div className="space-y-2 max-h-50 overflow-y-auto custom-scrollbar">
+        <div className="space-y-2 max-h-50 overflow-y-auto scrollbar-hide">
           {waypoints.filter((wp) => wp.type !== "zone").length > 0 ? (
             waypoints
               .filter((wp) => wp.type !== "zone")

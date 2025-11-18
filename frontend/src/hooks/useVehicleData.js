@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { API_BASE_URL } from '../config'
 
 const useVehicleData = () => {
@@ -7,7 +7,6 @@ const useVehicleData = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
 
   useEffect(() => {
-    let interval
     let loadingTimeout
 
     loadingTimeout = setTimeout(() => {
@@ -42,7 +41,12 @@ const useVehicleData = () => {
             }))
           : []
 
-        setVehicles(processedVehicles)
+        // Only update state if data actually changed
+        setVehicles(prevVehicles => {
+          const hasChanged =
+            JSON.stringify(prevVehicles) !== JSON.stringify(processedVehicles)
+          return hasChanged ? processedVehicles : prevVehicles
+        })
       } catch (error) {
         console.error('Error fetching vehicles:', error)
         // Set empty array on error instead of dummy data
@@ -54,59 +58,56 @@ const useVehicleData = () => {
       }
     }
 
+    // Fetch only once on mount - WebSocket will handle real-time updates
     fetchVehicles()
-    interval = setInterval(fetchVehicles, 5000) // Update every 5 seconds
 
     return () => {
-      clearInterval(interval)
       if (loadingTimeout) clearTimeout(loadingTimeout)
     }
   }, [])
 
-  // Calculate widget data
-  const today = new Date().toISOString().slice(0, 10)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  // Calculate widget data with useMemo to prevent unnecessary recalculations
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
 
-  const vehiclesToday = vehicles.filter(v => v.created_at.startsWith(today))
-  const vehiclesYesterday = vehicles.filter(v =>
-    v.created_at.startsWith(yesterday)
-  )
+    const vehiclesToday = vehicles.filter(v => v.created_at.startsWith(today))
+    const vehiclesYesterday = vehicles.filter(v =>
+      v.created_at.startsWith(yesterday)
+    )
 
-  const totalToday = vehiclesToday.length
-  const totalYesterday = vehiclesYesterday.length
+    const totalToday = vehiclesToday.length
+    const totalYesterday = vehiclesYesterday.length
 
-  const onMissionToday = vehiclesToday.filter(
-    v => v.status === 'on_mission'
-  ).length
-  const onMissionYesterday = vehiclesYesterday.filter(
-    v => v.status === 'on_mission'
-  ).length
+    const onMissionToday = vehiclesToday.filter(
+      v => v.status === 'on_mission'
+    ).length
+    const onMissionYesterday = vehiclesYesterday.filter(
+      v => v.status === 'on_mission'
+    ).length
 
-  const onlineToday = vehiclesToday.filter(
-    v => v.status === 'idle' || v.status === 'on_mission'
-  ).length
-  const onlineYesterday = vehiclesYesterday.filter(
-    v => v.status === 'idle' || v.status === 'on_mission'
-  ).length
+    const onlineToday = vehiclesToday.filter(
+      v => v.status === 'idle' || v.status === 'on_mission'
+    ).length
+    const onlineYesterday = vehiclesYesterday.filter(
+      v => v.status === 'idle' || v.status === 'on_mission'
+    ).length
 
-  const offlineToday = vehiclesToday.filter(v => v.status === 'offline').length
-  const offlineYesterday = vehiclesYesterday.filter(
-    v => v.status === 'offline'
-  ).length
+    const offlineToday = vehiclesToday.filter(
+      v => v.status === 'offline'
+    ).length
+    const offlineYesterday = vehiclesYesterday.filter(
+      v => v.status === 'offline'
+    ).length
 
-  const maintenanceToday = vehiclesToday.filter(
-    v => v.status === 'maintenance'
-  ).length
-  const maintenanceYesterday = vehiclesYesterday.filter(
-    v => v.status === 'maintenance'
-  ).length
+    const maintenanceToday = vehiclesToday.filter(
+      v => v.status === 'maintenance'
+    ).length
+    const maintenanceYesterday = vehiclesYesterday.filter(
+      v => v.status === 'maintenance'
+    ).length
 
-  return {
-    vehicles,
-    loading,
-    selectedVehicleId,
-    setSelectedVehicleId,
-    stats: {
+    return {
       totalToday,
       totalYesterday,
       onMissionToday,
@@ -118,6 +119,14 @@ const useVehicleData = () => {
       maintenanceToday,
       maintenanceYesterday
     }
+  }, [vehicles])
+
+  return {
+    vehicles,
+    loading,
+    selectedVehicleId,
+    setSelectedVehicleId,
+    stats
   }
 }
 

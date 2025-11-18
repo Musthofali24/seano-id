@@ -71,6 +71,16 @@
   scrollbar-color: rgba(75, 85, 99, 0.4) transparent;
 }
 
+/* Hide scrollbar completely */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* Waypoint Marker Styles */
 .custom-waypoint-marker.edit-mode .waypoint-marker:hover {
   transform: scale(1.1) !important;

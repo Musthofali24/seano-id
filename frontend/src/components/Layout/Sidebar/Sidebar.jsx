@@ -14,7 +14,7 @@ const Sidebar = ({ isSidebarOpen }) => {
       <div className="h-full flex flex-col relative">
         {/* Scrollable Content Area */}
         <div
-          className="flex-1 px-3 pt-2 overflow-y-auto custom-scrollbar"
+          className="flex-1 px-3 pt-2 overflow-y-auto scrollbar-hide"
           style={{ paddingBottom: "120px" }}
         >
           {/* Dashboard - Root Level */}

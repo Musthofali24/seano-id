@@ -13,7 +13,7 @@ import {
 import useVehicleData from "../../../hooks/useVehicleData";
 import useVehicleBattery from "../../../hooks/useVehicleBattery";
 
-const BatteryMonitoring = ({ selectedVehicle = null }) => {
+const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
   const { vehicles, loading } = useVehicleData();
   const { batteryData, loading: batteryLoading } = useVehicleBattery(
     selectedVehicle,
@@ -370,6 +370,6 @@ const BatteryMonitoring = ({ selectedVehicle = null }) => {
       </div>
     </div>
   );
-};
+});
 
 export default BatteryMonitoring;

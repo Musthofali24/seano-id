@@ -93,10 +93,7 @@ const DataHeader = ({
     <div>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4">
-        <Title
-          title="Data Management"
-          subtitle="Real-time and historical data management for autonomous USV operations"
-        />
+        <Title title="Data Management" />
 
         {/* Filter Controls */}
         <div className="flex items-center gap-3">

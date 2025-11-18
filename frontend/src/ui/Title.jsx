@@ -1,4 +1,27 @@
-const Title = ({ title, subtitle, children }) => {
+import { Link, useLocation } from "react-router-dom";
+import { FaHome, FaChevronRight } from "react-icons/fa";
+
+const Title = ({ title, subtitle, children, showBreadcrumb = true }) => {
+  const location = useLocation();
+
+  // Generate breadcrumb items from current path
+  const getBreadcrumbs = () => {
+    const paths = location.pathname.split("/").filter((path) => path);
+    const breadcrumbs = [{ name: "Home", path: "/" }];
+
+    let currentPath = "";
+    paths.forEach((path) => {
+      currentPath += `/${path}`;
+      const name =
+        path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+      breadcrumbs.push({ name, path: currentPath });
+    });
+
+    return breadcrumbs;
+  };
+
+  const breadcrumbs = getBreadcrumbs();
+
   if (children) {
     return (
       <h2 className="font-bold text-gray-700 text-2xl dark:text-gray-400">
@@ -15,6 +38,36 @@ const Title = ({ title, subtitle, children }) => {
         </h1>
         {subtitle && (
           <h2 className="text-gray-600 dark:text-gray-400">{subtitle}</h2>
+        )}
+        {showBreadcrumb && breadcrumbs.length > 1 && (
+          <nav className="flex items-center gap-2 text-sm">
+            {breadcrumbs.map((crumb, index) => (
+              <div key={crumb.path} className="flex items-center gap-2">
+                {index === 0 ? (
+                  <Link
+                    to={crumb.path}
+                    className="flex items-center gap-1 text-gray-500 hover:text-fourth dark:text-gray-400 dark:hover:text-fourth transition-colors"
+                  >
+                    <span>{crumb.name}</span>
+                  </Link>
+                ) : index === breadcrumbs.length - 1 ? (
+                  <span className="text-fourth dark:text-fourth font-medium">
+                    {crumb.name}
+                  </span>
+                ) : (
+                  <Link
+                    to={crumb.path}
+                    className="text-gray-500 hover:text-fourth dark:text-gray-400 dark:hover:text-fourth transition-colors"
+                  >
+                    {crumb.name}
+                  </Link>
+                )}
+                {index < breadcrumbs.length - 1 && (
+                  <FaChevronRight size={12} className="text-gray-400" />
+                )}
+              </div>
+            ))}
+          </nav>
         )}
       </div>
     </div>

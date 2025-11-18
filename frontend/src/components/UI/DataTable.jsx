@@ -138,7 +138,7 @@ const DataTable = ({
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-800">
+          <thead className="bg-gray-50 dark:bg-transparent">
             <tr>
               {columns.map((column, index) => (
                 <th
@@ -152,7 +152,7 @@ const DataTable = ({
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+          <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-700">
             {paginatedData.length === 0 ? (
               <tr>
                 <td
