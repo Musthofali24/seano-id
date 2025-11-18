@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // biar bisa diakses dari luar container/PC
     port: 5173, // port default vite
-    strictPort: true // kalau 5173 dipakai jangan auto ganti ke 5174
+    strictPort: true, // kalau 5173 dipakai jangan auto ganti ke 5174
+    allowedHosts: ['seano.cloud']
   },
   build: {
     rollupOptions: {
