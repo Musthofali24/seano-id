@@ -1,22 +1,14 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
-import { WidgetCard } from "../components/Widgets";
 import { RoleModal, RoleTable } from "../components/Widgets/Role";
 import useRoleData from "../hooks/useRoleData";
-import { getRoleWidgetData } from "../constant";
 import { Title } from "../ui";
-import { WidgetCardSkeleton } from "../components/Skeleton";
-import useLoadingTimeout from "../hooks/useLoadingTimeout";
 
 const Role = () => {
   useTitle("Role");
-  const { roleData, loading, stats, actions } = useRoleData();
+  const { roleData, loading, actions } = useRoleData();
   const [showModal, setShowModal] = useState(false);
-
-  const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
-  const shouldShowSkeleton = timeoutLoading && loading && roleData.length === 0;
-  const widgetData = getRoleWidgetData(stats, roleData);
 
   const handleAddRole = async (formData) => {
     const result = await actions.addRole(formData);
@@ -58,17 +50,6 @@ const Role = () => {
           <FaPlus size={16} />
           Add Role
         </button>
-      </div>
-
-      {/* Widget Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 px-4 pb-4">
-        {shouldShowSkeleton
-          ? Array.from({ length: 5 }).map((_, idx) => (
-              <WidgetCardSkeleton key={idx} />
-            ))
-          : widgetData.map((widget, index) => (
-              <WidgetCard key={index} {...widget} />
-            ))}
       </div>
 
       {/* Roles Table */}

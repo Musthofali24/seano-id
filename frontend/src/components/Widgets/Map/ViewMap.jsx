@@ -1,7 +1,6 @@
 import {
   MapContainer,
   TileLayer,
-  GeoJSON,
   Marker,
   Popup,
   useMapEvents,

@@ -26,7 +26,6 @@ services:
     restart: always
     ports:
       - "8000:8000"
-      - "5173:5173"
     env_file:
       - ./backend/.env
     depends_on:
@@ -36,6 +35,19 @@ services:
       - ./backend:/app
     networks:
       - seano_net
+
+  frontend:
+    build: ./frontend
+    container_name: seano_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - seano_net
+    environment:
+      - VITE_API_URL=http://backend:8000
 
 networks:
   seano_net:

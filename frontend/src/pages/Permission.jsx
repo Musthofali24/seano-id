@@ -1,26 +1,17 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
-import { WidgetCard } from "../components/Widgets";
 import {
   PermissionModal,
   PermissionTable,
 } from "../components/Widgets/Permission";
 import usePermissionData from "../hooks/usePermissionData";
-import { getPermissionWidgetData } from "../constant";
 import { Title } from "../ui";
-import { WidgetCardSkeleton } from "../components/Skeleton";
-import useLoadingTimeout from "../hooks/useLoadingTimeout";
 
 const Permission = () => {
   useTitle("Permission");
-  const { permissionData, loading, stats, actions } = usePermissionData();
+  const { permissionData, loading, actions } = usePermissionData();
   const [showModal, setShowModal] = useState(false);
-
-  const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
-  const shouldShowSkeleton =
-    timeoutLoading && loading && permissionData.length === 0;
-  const widgetData = getPermissionWidgetData(stats, permissionData);
 
   const handleAddPermission = async (formData) => {
     const result = await actions.addPermission(formData);
@@ -65,17 +56,6 @@ const Permission = () => {
           <FaPlus size={16} />
           Add Permission
         </button>
-      </div>
-
-      {/* Widget Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 px-4 pb-4">
-        {shouldShowSkeleton
-          ? Array.from({ length: 5 }).map((_, idx) => (
-              <WidgetCardSkeleton key={idx} />
-            ))
-          : widgetData.map((widget, index) => (
-              <WidgetCard key={index} {...widget} />
-            ))}
       </div>
 
       {/* Permissions Table */}

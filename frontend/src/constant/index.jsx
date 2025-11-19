@@ -1132,7 +1132,12 @@ export const getTelemetryCards = (hasData = true) => [
 ];
 
 // User Widget Data - Similar to other widget data patterns
-export const getUserWidgetData = (stats, users) => {
+export const getUserWidgetData = (
+  stats,
+  users,
+  roles = [],
+  permissions = []
+) => {
   return [
     {
       title: "Total Users",
@@ -1165,24 +1170,24 @@ export const getUserWidgetData = (stats, users) => {
           : `${stats.inactive} users inactive`,
     },
     {
-      title: "Top Domain",
-      value: users.length > 0 ? stats.topDomain : "N/A",
-      icon: <TbSettings size={26} className="text-purple-500" />,
+      title: "Total Roles",
+      value: roles.length,
+      icon: <FaUserShield size={26} className="text-purple-500" />,
       trendIcon: <FaArrowRight className="text-gray-400" />,
       trendText:
-        users.length === 0
-          ? "No data available"
-          : `Most users from ${stats.topDomain}`,
+        roles.length === 0
+          ? "No roles available"
+          : `${roles.length} roles created`,
     },
     {
-      title: "Active Rate",
-      value: users.length > 0 ? `${stats.activeRate}%` : "0%",
-      icon: <FaChartBar size={26} className="text-cyan-500" />,
+      title: "Total Permissions",
+      value: permissions.length,
+      icon: <FaKey size={26} className="text-cyan-500" />,
       trendIcon: <FaArrowRight className="text-gray-400" />,
       trendText:
-        users.length === 0
-          ? "No data available"
-          : `${stats.activeRate}% users active`,
+        permissions.length === 0
+          ? "No permissions available"
+          : `${permissions.length} permissions created`,
     },
   ];
 };

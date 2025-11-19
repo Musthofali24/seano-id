@@ -4,6 +4,8 @@ import useTitle from "../hooks/useTitle";
 import { WidgetCard } from "../components/Widgets";
 import { UserModal, UserTable } from "../components/Widgets/User";
 import useUserData from "../hooks/useUserData";
+import useRoleData from "../hooks/useRoleData";
+import usePermissionData from "../hooks/usePermissionData";
 import { getUserWidgetData } from "../constant";
 import { Title } from "../ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
@@ -12,11 +14,18 @@ import useLoadingTimeout from "../hooks/useLoadingTimeout";
 const User = () => {
   useTitle("User");
   const { userData, loading, stats, actions } = useUserData();
+  const { roleData } = useRoleData();
+  const { permissionData } = usePermissionData();
   const [showModal, setShowModal] = useState(false);
 
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && userData.length === 0;
-  const widgetData = getUserWidgetData(stats, userData);
+  const widgetData = getUserWidgetData(
+    stats,
+    userData,
+    roleData,
+    permissionData
+  );
 
   const handleAddUser = async (formData) => {
     const result = await actions.addUser(formData);
