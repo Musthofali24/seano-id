@@ -19,11 +19,18 @@ async def seed_users():
             print("[WARN] No Admin role found. Please seed roles first.")
             return
 
+        result = await session.execute(select(Role).where(Role.name == "User"))
+        user_role_obj = result.scalar_one_or_none()
+        if not user_role_obj:
+            print("[WARN] No User role found. Please seed roles first.")
+            return
+
         password = "Seano2025*"
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
             "utf-8"
         )
 
+        # Create Admin user
         admin_user = User(
             email="seanousv@gmail.com",
             password_hash=hashed,
@@ -34,10 +41,34 @@ async def seed_users():
         session.add(admin_user)
         await session.flush()
 
-        user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
+        admin_user_role = UserRole(user_id=admin_user.id, role_id=admin_role.id)
+        session.add(admin_user_role)
+
+        # Create Regular user
+        regular_user = User(
+            email="user@example.com",
+            password_hash=hashed,
+            full_name="Regular User",
+            is_verified=True,
+        )
+
+        session.add(regular_user)
+        await session.flush()
+
+        user_role = UserRole(user_id=regular_user.id, role_id=user_role_obj.id)
         session.add(user_role)
 
         await session.commit()
-        print(
-            f"[SUCCESS] Admin user seeded (email: seanousv@gmail.com, pass: {password})"
-        )
+
+        print("\n" + "=" * 70)
+        print("✅ USERS SEEDED SUCCESSFULLY")
+        print("=" * 70)
+        print(f"\n📌 ADMIN USER:")
+        print(f"   Email:    seanousv@gmail.com")
+        print(f"   Password: {password}")
+        print(f"   Role:     Admin (43 permissions)")
+        print(f"\n📌 REGULAR USER:")
+        print(f"   Email:    user@example.com")
+        print(f"   Password: {password}")
+        print(f"   Role:     User (25 permissions)")
+        print("\n" + "=" * 70)

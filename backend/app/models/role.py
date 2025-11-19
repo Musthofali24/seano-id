@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
 
+
 class Role(Base):
     __tablename__ = "roles"
 
@@ -10,9 +11,11 @@ class Role(Base):
     name = Column(String(50), unique=True, nullable=False)
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     users = relationship("UserRole", back_populates="role")
+    permissions = relationship("RolePermission", back_populates="role")
+
 
 class UserRole(Base):
     __tablename__ = "user_roles"

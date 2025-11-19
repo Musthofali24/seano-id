@@ -9,15 +9,24 @@ from app.models.sensor import Sensor
 from app.models.user import User
 from app.schemas.sensor import SensorCreate, SensorUpdate, SensorResponse
 from app.services.auth_service import get_authenticated_user
+from app.services.permission_service import make_permission_checker
 
 router = APIRouter(tags=["Sensors"])
+
+# Permission checkers
+can_create_sensors = make_permission_checker("sensors.create")
+can_read_sensors = make_permission_checker("sensors.read")
+can_update_sensors = make_permission_checker("sensors.update")
+can_delete_sensors = make_permission_checker("sensors.delete")
+
 
 # Post Data
 @router.post("/", response_model=SensorResponse)
 async def create_sensor(
-    sensor: SensorCreate, 
+    sensor: SensorCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_create_sensors),
 ):
     new_sensor = Sensor(**sensor.dict())
     db.add(new_sensor)
@@ -25,34 +34,41 @@ async def create_sensor(
     await db.refresh(new_sensor)
     return new_sensor
 
+
 # Get All Data
 @router.get("/", response_model=List[SensorResponse])
 async def get_sensors(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_read_sensors),
 ):
     result = await db.execute(select(Sensor))
     return result.scalars().all()
 
+
 # Get Data by Id
 @router.get("/{sensor_id}", response_model=SensorResponse)
 async def get_sensor(
-    sensor_id: int, 
+    sensor_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_read_sensors),
 ):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
     sensor = result.scalars().first()
     if not sensor:
         raise HTTPException(status_code=404, detail="Sensor not found")
     return sensor
+
+
 # Update Data
 @router.put("/{sensor_id}", response_model=SensorResponse)
 async def update_sensor(
-    sensor_id: int, 
-    update: SensorUpdate, 
+    sensor_id: int,
+    update: SensorUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_update_sensors),
 ):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
     sensor = result.scalars().first()
@@ -66,11 +82,13 @@ async def update_sensor(
     await db.refresh(sensor)
     return sensor
 
+
 @router.delete("/{sensor_id}")
 async def delete_sensor(
-    sensor_id: int, 
+    sensor_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_authenticated_user)
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_delete_sensors),
 ):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
     sensor = result.scalars().first()

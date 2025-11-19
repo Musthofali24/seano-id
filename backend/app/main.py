@@ -13,6 +13,7 @@ from .routes import (
     vehicle_log,
     user,
     role,
+    permission,
     auth,
     mqtt,
     websocket,
@@ -59,6 +60,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(role.router, prefix="/roles")
+app.include_router(permission.router, prefix="/permissions")
 app.include_router(sensor.router, prefix="/sensors", tags=["Sensors"])
 app.include_router(sensor_type.router, prefix="/sensor-types", tags=["Sensor Types"])
 app.include_router(sensor_log.router, prefix="/sensor-logs", tags=["Sensor Logs"])
