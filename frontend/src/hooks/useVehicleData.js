@@ -16,7 +16,20 @@ const useVehicleData = () => {
     const fetchVehicles = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`${API_BASE_URL}/vehicles/`)
+
+        // Get token from localStorage
+        const token = localStorage.getItem('access_token')
+
+        const response = await fetch(`${API_BASE_URL}/vehicles/`, {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            : {
+                'Content-Type': 'application/json'
+              }
+        })
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)

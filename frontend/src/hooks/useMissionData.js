@@ -12,11 +12,15 @@ const useMissionData = () => {
       setLoading(true)
       setError(null)
 
+      // Get token from localStorage
+      const token = localStorage.getItem('access_token')
+
       // API endpoint untuk missions
       const response = await fetch(`${API_BASE_URL}/api/missions`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` })
         },
         // Add timeout
         signal: AbortSignal.timeout(10000) // 10 second timeout
