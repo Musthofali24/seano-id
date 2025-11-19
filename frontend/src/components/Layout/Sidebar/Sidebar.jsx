@@ -32,6 +32,9 @@ const Sidebar = ({ isSidebarOpen }) => {
                 title={group.title}
                 items={group.items}
                 isSidebarOpen={isSidebarOpen}
+                adminOnly={group.adminOnly}
+                userOnly={group.userOnly}
+                requiredPermission={group.requiredPermission}
               />
             ))}
           </div>

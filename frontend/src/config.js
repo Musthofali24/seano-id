@@ -29,6 +29,8 @@ export const API_ENDPOINTS = {
     DELETE: id => `${API_BASE_URL}/roles/${id}`
   },
 
+  PERMISSIONS: `${API_BASE_URL}/permissions/`,
+
   SENSORS: {
     LIST: `${API_BASE_URL}/sensors/`,
     BY_ID: id => `${API_BASE_URL}/sensors/${id}`,

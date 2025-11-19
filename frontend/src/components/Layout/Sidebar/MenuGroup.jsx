@@ -1,8 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import LinkItem from "./LinkItem";
+import { usePermission } from "../../../hooks/usePermission";
+import { AuthContext } from "../../../contexts/AuthContext";
 
-const MenuGroup = ({ title, items, isSidebarOpen }) => {
+const MenuGroup = ({
+  title,
+  items,
+  isSidebarOpen,
+  adminOnly,
+  userOnly,
+  requiredPermission,
+}) => {
+  const { user } = useContext(AuthContext);
+  const { hasPermission } = usePermission();
+
   // Load initial state from localStorage, default to true (expanded)
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem(`menuGroup_${title}_expanded`);
@@ -20,6 +32,41 @@ const MenuGroup = ({ title, items, isSidebarOpen }) => {
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
   };
+
+  // Filter items based on user role and permissions
+  const filteredItems = useMemo(() => {
+    if (!user) return [];
+
+    const isAdmin = user.role === "Admin";
+
+    return items.filter((item) => {
+      // Admin-only items - only show to admins
+      if (item.adminOnly && !isAdmin) {
+        return false;
+      }
+
+      // Check permission if required
+      if (item.requiredPermission && !hasPermission(item.requiredPermission)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [user, items, hasPermission]);
+
+  // Don't show group if no items available or admin-only group for non-admins
+  if (adminOnly && user?.role !== "Admin") {
+    return null;
+  }
+
+  // Don't show group if user-only group for admins
+  if (userOnly && user?.role === "Admin") {
+    return null;
+  }
+
+  if (filteredItems.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mb-3">
@@ -59,7 +106,7 @@ const MenuGroup = ({ title, items, isSidebarOpen }) => {
               : ""
           }`}
         >
-          {items.map((item, index) => (
+          {filteredItems.map((item, index) => (
             <LinkItem key={index} isSidebarOpen={isSidebarOpen} {...item} />
           ))}
         </ul>

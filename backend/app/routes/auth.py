@@ -5,7 +5,16 @@ from datetime import timedelta
 from ..database import get_db
 from ..models.user import User
 from ..schemas.user import (
-    RegisterEmailRequest, RegisterResponse, VerifyEmailRequest, VerifyEmailResponse, SetCredentialRequest, UserLogin, UserAuth, UserResponse, ResendVerificationRequest, ResendVerificationResponse
+    RegisterEmailRequest,
+    RegisterResponse,
+    VerifyEmailRequest,
+    VerifyEmailResponse,
+    SetCredentialRequest,
+    UserLogin,
+    UserAuth,
+    UserResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
 )
 from ..services.auth_service import (
     create_access_token,
@@ -15,15 +24,18 @@ from ..services.auth_service import (
     set_user_credentials,
     resend_verification_email,
     get_authenticated_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    get_user_role,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+
 @router.post("/register-email", response_model=RegisterResponse)
-async def register_email( req: RegisterEmailRequest, db: AsyncSession = Depends(get_db)):
+async def register_email(req: RegisterEmailRequest, db: AsyncSession = Depends(get_db)):
     await create_user_email_only(req.email, db)
     return RegisterResponse(message="Verification link has been sent to your email")
+
 
 @router.post("/verify-email", response_model=VerifyEmailResponse)
 async def verify_email_endpoint(
@@ -34,7 +46,10 @@ async def verify_email_endpoint(
     Hanya validasi token dan mengizinkan user lanjut ke set username/password.
     """
     await verify_email_token(verify_data.token, db)
-    return VerifyEmailResponse(message="Token valid. You can now set username & password.")
+    return VerifyEmailResponse(
+        message="Token valid. You can now set username & password."
+    )
+
 
 @router.post("/set-credentials", response_model=VerifyEmailResponse)
 async def set_credentials(
@@ -45,7 +60,10 @@ async def set_credentials(
     Sekaligus mengubah is_verified=True.
     """
     await set_user_credentials(data.token, data.username, data.password, db)
-    return VerifyEmailResponse(message="Account activated successfully! You can now login.")
+    return VerifyEmailResponse(
+        message="Account activated successfully! You can now login."
+    )
+
 
 @router.post("/resend-verification", response_model=ResendVerificationResponse)
 async def resend_verification(
@@ -54,6 +72,7 @@ async def resend_verification(
     """Kirim ulang link verifikasi email"""
     await resend_verification_email(resend_data.email, db)
     return ResendVerificationResponse(message="Verification email resent successfully.")
+
 
 @router.post("/login", response_model=UserAuth)
 async def login(login_data: UserLogin, db: AsyncSession = Depends(get_db)):
@@ -77,30 +96,49 @@ async def login(login_data: UserLogin, db: AsyncSession = Depends(get_db)):
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
 
+    # Build user response with role
+    user_response = UserResponse.model_validate(user)
+    user_response.role = await get_user_role(user, db)
+
     return UserAuth(
-        user=UserResponse.model_validate(user),
+        user=user_response,
         access_token=access_token,
         token_type="bearer",
     )
 
+
 @router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_authenticated_user)):
+async def get_current_user_info(
+    current_user: User = Depends(get_authenticated_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Ambil data user yang sedang login"""
-    return UserResponse.model_validate(current_user)
+    user_response = UserResponse.model_validate(current_user)
+    user_response.role = await get_user_role(current_user, db)
+    return user_response
+
 
 @router.post("/refresh", response_model=UserAuth)
-async def refresh_token(current_user: User = Depends(get_authenticated_user)):
+async def refresh_token(
+    current_user: User = Depends(get_authenticated_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Refresh access token"""
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(current_user.id)}, expires_delta=access_token_expires
     )
 
+    # Build user response with role
+    user_response = UserResponse.model_validate(current_user)
+    user_response.role = await get_user_role(current_user, db)
+
     return UserAuth(
-        user=UserResponse.model_validate(current_user),
+        user=user_response,
         access_token=access_token,
         token_type="bearer",
     )
+
 
 @router.post("/logout")
 async def logout():

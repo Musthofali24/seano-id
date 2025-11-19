@@ -25,4 +25,4 @@ class UserRole(Base):
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
 
     role = relationship("Role", back_populates="users")
-    user = relationship("User", back_populates="roles")
+    user = relationship("User", back_populates="user_roles")

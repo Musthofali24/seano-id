@@ -34,16 +34,20 @@ export function AuthProvider({ children }) {
 
       if (response.ok) {
         const userData = await response.json();
+        // Store user with permissions in localStorage for quick access
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
       } else {
         // Token invalid, clear storage
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
       }
     } catch (error) {
       console.error("Auth check failed:", error);
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
     } finally {
       setLoading(false);
     }
@@ -109,6 +113,8 @@ export function AuthProvider({ children }) {
       if (data.user) {
         // User data is already in login response
         console.log("Got user data from login response:", data.user);
+        // Store user in localStorage for quick access
+        localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
         navigate("/dashboard");
         return { success: true };
@@ -124,6 +130,7 @@ export function AuthProvider({ children }) {
       if (userResponse.ok) {
         const userData = await userResponse.json();
         console.log("Got user data from /auth/me:", userData);
+        localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
 
         // Redirect to dashboard
@@ -163,6 +170,7 @@ export function AuthProvider({ children }) {
       // Clear storage and state
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user");
       setUser(null);
 
       // Redirect to login

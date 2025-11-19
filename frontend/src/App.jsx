@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { PermissionProvider } from "./contexts/PermissionProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import RegistrationRoute from "./components/RegistrationRoute";
@@ -374,7 +375,9 @@ function App() {
 const AppWithRouter = () => (
   <BrowserRouter>
     <AuthProvider>
-      <App />
+      <PermissionProvider>
+        <App />
+      </PermissionProvider>
     </AuthProvider>
   </BrowserRouter>
 );

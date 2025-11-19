@@ -20,4 +20,4 @@ class User(Base):
     )
 
     vehicles = relationship("Vehicle", back_populates="user")
-    roles = relationship("UserRole", back_populates="user")
+    user_roles = relationship("UserRole", back_populates="user")
