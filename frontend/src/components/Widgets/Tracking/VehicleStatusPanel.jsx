@@ -10,11 +10,30 @@ import {
   FaStop,
 } from "react-icons/fa";
 import { MdAutoMode, MdGpsFixed, MdGpsNotFixed } from "react-icons/md";
+import { API_ENDPOINTS } from "../../../config";
 import useVehicleData from "../../../hooks/useVehicleData";
+import useMQTT from "../../../hooks/useMQTT";
 
+/**
+ * VehicleStatusPanel - Panel Status Kendaraan
+ *
+ * SUMBER DATA:
+ * - Historis: useVehicleData() hook → /vehicles/ API endpoint
+ * - Real-time: WebSocket via useMQTT hook → seano/{registration_code}/vehicle_log
+ *
+ * CARA KERJA:
+ * - Fetch semua kendaraan dari API via useVehicleData()
+ * - Subscribe WebSocket untuk real-time updates
+ * - Merge data real-time dengan data historis
+ * - Update otomatis ketika selectedVehicle berubah atau data baru masuk
+ */
 const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   const { vehicles, loading } = useVehicleData();
+  const { subscribe, unsubscribe, messages } = useMQTT();
   const [showTimeout, setShowTimeout] = useState(false);
+  const [historicalData, setHistoricalData] = useState(null);
+  const [realtimeData, setRealtimeData] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [activeActions, setActiveActions] = useState({
     start: false,
     pause: false,
@@ -32,6 +51,121 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     }));
   };
 
+  // Fetch historical vehicle log data from database
+  useEffect(() => {
+    const fetchHistoricalData = async () => {
+      // Only fetch when we have a selected vehicle
+      if (!selectedVehicle?.id) {
+        console.log("📡 VehicleStatusPanel: No vehicle selected yet");
+        return;
+      }
+
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.error(
+          "📡 VehicleStatusPanel: No access_token found in localStorage"
+        );
+        return;
+      }
+
+      try {
+        console.log(
+          "📡 VehicleStatusPanel: Fetching historical data for vehicle",
+          selectedVehicle.id
+        );
+        const url = `${API_ENDPOINTS.VEHICLE_LOGS.LIST}?vehicle_id=${selectedVehicle.id}&limit=1`;
+        console.log("📡 VehicleStatusPanel: URL:", url);
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log(
+          "📡 VehicleStatusPanel: Fetch response status:",
+          response.status
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("📡 VehicleStatusPanel: Received data:", data);
+          if (data && Array.isArray(data) && data.length > 0) {
+            console.log(
+              "✅ VehicleStatusPanel: Setting historical data:",
+              data[0]
+            );
+            setHistoricalData(data[0]);
+          } else {
+            console.warn("📡 VehicleStatusPanel: No data returned from API");
+          }
+        } else {
+          console.error(
+            "📡 VehicleStatusPanel: API response error:",
+            response.status,
+            response.statusText
+          );
+          const errorText = await response.text();
+          console.error("📡 VehicleStatusPanel: Error details:", errorText);
+        }
+      } catch (error) {
+        console.error("📡 VehicleStatusPanel: Fetch error:", error.message);
+      }
+    };
+
+    fetchHistoricalData();
+  }, [selectedVehicle?.id]);
+
+  // Subscribe to WebSocket for real-time updates
+  useEffect(() => {
+    if (!selectedVehicle?.code) return;
+
+    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
+    console.log("📡 VehicleStatusPanel: Subscribing to:", topic);
+    subscribe(topic);
+
+    return () => {
+      unsubscribe(topic);
+    };
+  }, [selectedVehicle, subscribe, unsubscribe]);
+
+  // Listen to real-time messages and track connection timeout
+  useEffect(() => {
+    if (!selectedVehicle?.code) return;
+
+    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
+    const message = messages[topic];
+
+    if (message && message.data) {
+      console.log("📡 VehicleStatusPanel: Real-time update:", message.data);
+      setRealtimeData(message.data);
+      setIsConnected(true);
+    } else {
+      // If no real-time data but we have historical data, still show as connected
+      if (historicalData) {
+        console.log(
+          "📡 VehicleStatusPanel: No real-time data, using historical data"
+        );
+        setIsConnected(true);
+      }
+    }
+  }, [messages, selectedVehicle, historicalData]);
+
+  // Monitor connection status with 15-second timeout
+  useEffect(() => {
+    if (!realtimeData) return;
+
+    const timeout = setTimeout(() => {
+      setIsConnected(false);
+      console.log(
+        "📡 VehicleStatusPanel: Connection timeout - no data received for 15 seconds"
+      );
+    }, 15000);
+
+    return () => clearTimeout(timeout);
+  }, [realtimeData]);
+
   // Set timeout to show default values after 5 seconds
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -43,24 +177,31 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  // Find current vehicle data
-  const currentVehicle = vehicles.find((v) => v.id === selectedVehicle) || {};
+  // Find current vehicle data and merge with real-time and historical data
+  const currentVehicle =
+    vehicles.find((v) => v.id === selectedVehicle?.id) || {};
 
-  // Vehicle states with default fallback values
+  // Merge: currentVehicle (vehicle metadata) → historicalData (latest DB data) → realtimeData (live WebSocket)
+  // Real-time takes priority, then historical DB data, then fallback to vehicle metadata
+  const mergedData = { ...currentVehicle, ...historicalData, ...realtimeData };
+
+  // Vehicle states with proper data fallback
   const vehicleStates = {
     connected:
-      currentVehicle.connected !== undefined ? currentVehicle.connected : null,
-    armed: currentVehicle.armed !== undefined ? currentVehicle.armed : null,
-    guided: currentVehicle.guided !== undefined ? currentVehicle.guided : null,
+      isConnected ||
+      (historicalData &&
+        historicalData.rssi !== undefined &&
+        historicalData.rssi !== null)
+        ? true
+        : false,
+    armed: mergedData.armed !== undefined ? mergedData.armed : null,
+    guided: mergedData.guided !== undefined ? mergedData.guided : null,
     manual_input:
-      currentVehicle.manual_input !== undefined
-        ? currentVehicle.manual_input
-        : null,
-    mode: currentVehicle.mode || null,
+      mergedData.manual_input !== undefined ? mergedData.manual_input : null,
+    mode: mergedData.mode || null,
+    gps_fix: mergedData.gps_fix !== undefined ? mergedData.gps_fix : null,
     system_status:
-      currentVehicle.system_status !== undefined
-        ? currentVehicle.system_status
-        : null,
+      mergedData.system_status !== undefined ? mergedData.system_status : null,
   };
 
   const getModeColor = (mode) => {
@@ -82,14 +223,50 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     if (status === null || status === undefined) {
       return { text: "N/A", color: "text-gray-600" };
     }
-    switch (status) {
+
+    // Handle both string and number status values
+    const statusStr =
+      typeof status === "string" ? status.toUpperCase() : String(status);
+
+    // Match against status enum names
+    if (statusStr.includes("UNKNOWN")) {
+      return { text: "Unknown", color: "text-gray-600" };
+    }
+    if (statusStr.includes("BOOT")) {
+      return { text: "Boot", color: "text-yellow-600" };
+    }
+    if (statusStr.includes("CALIBRATING")) {
+      return { text: "Calibrating", color: "text-blue-600" };
+    }
+    if (statusStr.includes("STANDBY")) {
+      return { text: "Standby", color: "text-yellow-600" };
+    }
+    if (statusStr.includes("ACTIVE")) {
+      return { text: "Active", color: "text-green-600" };
+    }
+    if (statusStr.includes("CRITICAL")) {
+      return { text: "Critical", color: "text-red-600" };
+    }
+    if (statusStr.includes("EMERGENCY")) {
+      return { text: "Emergency", color: "text-red-800" };
+    }
+
+    // Fallback for numeric values
+    const statusNum = typeof status === "string" ? parseInt(status) : status;
+    switch (statusNum) {
       case 0:
-        return { text: "Initializing", color: "text-yellow-600" };
+        return { text: "Unknown", color: "text-gray-600" };
       case 1:
-        return { text: "System Ready", color: "text-green-600" };
+        return { text: "Boot", color: "text-yellow-600" };
       case 2:
-        return { text: "Critical", color: "text-red-600" };
+        return { text: "Calibrating", color: "text-blue-600" };
       case 3:
+        return { text: "Standby", color: "text-yellow-600" };
+      case 4:
+        return { text: "Active", color: "text-green-600" };
+      case 5:
+        return { text: "Critical", color: "text-red-600" };
+      case 6:
         return { text: "Emergency", color: "text-red-800" };
       default:
         return { text: "Unknown", color: "text-gray-600" };
@@ -164,7 +341,9 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
         <div
           className={`p-3 rounded-lg border ${
-            vehicleStates.armed
+            vehicleStates.armed === null
+              ? "bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800"
+              : vehicleStates.armed
               ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800"
               : "bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800"
           }`}
@@ -172,7 +351,9 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           <div className="flex items-center gap-2 mb-1">
             <FaShieldAlt
               className={
-                vehicleStates.armed ? "text-orange-600" : "text-gray-400"
+                vehicleStates.armed === true
+                  ? "text-orange-600"
+                  : "text-gray-400"
               }
             />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -214,44 +395,71 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
         <div className="flex items-center gap-3 text-sm">
           <div className="flex items-center gap-2">
-            {vehicleStates.guided === null ? (
-              <MdGpsNotFixed className="text-gray-400" />
-            ) : vehicleStates.guided ? (
-              <MdGpsFixed className="text-blue-600" />
-            ) : (
-              <MdGpsNotFixed className="text-gray-400" />
-            )}
+            {(() => {
+              const gpsNum =
+                typeof vehicleStates.gps_fix === "string"
+                  ? parseInt(vehicleStates.gps_fix)
+                  : vehicleStates.gps_fix;
+              return gpsNum === null || gpsNum === 0 ? (
+                <MdGpsNotFixed className="text-gray-400" />
+              ) : gpsNum >= 3 ? (
+                <MdGpsFixed className="text-green-600" />
+              ) : (
+                <MdGpsFixed className="text-yellow-600" />
+              );
+            })()}
             <span
-              className={
-                vehicleStates.guided === null
+              className={(() => {
+                const gpsNum =
+                  typeof vehicleStates.gps_fix === "string"
+                    ? parseInt(vehicleStates.gps_fix)
+                    : vehicleStates.gps_fix;
+                return gpsNum === null || gpsNum === 0
                   ? "text-gray-500"
-                  : vehicleStates.guided
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-gray-500"
-              }
+                  : gpsNum >= 3
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-yellow-600 dark:text-yellow-400";
+              })()}
             >
               GPS{" "}
-              {vehicleStates.guided === null
-                ? "N/A"
-                : vehicleStates.guided
-                ? "Guided"
-                : "Manual"}
+              {(() => {
+                const gpsNum =
+                  typeof vehicleStates.gps_fix === "string"
+                    ? parseInt(vehicleStates.gps_fix)
+                    : vehicleStates.gps_fix;
+                return gpsNum === null
+                  ? "N/A"
+                  : gpsNum === 0
+                  ? "No Fix"
+                  : gpsNum === 1
+                  ? "Dead Reckoning"
+                  : gpsNum === 2
+                  ? "2D Fix"
+                  : gpsNum === 3
+                  ? "3D Fix"
+                  : `${gpsNum}D Fix`;
+              })()}
             </span>
           </div>
         </div>
       </div>
 
       {/* System Status */}
-      <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+      <div className="mb-6 p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
         <div className="flex items-center gap-2 mb-2">
-          <FaExclamationTriangle className={systemStatus.color} />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <FaExclamationTriangle className={systemStatus.color} size={16} />
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             System Status
           </span>
         </div>
-        <p className={`text-sm font-semibold ${systemStatus.color}`}>
+        <p className={`text-lg font-bold ${systemStatus.color}`}>
           {systemStatus.text}
         </p>
+        {mergedData.system_status && (
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+            Status Code: {mergedData.system_status}
+          </p>
+        )}
       </div>
 
       {/* Quick Actions */}

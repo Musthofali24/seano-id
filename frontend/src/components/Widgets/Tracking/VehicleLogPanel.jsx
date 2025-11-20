@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaCog,
   FaInfoCircle,
@@ -6,97 +6,119 @@ import {
   FaCheckCircle,
   FaTimesCircle,
 } from "react-icons/fa";
+import { API_ENDPOINTS } from "../../../config";
 
+/**
+ * VehicleLogPanel - Panel Log Kendaraan
+ *
+ * SUMBER DATA:
+ * - Historis: GET /vehicle-logs/?vehicle_id={id}&limit=100 (API)
+ * - Real-time: MQTT topic `seano/{vehicleId}/vehicle_log` (akan ditambah di masa depan)
+ *
+ * CARA KERJA:
+ * - Fetch log kendaraan dari API saat mount/ubah vehicle
+ * - Filter logs berdasarkan kategori (system, gps, power, nav, comm)
+ * - Update otomatis ketika selectedVehicle berubah
+ *
+ * @param {object} selectedVehicle - Vehicle object (with id and code) from parent
+ */
 const VehicleLogPanel = ({ selectedVehicle = null }) => {
   const [activeTab, setActiveTab] = useState("system");
+  const [logData, setLogData] = useState({
+    system: [],
+    gps: [],
+    power: [],
+    nav: [],
+    comm: [],
+  });
+  const [loading, setLoading] = useState(false);
 
-  // Mock log data - should come from API
-  const logData = {
-    system: [
-      {
-        id: 1,
-        timestamp: "10:25:30",
-        level: "INFO",
-        message: "Vehicle system initialized successfully",
-        module: "SYSTEM",
-      },
-      {
-        id: 2,
-        timestamp: "10:25:45",
-        level: "INFO",
-        message: "GPS lock acquired - 8 satellites",
-        module: "GPS",
-      },
-      {
-        id: 3,
-        timestamp: "10:26:12",
-        level: "WARNING",
-        message: "Battery voltage below optimal (12.2V)",
-        module: "POWER",
-      },
-      {
-        id: 4,
-        timestamp: "10:26:30",
-        level: "INFO",
-        message: "Mission waypoint #3 reached",
-        module: "NAV",
-      },
-      {
-        id: 5,
-        timestamp: "10:27:01",
-        level: "ERROR",
-        message: "Communication timeout with ground station",
-        module: "COMM",
-      },
-    ],
-    vehicle: [
-      {
-        id: 1,
-        timestamp: "10:25:15",
-        battery_voltage: 12.4,
-        battery_current: 2.1,
-        speed: 2.3,
-        heading: 145.8,
-        mode: "AUTO",
-      },
-      {
-        id: 2,
-        timestamp: "10:25:30",
-        battery_voltage: 12.3,
-        battery_current: 2.2,
-        speed: 2.5,
-        heading: 146.2,
-        mode: "AUTO",
-      },
-      {
-        id: 3,
-        timestamp: "10:25:45",
-        battery_voltage: 12.2,
-        battery_current: 2.3,
-        speed: 2.1,
-        heading: 145.5,
-        mode: "AUTO",
-      },
-      {
-        id: 4,
-        timestamp: "10:26:00",
-        battery_voltage: 12.1,
-        battery_current: 2.4,
-        speed: 1.8,
-        heading: 144.9,
-        mode: "MANUAL",
-      },
-      {
-        id: 5,
-        timestamp: "10:26:15",
-        battery_voltage: 12.0,
-        battery_current: 2.5,
-        speed: 1.5,
-        heading: 144.2,
-        mode: "MANUAL",
-      },
-    ],
-  };
+  // Fetch vehicle logs dari API
+  useEffect(() => {
+    if (!selectedVehicle?.id) return;
+
+    const fetchVehicleLogs = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(
+          API_ENDPOINTS.VEHICLE_LOGS.LIST +
+            `?vehicle_id=${selectedVehicle.id}&limit=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Process logs into categories
+          const processed = {
+            system: [],
+            gps: [],
+            power: [],
+            nav: [],
+            comm: [],
+          };
+
+          data.forEach((log) => {
+            let logData = {};
+
+            try {
+              if (typeof log.data === "string") {
+                logData = JSON.parse(log.data);
+              } else {
+                logData = log.data;
+              }
+            } catch (e) {
+              logData = {};
+            }
+
+            const logEntry = {
+              id: log.id,
+              timestamp: new Date(log.created_at).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }),
+              level: logData.level || "INFO",
+              message: logData.message || JSON.stringify(logData),
+              module: logData.module || "SYSTEM",
+            };
+
+            // Categorize by module
+            const module = logEntry.module.toUpperCase();
+            if (module.includes("GPS") || module.includes("NAV")) {
+              processed.gps.push(logEntry);
+            } else if (module.includes("POWER") || module.includes("BATTERY")) {
+              processed.power.push(logEntry);
+            } else if (
+              module.includes("MISSION") ||
+              module.includes("WAYPOINT")
+            ) {
+              processed.nav.push(logEntry);
+            } else if (module.includes("COMM") || module.includes("RADIO")) {
+              processed.comm.push(logEntry);
+            } else {
+              processed.system.push(logEntry);
+            }
+          });
+
+          setLogData(processed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch vehicle logs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicleLogs();
+  }, [selectedVehicle]);
+
+  const currentLogs = logData[activeTab] || [];
 
   const getLogLevelIcon = (level) => {
     switch (level) {

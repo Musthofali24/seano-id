@@ -41,7 +41,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
   // Use vehicles from props if provided, otherwise fallback to hook
   const { vehicles: hookVehicles } = useVehicleData();
   const vehicles = propVehicles || hookVehicles;
-  const { gyroscopeData } = useGyroscopeData(selectedVehicle);
+  const { gyroscopeData } = useGyroscopeData(selectedVehicle?.id);
 
   // Debug vehicles data
   console.log(
@@ -338,20 +338,31 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
               <Popup>
                 <div className="text-sm">
                   <h3 className="font-semibold text-gray-800">
-                    {vehicle.name}
+                    {vehicle.name || "Unknown"}
                   </h3>
-                  <p className="text-gray-600">Code: {vehicle.code}</p>
-                  <p className="text-gray-600">Status: {vehicle.status}</p>
+                  <p className="text-gray-600">Code: {vehicle.code || "N/A"}</p>
                   <p className="text-gray-600">
-                    Battery: {vehicle.battery_level}%
+                    Status: {vehicle.status || "Unknown"}
                   </p>
                   <p className="text-gray-600">
-                    Heading: {Math.round(heading)}° ({getDirectionName(heading)}
-                    )
+                    Battery:{" "}
+                    {vehicle.battery_level
+                      ? `${vehicle.battery_level}%`
+                      : "N/A"}
                   </p>
                   <p className="text-gray-600">
-                    Position: {vehicle.latitude.toFixed(4)},{" "}
-                    {vehicle.longitude.toFixed(4)}
+                    Heading:{" "}
+                    {heading != null
+                      ? `${Math.round(heading)}° (${getDirectionName(heading)})`
+                      : "N/A"}
+                  </p>
+                  <p className="text-gray-600">
+                    Position:{" "}
+                    {vehicle.latitude != null && vehicle.longitude != null
+                      ? `${vehicle.latitude.toFixed(
+                          4
+                        )}, ${vehicle.longitude.toFixed(4)}`
+                      : "N/A"}
                   </p>
                 </div>
               </Popup>

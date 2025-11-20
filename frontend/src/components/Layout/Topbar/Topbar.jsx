@@ -135,10 +135,20 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
         </div>
         <div className="min-w-[200px]">
           <VehicleDropdown
+            key={selectedVehicle?.id || "no-vehicle"}
             vehicles={vehicles}
             selectedVehicle={selectedVehicle}
-            onVehicleChange={setSelectedVehicle}
-            placeholder={loading ? "Loading vehicles..." : "Select Vehicle"}
+            onVehicleChange={(vehicle) => {
+              console.log("Vehicle selected in dropdown:", vehicle);
+              setSelectedVehicle(vehicle);
+            }}
+            placeholder={
+              loading
+                ? "Loading vehicles..."
+                : selectedVehicle
+                ? selectedVehicle.name
+                : "Select Vehicle"
+            }
             className="text-sm"
           />
         </div>

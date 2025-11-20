@@ -6,11 +6,114 @@ import {
   FaThermometerHalf,
 } from "react-icons/fa";
 import { MdAirlineSeatFlat, MdSpeed } from "react-icons/md";
-import useVehicleData from "../../../hooks/useVehicleData";
+import { API_ENDPOINTS } from "../../../config";
+import useMQTT from "../../../hooks/useMQTT";
 
 const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
-  const { vehicles, loading } = useVehicleData();
+  const [vehicleLog, setVehicleLog] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showTimeout, setShowTimeout] = useState(false);
+
+  const { subscribe, unsubscribe, messages } = useMQTT();
+
+  // Fetch initial vehicle log data (historical)
+  useEffect(() => {
+    const fetchVehicleLog = async () => {
+      // Only fetch when we have a selected vehicle
+      if (!selectedVehicle?.id) {
+        console.log("🔍 TelemetryPanel: No vehicle selected yet");
+        setLoading(false);
+        return;
+      }
+
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.error(
+          "🔍 TelemetryPanel: No access_token found in localStorage"
+        );
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log(
+          "🔍 TelemetryPanel: Fetching vehicle log for vehicle",
+          selectedVehicle.id
+        );
+        const url = `${API_ENDPOINTS.VEHICLE_LOGS.LIST}?vehicle_id=${selectedVehicle.id}&limit=1`;
+        console.log("🔍 TelemetryPanel: URL:", url);
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log(
+          "🔍 TelemetryPanel: Fetch response status:",
+          response.status
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log("🔍 TelemetryPanel: Fetched vehicle log:", data);
+          if (data && Array.isArray(data) && data.length > 0) {
+            console.log("✅ TelemetryPanel: Setting vehicle log:", data[0]);
+            setVehicleLog(data[0]);
+          } else {
+            console.warn("🔍 TelemetryPanel: No data returned from API");
+          }
+        } else {
+          console.error(
+            "🔍 TelemetryPanel: API response error:",
+            response.status,
+            response.statusText
+          );
+          const errorText = await response.text();
+          console.error("🔍 TelemetryPanel: Error details:", errorText);
+        }
+      } catch (error) {
+        console.error("🔍 TelemetryPanel: Fetch error:", error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicleLog();
+  }, [selectedVehicle]);
+
+  // Subscribe to MQTT for real-time updates
+  useEffect(() => {
+    if (!selectedVehicle?.code) return;
+
+    // Use registration_code for MQTT topic (seano/{registration_code}/vehicle_log)
+    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
+    console.log("📡 TelemetryPanel: Subscribing to MQTT topic:", topic);
+
+    subscribe(topic);
+
+    return () => {
+      unsubscribe(topic);
+    };
+  }, [selectedVehicle, subscribe, unsubscribe]);
+
+  // Listen to messages changes and update vehicle log
+  useEffect(() => {
+    if (!selectedVehicle?.code) return;
+
+    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
+    const message = messages[topic];
+
+    if (message && message.data) {
+      console.log(
+        "📡 TelemetryPanel: Real-time update received:",
+        message.data
+      );
+      setVehicleLog(message.data);
+    }
+  }, [messages, selectedVehicle]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -22,71 +125,54 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  const currentVehicle = vehicles.find((v) => v.id === selectedVehicle) || {};
-
   const telemetryData = {
     orientation: {
-      roll: currentVehicle.roll !== undefined ? currentVehicle.roll : null,
-      pitch: currentVehicle.pitch !== undefined ? currentVehicle.pitch : null,
-      yaw: currentVehicle.heading !== undefined ? currentVehicle.heading : null,
+      roll: vehicleLog?.roll || null,
+      pitch: vehicleLog?.pitch || null,
+      yaw: vehicleLog?.yaw || null,
     },
     angular_velocity: {
-      x:
-        currentVehicle.angular_vel_x !== undefined
-          ? currentVehicle.angular_vel_x
-          : null,
-      y:
-        currentVehicle.angular_vel_y !== undefined
-          ? currentVehicle.angular_vel_y
-          : null,
-      z:
-        currentVehicle.angular_vel_z !== undefined
-          ? currentVehicle.angular_vel_z
-          : null,
+      x: null, // Not in vehicle_logs
+      y: null,
+      z: null,
     },
     linear_acceleration: {
-      x: currentVehicle.accel_x !== undefined ? currentVehicle.accel_x : null,
-      y: currentVehicle.accel_y !== undefined ? currentVehicle.accel_y : null,
-      z: currentVehicle.accel_z !== undefined ? currentVehicle.accel_z : null,
+      x: null, // Not in vehicle_logs
+      y: null,
+      z: null,
     },
 
     position: {
-      latitude:
-        currentVehicle.latitude !== undefined ? currentVehicle.latitude : null,
-      longitude:
-        currentVehicle.longitude !== undefined
-          ? currentVehicle.longitude
-          : null,
-      altitude:
-        currentVehicle.altitude !== undefined ? currentVehicle.altitude : null,
+      latitude: vehicleLog?.latitude || null,
+      longitude: vehicleLog?.longitude || null,
+      altitude: vehicleLog?.altitude || null,
     },
     navigation: {
-      speed: currentVehicle.speed !== undefined ? currentVehicle.speed : null,
-      heading:
-        currentVehicle.heading !== undefined ? currentVehicle.heading : null,
+      speed: vehicleLog?.speed || null,
+      heading: vehicleLog?.heading || vehicleLog?.yaw || null,
     },
 
-    rssi: currentVehicle.rssi !== undefined ? currentVehicle.rssi : null,
-    temperature:
-      currentVehicle.temperature !== undefined
-        ? currentVehicle.temperature
-        : null,
-    battery_voltage:
-      currentVehicle.battery_voltage !== undefined
-        ? currentVehicle.battery_voltage
-        : null,
-    battery_current:
-      currentVehicle.battery_current !== undefined
-        ? currentVehicle.battery_current
-        : null,
+    rssi: vehicleLog?.rssi || null,
+    temperature: vehicleLog?.temperature || null,
+    battery_voltage: vehicleLog?.battery_voltage || null,
+    battery_current: vehicleLog?.battery_current || null,
   };
 
-  const formatDegrees = (value) =>
-    value !== null && value !== undefined ? `${value.toFixed(1)}°` : "N/A";
-  const formatValue = (value, unit = "") =>
-    value !== null && value !== undefined
-      ? `${value.toFixed(2)}${unit}`
-      : "N/A";
+  const formatDegrees = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num) ? "N/A" : `${num.toFixed(1)}°`;
+  };
+  const formatCoordinate = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num) ? "N/A" : `${num.toFixed(8)}`;
+  };
+  const formatValue = (value, unit = "") => {
+    if (value === null || value === undefined) return "N/A";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num) ? "N/A" : `${num.toFixed(2)}${unit}`;
+  };
 
   const getRSSIColor = (rssi) => {
     if (rssi === null || rssi === undefined) return "text-gray-500";
@@ -202,14 +288,14 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Latitude:</span>
-            <span className="font-mono text-purple-700 dark:text-purple-300">
-              {formatValue(telemetryData.position.latitude)}
+            <span className="font-mono text-purple-700 dark:text-purple-300 text-xs">
+              {formatCoordinate(telemetryData.position.latitude)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Longitude:</span>
-            <span className="font-mono text-purple-700 dark:text-purple-300">
-              {formatValue(telemetryData.position.longitude)}
+            <span className="font-mono text-purple-700 dark:text-purple-300 text-xs">
+              {formatCoordinate(telemetryData.position.longitude)}
             </span>
           </div>
           <div className="flex justify-between">

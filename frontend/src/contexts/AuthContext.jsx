@@ -116,6 +116,8 @@ export function AuthProvider({ children }) {
         // Store user in localStorage for quick access
         localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
+        // Dispatch custom event to trigger vehicle fetch
+        window.dispatchEvent(new Event("userLoggedIn"));
         navigate("/dashboard");
         return { success: true };
       }

@@ -68,4 +68,4 @@ app.include_router(vehicle.router, prefix="/vehicles", tags=["Vehicles"])
 app.include_router(raw_log.router, prefix="/raw-logs", tags=["Raw Logs"])
 app.include_router(vehicle_log.router, prefix="/vehicle-logs", tags=["Vehicle Logs"])
 app.include_router(mqtt.router, prefix="/api", tags=["MQTT"])
-app.include_router(websocket.router, prefix="/api", tags=["WebSocket"])
+app.include_router(websocket.router, tags=["WebSocket"])  # No prefix for WebSocket

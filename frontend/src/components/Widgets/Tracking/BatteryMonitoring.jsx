@@ -16,7 +16,7 @@ import useVehicleBattery from "../../../hooks/useVehicleBattery";
 const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
   const { vehicles, loading } = useVehicleData();
   const { batteryData, loading: batteryLoading } = useVehicleBattery(
-    selectedVehicle,
+    selectedVehicle?.id, // Pass vehicle ID to hook
     30000
   );
   const [showTimeout, setShowTimeout] = useState(false);
@@ -33,7 +33,8 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
   }, [batteryLoading]);
 
   // Find current vehicle for fallback data
-  const currentVehicle = vehicles.find((v) => v.id === selectedVehicle) || {};
+  const currentVehicle =
+    vehicles.find((v) => v.id === selectedVehicle?.id) || {};
 
   // Battery data with fallbacks - support for 2 batteries
   const batteries =
@@ -231,13 +232,16 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
   return (
     <div className="h-full p-4 flex flex-col">
       {/* Header */}
-      <div className="mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <FaBatteryFull className="text-lg text-green-500" />
+          <FaBatteryFull className="text-lg text-orange-500" />
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">
             Battery Monitoring
           </h3>
         </div>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {selectedVehicle?.name || selectedVehicle?.code || "All Vehicles"}
+        </span>
       </div>
 
       <div className="flex-1 grid grid-cols-5 gap-4 items-center">

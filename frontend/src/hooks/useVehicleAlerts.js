@@ -22,7 +22,12 @@ const useVehicleAlerts = (
         setError(null)
 
         const response = await fetch(
-          `${API_ENDPOINTS.VEHICLES.ALERTS(selectedVehicle)}?limit=${limit}`
+          `${API_ENDPOINTS.VEHICLES.ALERTS(selectedVehicle)}?limit=${limit}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('access_token')}`
+            }
+          }
         )
 
         if (!response.ok) {

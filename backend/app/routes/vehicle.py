@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import desc, and_
 from typing import List
+from datetime import datetime, timedelta
 
 from app.database import get_db
 from app.models.vehicle import Vehicle
 from app.models.user import User
 from app.models.role import Role, UserRole
+from app.models.vehicle_log import VehicleLog
+from app.models.sensor_log import SensorLog
+from app.models.raw_log import RawLog
 from app.schemas.vehicle import VehicleCreate, VehicleUpdate, VehicleResponse
 from app.services.auth_service import get_authenticated_user
 from app.services.permission_service import make_permission_checker
@@ -51,6 +56,47 @@ async def check_vehicle_ownership(
         raise HTTPException(
             status_code=403, detail="You can only access your own vehicles"
         )
+
+
+@router.get("/batteries")
+async def get_vehicle_batteries(
+    vehicle_id: int = Query(..., ge=1),
+    limit: int = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_read_vehicles),
+):
+    """Get battery data for a vehicle from vehicle logs"""
+    await check_vehicle_ownership(vehicle_id, current_user, db)
+
+    # Query vehicle logs with battery data
+    result = await db.execute(
+        select(VehicleLog)
+        .where(
+            and_(
+                VehicleLog.vehicle_id == vehicle_id,
+                VehicleLog.battery_voltage.is_not(None),
+            )
+        )
+        .order_by(desc(VehicleLog.created_at))
+        .limit(limit)
+    )
+    logs = result.scalars().all()
+
+    # Format battery data
+    batteries = []
+    for log in logs:
+        batteries.append(
+            {
+                "id": log.id,
+                "voltage": float(log.battery_voltage) if log.battery_voltage else None,
+                "current": float(log.battery_current) if log.battery_current else None,
+                "timestamp": log.created_at.isoformat() if log.created_at else None,
+                "system_status": log.system_status,
+            }
+        )
+
+    return batteries
 
 
 # Create Vehicle
@@ -160,3 +206,40 @@ async def delete_vehicle(
     await db.delete(vehicle)
     await db.commit()
     return {"message": "Vehicle deleted successfully"}
+
+
+# Get Vehicle Alerts
+@router.get("/{vehicle_id}/alerts")
+async def get_vehicle_alerts(
+    vehicle_id: int,
+    limit: int = Query(10, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_read_vehicles),
+):
+    """Get recent alerts for a vehicle (based on sensor anomalies)"""
+    await check_vehicle_ownership(vehicle_id, current_user, db)
+
+    # Query recent sensor logs with anomalies (values out of normal range)
+    result = await db.execute(
+        select(SensorLog)
+        .where(SensorLog.vehicle_id == vehicle_id)
+        .order_by(desc(SensorLog.created_at))
+        .limit(limit)
+    )
+    logs = result.scalars().all()
+
+    # Format as alerts (any recent sensor reading is potential alert)
+    alerts = []
+    for log in logs:
+        alerts.append(
+            {
+                "id": log.id,
+                "type": f"sensor_{log.sensor_type_id}",
+                "message": f"Sensor {log.sensor_type_id}: {log.value}",
+                "severity": "info",
+                "timestamp": log.created_at.isoformat() if log.created_at else None,
+            }
+        )
+
+    return alerts

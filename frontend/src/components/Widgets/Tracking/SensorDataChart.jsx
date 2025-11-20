@@ -8,68 +8,86 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useEffect, useState } from "react";
 import { FaChartLine, FaRuler } from "react-icons/fa";
+import { API_ENDPOINTS } from "../../../config";
 
-const SensorDataChart = ({ className = "" }) => {
-  const chartData = [
-    {
-      time: "10:00",
-      waterTemp: 23.2,
-      waterDepth: 14.8,
-      windSpeed: 6.1,
-      visibility: 2.1,
-    },
-    {
-      time: "10:05",
-      waterTemp: 23.8,
-      waterDepth: 15.0,
-      windSpeed: 6.8,
-      visibility: 2.2,
-    },
-    {
-      time: "10:10",
-      waterTemp: 24.1,
-      waterDepth: 15.1,
-      windSpeed: 7.2,
-      visibility: 2.3,
-    },
-    {
-      time: "10:15",
-      waterTemp: 24.3,
-      waterDepth: 15.2,
-      windSpeed: 7.9,
-      visibility: 2.4,
-    },
-    {
-      time: "10:20",
-      waterTemp: 24.5,
-      waterDepth: 15.2,
-      windSpeed: 8.3,
-      visibility: 2.5,
-    },
-    {
-      time: "10:25",
-      waterTemp: 24.2,
-      waterDepth: 15.1,
-      windSpeed: 7.8,
-      visibility: 2.3,
-    },
-    {
-      time: "10:30",
-      waterTemp: 24.0,
-      waterDepth: 15.0,
-      windSpeed: 7.5,
-      visibility: 2.4,
-    },
-  ];
+const SensorDataChart = ({ className = "", selectedVehicle }) => {
+  const [chartData, setChartData] = useState([]);
+  const [currentValues, setCurrentValues] = useState({
+    waterTemp: "N/A",
+    waterDepth: "N/A",
+    windSpeed: "N/A",
+    visibility: "N/A",
+  });
 
-  // Current values
-  const currentValues = {
-    waterTemp: 24.5,
-    waterDepth: 15.2,
-    windSpeed: 8.3,
-    visibility: 2.5,
-  };
+  // Fetch sensor data from API
+  useEffect(() => {
+    if (!selectedVehicle?.id) return;
+
+    const fetchSensorData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(
+          API_ENDPOINTS.SENSOR_LOGS.LIST +
+            `?vehicle_id=${selectedVehicle.id}&limit=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Process data for chart
+          const processed = data.map((log) => {
+            let logData = {};
+
+            // Parse sensor data
+            try {
+              if (typeof log.data === "string") {
+                logData = JSON.parse(log.data);
+              } else {
+                logData = log.data;
+              }
+            } catch (e) {
+              logData = {};
+            }
+
+            return {
+              time: new Date(log.created_at).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              waterTemp: logData.water_temp || logData.waterTemp || "N/A",
+              waterDepth: logData.water_depth || logData.waterDepth || "N/A",
+              windSpeed: logData.wind_speed || logData.windSpeed || "N/A",
+              visibility: logData.visibility || "N/A",
+            };
+          });
+
+          setChartData(processed);
+
+          // Set current values from latest data
+          if (processed.length > 0) {
+            const latest = processed[processed.length - 1];
+            setCurrentValues({
+              waterTemp: latest.waterTemp,
+              waterDepth: latest.waterDepth,
+              windSpeed: latest.windSpeed,
+              visibility: latest.visibility,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch sensor data:", err);
+      }
+    };
+
+    fetchSensorData();
+  }, [selectedVehicle]);
 
   return (
     <div className={`h-full p-6 flex flex-col ${className}`}>

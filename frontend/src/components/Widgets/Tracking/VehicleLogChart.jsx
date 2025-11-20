@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -17,124 +17,94 @@ import {
   FaChartLine,
   FaThermometerHalf,
 } from "react-icons/fa";
+import { API_ENDPOINTS } from "../../../config";
 
-const VehicleLogChart = ({ className = "" }) => {
-  // Mock vehicle telemetry data for chart - should come from API
-  const chartData = [
-    {
-      time: "10:00",
-      battery: 92,
-      voltage: 12.6,
-      speed: 0,
-      heading: 120,
-      temperature: 25,
-    },
-    {
-      time: "10:05",
-      battery: 89,
-      voltage: 12.5,
-      speed: 1.2,
-      heading: 130,
-      temperature: 26,
-    },
-    {
-      time: "10:10",
-      battery: 85,
-      voltage: 12.4,
-      speed: 2.1,
-      heading: 140,
-      temperature: 27,
-    },
-    {
-      time: "10:15",
-      battery: 82,
-      voltage: 12.3,
-      speed: 2.5,
-      heading: 145,
-      temperature: 28,
-    },
-    {
-      time: "10:20",
-      battery: 78,
-      voltage: 12.2,
-      speed: 2.3,
-      heading: 148,
-      temperature: 29,
-    },
-    {
-      time: "10:25",
-      battery: 75,
-      voltage: 12.1,
-      speed: 1.8,
-      heading: 145,
-      temperature: 28.5,
-    },
-    {
-      time: "10:30",
-      battery: 72,
-      voltage: 12.0,
-      speed: 2.2,
-      heading: 142,
-      temperature: 28,
-    },
-    {
-      time: "10:35",
-      battery: 69,
-      voltage: 11.9,
-      speed: 2.7,
-      heading: 140,
-      temperature: 27.5,
-    },
-    {
-      time: "10:40",
-      battery: 65,
-      voltage: 11.8,
-      speed: 2.1,
-      heading: 138,
-      temperature: 28,
-    },
-    {
-      time: "10:45",
-      battery: 62,
-      voltage: 11.7,
-      speed: 1.5,
-      heading: 135,
-      temperature: 28.5,
-    },
-  ];
+const VehicleLogChart = ({ className = "", selectedVehicle }) => {
+  const [chartData, setChartData] = useState([]);
+
+  // Fetch vehicle log data from API
+  useEffect(() => {
+    if (!selectedVehicle?.id) return;
+
+    const fetchVehicleLogData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await fetch(
+          API_ENDPOINTS.VEHICLE_LOGS.LIST +
+            `?vehicle_id=${selectedVehicle.id}&limit=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Process data for chart
+          const processed = data.map((log) => {
+            let logData = {};
+
+            // Parse vehicle data
+            try {
+              if (typeof log.data === "string") {
+                logData = JSON.parse(log.data);
+              } else {
+                logData = log.data;
+              }
+            } catch (e) {
+              logData = {};
+            }
+
+            return {
+              time: new Date(log.created_at).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              battery: logData.battery_level || logData.battery || "N/A",
+              voltage: logData.battery_voltage || logData.voltage || "N/A",
+              speed: logData.speed || "N/A",
+              heading: logData.heading || "N/A",
+              temperature: logData.temperature || "N/A",
+            };
+          });
+
+          setChartData(processed);
+        }
+      } catch (err) {
+        console.error("Failed to fetch vehicle log data:", err);
+      }
+    };
+
+    fetchVehicleLogData();
+  }, [selectedVehicle]);
 
   // Current values for display cards
   const currentValues = {
     battery: {
-      value: 85,
+      value: "N/A",
       unit: "%",
       icon: FaBatteryFull,
       color: "#22c55e",
       label: "Battery Level",
     },
-    voltage: {
-      value: 12.4,
-      unit: "V",
-      icon: FaBolt,
-      color: "#3b82f6",
-      label: "Battery Voltage",
-    },
     speed: {
-      value: 2.3,
+      value: "N/A",
       unit: "m/s",
       icon: FaTachometerAlt,
       color: "#8b5cf6",
       label: "Vehicle Speed",
     },
     heading: {
-      value: 145.8,
+      value: "N/A",
       unit: "°",
       icon: FaCompass,
       color: "#6366f1",
       label: "Heading",
     },
     temperature: {
-      value: 28.5,
+      value: "N/A",
       unit: "°C",
       icon: FaThermometerHalf,
       color: "#f59e0b",
@@ -160,14 +130,6 @@ const VehicleLogChart = ({ className = "" }) => {
           </p>
           <p className="text-2xl font-bold text-green-700 dark:text-green-300">
             {currentValues.battery.value}%
-          </p>
-        </div>
-        <div className="text-center p-5 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-h-[100px] flex flex-col justify-center">
-          <p className="text-sm text-blue-600 dark:text-blue-400 mb-2">
-            Battery Voltage
-          </p>
-          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-            {currentValues.voltage.value}V
           </p>
         </div>
         <div className="text-center p-5 bg-purple-50 dark:bg-purple-900/20 rounded-lg min-h-[100px] flex flex-col justify-center">

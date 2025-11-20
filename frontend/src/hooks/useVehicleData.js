@@ -14,21 +14,26 @@ const useVehicleData = () => {
     }, 5000)
 
     const fetchVehicles = async () => {
+      // Get token from localStorage
+      const token = localStorage.getItem('access_token')
+
+      // Skip fetch if no token (not logged in)
+      if (!token) {
+        console.log('No token found, skipping vehicle fetch')
+        setVehicles([])
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
-
-        // Get token from localStorage
-        const token = localStorage.getItem('access_token')
+        console.log('Fetching vehicles with token...')
 
         const response = await fetch(`${API_BASE_URL}/vehicles/`, {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
-            : {
-                'Content-Type': 'application/json'
-              }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         })
 
         if (!response.ok) {
@@ -36,6 +41,7 @@ const useVehicleData = () => {
         }
 
         const data = await response.json()
+        console.log('Vehicles fetched:', data.length)
 
         // Process and validate API data
         const processedVehicles = Array.isArray(data)
@@ -71,11 +77,20 @@ const useVehicleData = () => {
       }
     }
 
-    // Fetch only once on mount - WebSocket will handle real-time updates
+    // Fetch vehicles on mount and when component re-mounts
     fetchVehicles()
+
+    // Re-fetch when user logs in
+    const handleUserLogin = () => {
+      console.log('User logged in event detected, re-fetching vehicles')
+      fetchVehicles()
+    }
+
+    window.addEventListener('userLoggedIn', handleUserLogin)
 
     return () => {
       if (loadingTimeout) clearTimeout(loadingTimeout)
+      window.removeEventListener('userLoggedIn', handleUserLogin)
     }
   }, [])
 

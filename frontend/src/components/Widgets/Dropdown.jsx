@@ -29,13 +29,25 @@ const Dropdown = ({
   }, []);
 
   // Get selected item data
-  const selectedItemData = items.find((item) =>
-    getItemKey ? getItemKey(item) === selectedItem : item.id === selectedItem
-  );
+  // Handle both object and ID for selectedItem
+  const selectedItemKey =
+    selectedItem && typeof selectedItem === "object"
+      ? getItemKey
+        ? getItemKey(selectedItem)
+        : selectedItem.id
+      : selectedItem;
+
+  const selectedItemData =
+    selectedItem && typeof selectedItem === "object"
+      ? selectedItem
+      : items.find((item) =>
+          getItemKey
+            ? getItemKey(item) === selectedItemKey
+            : item.id === selectedItemKey
+        );
 
   const handleItemSelect = (item) => {
-    const itemKey = getItemKey ? getItemKey(item) : item.id;
-    onItemChange(itemKey);
+    onItemChange(item);
     setIsOpen(false);
   };
 
@@ -80,7 +92,7 @@ const Dropdown = ({
           ) : (
             items.map((item) => {
               const itemKey = getItemKey ? getItemKey(item) : item.id;
-              const isSelected = selectedItem === itemKey;
+              const isSelected = selectedItemKey === itemKey;
 
               return (
                 <button

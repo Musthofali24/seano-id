@@ -30,26 +30,26 @@ const Tracking = ({ darkMode, selectedVehicle }) => {
           <TelemetryPanel selectedVehicle={selectedVehicle} />
         </div>
       </div>
+      {/* TEMPORARILY COMMENTED TO ISOLATE ERROR
       <div className="col-span-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-4">
-        {/* Sensor Log Chart (multiple sensor type) */}
         <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
           <SensorDataChart selectedVehicle={selectedVehicle} />
         </div>
-        {/* Vehicle Log Chart (battery, volt, speed, etc)*/}
         <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
           <VehicleLogChart selectedVehicle={selectedVehicle} />
         </div>
       </div>
+      */}
+      {/* TEMPORARILY COMMENTED TO ISOLATE ERROR
       <div className="col-span-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
-        {/* Battery Monitoring */}
         <div className="h-[400px] col-span-3 xl:col-span-3 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
           <BatteryMonitoring selectedVehicle={selectedVehicle} />
         </div>
-        {/* Latest Alerts */}
         <div className="h-[400px] col-span-3 xl:col-span-3 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
           <LatestAlerts selectedVehicle={selectedVehicle} />
         </div>
       </div>
+      */}
       <div className="col-span-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-4">
         {/* Raw Data Log */}
         <div className="h-80 col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">

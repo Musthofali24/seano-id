@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { API_BASE_URL } from '../config'
 
 const useGyroscopeData = selectedVehicle => {
@@ -9,6 +9,7 @@ const useGyroscopeData = selectedVehicle => {
     timestamp: new Date().toISOString()
   })
   const [isLoading, setIsLoading] = useState(true)
+  const hasErrorRef = useRef(false) // Track if endpoint returns 404 to avoid repeated attempts
 
   useEffect(() => {
     let interval
@@ -20,7 +21,7 @@ const useGyroscopeData = selectedVehicle => {
     }, 5000)
 
     const fetchGyroscopeData = async () => {
-      if (!selectedVehicle) {
+      if (!selectedVehicle || hasErrorRef.current) {
         setIsLoading(false)
         return
       }
@@ -32,6 +33,10 @@ const useGyroscopeData = selectedVehicle => {
         )
 
         if (!response.ok) {
+          // Mark as error to avoid repeated failed attempts
+          if (response.status === 404) {
+            hasErrorRef.current = true
+          }
           throw new Error(`HTTP error! status: ${response.status}`)
         }
 
@@ -48,8 +53,7 @@ const useGyroscopeData = selectedVehicle => {
         // Clear loading timeout since we got a response
         if (loadingTimeout) clearTimeout(loadingTimeout)
       } catch (error) {
-        console.error('Error fetching gyroscope data:', error)
-        // Set to neutral values on error
+        // Use default/fallback data on error
         setGyroscopeData(prev => ({
           ...prev,
           timestamp: new Date().toISOString()
@@ -60,8 +64,9 @@ const useGyroscopeData = selectedVehicle => {
     }
 
     if (selectedVehicle) {
+      hasErrorRef.current = false // Reset error flag when vehicle changes
       fetchGyroscopeData()
-      interval = setInterval(fetchGyroscopeData, 1000) // Update every 1 second
+      interval = setInterval(fetchGyroscopeData, 10000) // Update every 10 seconds (reduced from 1s)
     } else {
       // Reset to neutral when no vehicle selected
       setGyroscopeData({

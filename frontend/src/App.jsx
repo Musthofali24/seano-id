@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PermissionProvider } from "./contexts/PermissionProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import RegistrationRoute from "./components/RegistrationRoute";
+import useVehicleData from "./hooks/useVehicleData";
 
 // Layout Components
 import { Header, Sidebar } from "./components/Layout";
@@ -44,7 +45,32 @@ function App() {
   const location = useLocation();
   const [darkMode, setDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(1);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+  const { vehicles } = useVehicleData();
+  const initializedRef = useRef(false);
+
+  // Set default vehicle ID to user's first vehicle (reset on vehicles change)
+  useEffect(() => {
+    // Reset initialization when vehicles change (e.g., after logout/login)
+    if (vehicles && vehicles.length > 0) {
+      if (
+        !initializedRef.current ||
+        !vehicles.find((v) => v.id === selectedVehicleId)
+      ) {
+        setSelectedVehicleId(vehicles[0].id); // Store vehicle ID
+        initializedRef.current = true;
+      }
+    } else if (vehicles && vehicles.length === 0) {
+      // Reset when no vehicles (logout)
+      setSelectedVehicleId(null);
+      initializedRef.current = false;
+    }
+  }, [vehicles, selectedVehicleId]);
+
+  // Get selected vehicle object from ID (always synced with vehicles array)
+  const selectedVehicle = selectedVehicleId
+    ? vehicles.find((v) => v.id === selectedVehicleId)
+    : null;
 
   // Initialize sidebar state
   useEffect(() => {
@@ -220,7 +246,7 @@ function App() {
         <Main
           isSidebarOpen={isSidebarOpen}
           selectedVehicle={selectedVehicle}
-          setSelectedVehicle={setSelectedVehicle}
+          setSelectedVehicle={(vehicle) => setSelectedVehicleId(vehicle.id)} // Set vehicle ID
           darkMode={darkMode}
         >
           <Content>

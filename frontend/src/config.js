@@ -64,8 +64,9 @@ export const API_ENDPOINTS = {
     UPDATE: id => `${API_BASE_URL}/vehicles/${id}`,
     DELETE: id => `${API_BASE_URL}/vehicles/${id}`,
     ALERTS: id => `${API_BASE_URL}/vehicles/${id}/alerts`,
-    RAW_LOGS: id => `${API_BASE_URL}/vehicles/${id}/raw-logs`,
-    SENSOR_LOGS: id => `${API_BASE_URL}/vehicles/${id}/sensor-logs`
+    RAW_LOGS: vehicleId => `${API_BASE_URL}/raw-logs/?vehicle_id=${vehicleId}`,
+    SENSOR_LOGS: vehicleId =>
+      `${API_BASE_URL}/sensor-logs/?vehicle_id=${vehicleId}`
   },
 
   // Raw Logs endpoints
@@ -94,7 +95,7 @@ export const API_ENDPOINTS = {
   // Battery endpoints (custom)
   BATTERY: {
     BY_VEHICLE: vehicleId =>
-      `${API_BASE_URL}/vehicle-batteries/?vehicle_id=${vehicleId}`
+      `${API_BASE_URL}/vehicles/batteries/?vehicle_id=${vehicleId}`
   },
 
   // Notifications endpoints (if exists)

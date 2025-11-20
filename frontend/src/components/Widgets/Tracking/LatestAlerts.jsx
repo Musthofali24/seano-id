@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 
 const LatestAlerts = ({ selectedVehicle }) => {
-  const { alerts, error } = useVehicleAlerts(selectedVehicle, 10, 30000);
+  const { alerts, error } = useVehicleAlerts(selectedVehicle?.id, 10, 30000);
   const { loading } = useLoadingTimeout(true, 2000);
 
   const formatTime = (timestamp) => {
@@ -146,7 +146,7 @@ const LatestAlerts = ({ selectedVehicle }) => {
           </h3>
         </div>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          Vehicle {selectedVehicle}
+          {selectedVehicle?.name || selectedVehicle?.code || "All Vehicles"}
         </span>
       </div>
 

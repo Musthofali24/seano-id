@@ -18,7 +18,12 @@ const useVehicleBattery = (selectedVehicle, refreshInterval = 30000) => {
         setError(null)
 
         const response = await fetch(
-          API_ENDPOINTS.BATTERY.BY_VEHICLE(selectedVehicle)
+          API_ENDPOINTS.BATTERY.BY_VEHICLE(selectedVehicle),
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('access_token')}`
+            }
+          }
         )
 
         if (response.ok) {
@@ -42,11 +47,8 @@ const useVehicleBattery = (selectedVehicle, refreshInterval = 30000) => {
 
     fetchBatteryData()
 
-    // Refresh data at specified interval
-    const interval = setInterval(fetchBatteryData, refreshInterval)
-
-    return () => clearInterval(interval)
-  }, [selectedVehicle, refreshInterval])
+    // No auto-refresh - only fetch when vehicle changes
+  }, [selectedVehicle])
 
   return { batteryData, loading, error }
 }
