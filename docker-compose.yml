@@ -47,7 +47,7 @@ services:
     networks:
       - seano_net
     environment:
-      - VITE_API_URL=http://backend:8000
+      - VITE_API_URL=https://api.seano.cloud
 
 networks:
   seano_net:
