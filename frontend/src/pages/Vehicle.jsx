@@ -3,6 +3,7 @@ import useTitle from "../hooks/useTitle";
 import Title from "../ui/Title";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import { WidgetCard, VehicleTable, VehicleModal } from "../components/Widgets";
+import { AddVehicleWizard } from "../components/Widgets/Vehicle";
 import { ConfirmModal } from "../components/UI";
 import { getWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
@@ -14,6 +15,7 @@ import { FaShip } from "react-icons/fa";
 const Vehicle = () => {
   useTitle("Vehicle");
   const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -244,10 +246,7 @@ const Vehicle = () => {
           subtitle="Manage and monitor all USV vehicles"
         />
         <button
-          onClick={() => {
-            setEditingVehicle(null);
-            setShowVehicleModal(true);
-          }}
+          onClick={() => setShowWizard(true)}
           className="font-semibold flex items-center gap-4 px-3 py-2 rounded-lg text-white hover:bg-blue-700 transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-fourth/50 bg-fourth dark:hover:bg-blue-700"
         >
           <FaShip size={20} />
@@ -278,6 +277,13 @@ const Vehicle = () => {
         onClose={handleCloseModal}
         onSubmit={handleCreateOrUpdateVehicle}
         editData={editingVehicle}
+      />
+
+      {/* Add Vehicle Wizard */}
+      <AddVehicleWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onSuccess={refreshVehicles}
       />
 
       {/* Delete Confirmation Modal */}
