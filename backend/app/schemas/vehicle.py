@@ -7,12 +7,14 @@ class VehicleBase(BaseModel):
     name: str
     description: Optional[str] = None
     status: Optional[str] = "idle"  # idle, on_mission, maintenance, offline
-    user_id: int  # Required - vehicle must belong to a user
 
 
-class VehicleCreate(VehicleBase):
+class VehicleCreate(BaseModel):
+    name: str
     code: Optional[str] = None  # Auto-generate if not provided
-    pass
+    description: Optional[str] = None
+    status: Optional[str] = "idle"
+    # user_id will be auto-assigned from current_user in the route
 
 
 class VehicleUpdate(BaseModel):
@@ -23,11 +25,18 @@ class VehicleUpdate(BaseModel):
     user_id: Optional[int] = None
 
 
-class VehicleResponse(VehicleBase):
+class VehicleResponse(BaseModel):
     id: int
     code: str  # Always returned in response, required
+    name: str
+    description: Optional[str] = None
+    status: str
+    user_id: int
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
     class Config:
         from_attributes = True
