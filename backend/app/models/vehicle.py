@@ -18,7 +18,7 @@ class Vehicle(Base):
         String(20), default="idle"
     )  # online, offline, on mission, maintenance
     user_id = Column(
-        Integer, ForeignKey("users.id"), nullable=False
+        Integer, ForeignKey("users.id"), nullable=False, index=True
     )  # Owner of the vehicle
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
@@ -28,4 +28,7 @@ class Vehicle(Base):
     user = relationship("User", back_populates="vehicles")
     vehicle_logs = relationship(
         "VehicleLog", back_populates="vehicle", cascade="all, delete-orphan"
+    )
+    vehicle_sensors = relationship(
+        "VehicleSensor", back_populates="vehicle", cascade="all, delete-orphan"
     )

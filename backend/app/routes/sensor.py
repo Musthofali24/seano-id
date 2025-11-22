@@ -28,7 +28,14 @@ async def create_sensor(
     current_user: User = Depends(get_authenticated_user),
     _: bool = Depends(can_create_sensors),
 ):
+    # Check if code already exists
+    existing = await db.execute(select(Sensor).where(Sensor.code == sensor.code))
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Sensor code already exists")
+
     new_sensor = Sensor(**sensor.dict())
+    new_sensor.user_id = current_user.id  # Assign owner
+    
     db.add(new_sensor)
     await db.commit()
     await db.refresh(new_sensor)
@@ -42,8 +49,24 @@ async def get_sensors(
     current_user: User = Depends(get_authenticated_user),
     _: bool = Depends(can_read_sensors),
 ):
-    result = await db.execute(select(Sensor))
-    return result.scalars().all()
+    """
+    Get sensors list.
+    - Admin: Returns all sensors
+    - User: Returns only sensors owned by them
+    """
+    # Check if user is admin
+    is_admin = any(ur.role.name == "Admin" for ur in current_user.user_roles)
+    
+    if is_admin:
+        # Admin can see all sensors
+        result = await db.execute(select(Sensor))
+        return result.scalars().all()
+    else:
+        # Regular user can only see their own sensors
+        result = await db.execute(
+            select(Sensor).where(Sensor.user_id == current_user.id)
+        )
+        return result.scalars().all()
 
 
 # Get Data by Id
@@ -55,6 +78,21 @@ async def get_sensor(
     _: bool = Depends(can_read_sensors),
 ):
     result = await db.execute(select(Sensor).where(Sensor.id == sensor_id))
+    sensor = result.scalars().first()
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    return sensor
+
+
+# Get Data by Code
+@router.get("/code/{sensor_code}", response_model=SensorResponse)
+async def get_sensor_by_code(
+    sensor_code: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_authenticated_user),
+    _: bool = Depends(can_read_sensors),
+):
+    result = await db.execute(select(Sensor).where(Sensor.code == sensor_code))
     sensor = result.scalars().first()
     if not sensor:
         raise HTTPException(status_code=404, detail="Sensor not found")

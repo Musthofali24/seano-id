@@ -20,4 +20,5 @@ class User(Base):
     )
 
     vehicles = relationship("Vehicle", back_populates="user")
+    sensors = relationship("Sensor", back_populates="user")
     user_roles = relationship("UserRole", back_populates="user")

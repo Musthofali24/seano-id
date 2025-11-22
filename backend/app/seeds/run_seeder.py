@@ -9,6 +9,8 @@ from app.database import AsyncSessionLocal, engine
 from app.seeds.seed_roles import seed_roles
 from app.seeds.seed_users import seed_users
 from app.seeds.seed_permissions import seed_permissions
+from app.seeds.seed_sensor_types import seed_sensor_types
+from app.seeds.seed_sensors import seed_sensors
 
 
 async def import_all_models():
@@ -27,8 +29,10 @@ async def run_seeders():
     await import_all_models()  # <--- Tambahin ini sebelum seed jalan
     print("[INFO] Starting database seeding...")
     await seed_roles()
-    await seed_users()
     await seed_permissions()
+    await seed_users()
+    await seed_sensor_types()
+    await seed_sensors()
     print("[DONE] All seeders executed successfully.")
 
 

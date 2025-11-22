@@ -57,10 +57,14 @@ class MQTTListener:
                     # Subscribe to wildcard topics to receive data from all Jetson devices
                     await client.subscribe(mqtt_settings.MQTT_TOPIC_RAW_LOG)
                     await client.subscribe(mqtt_settings.MQTT_TOPIC_SENSOR_LOG)
+                    await client.subscribe(mqtt_settings.MQTT_TOPIC_SENSOR_LOG_NEW)  # New format
                     await client.subscribe(mqtt_settings.MQTT_TOPIC_VEHICLE_LOG)
 
                     logger.info(
-                        f"Subscribed to topics: {mqtt_settings.MQTT_TOPIC_RAW_LOG}, {mqtt_settings.MQTT_TOPIC_SENSOR_LOG}, {mqtt_settings.MQTT_TOPIC_VEHICLE_LOG}"
+                        f"Subscribed to topics: {mqtt_settings.MQTT_TOPIC_RAW_LOG}, "
+                        f"{mqtt_settings.MQTT_TOPIC_SENSOR_LOG}, "
+                        f"{mqtt_settings.MQTT_TOPIC_SENSOR_LOG_NEW}, "
+                        f"{mqtt_settings.MQTT_TOPIC_VEHICLE_LOG}"
                     )
 
                     # Listen for messages from Jetson devices
@@ -82,52 +86,141 @@ class MQTTListener:
         try:
             logger.info(f"Received message from Jetson on topic {topic}: {payload}")
 
-            # Extract registration_code from topic (seano/{registration_code}/log_type)
+            # Extract parts from topic
             topic_parts = topic.split("/")
-            if len(topic_parts) != 3 or topic_parts[0] != "seano":
+            
+            # Check topic format
+            if len(topic_parts) < 3 or topic_parts[0] != "seano":
                 logger.error(f"Invalid topic format: {topic}")
                 return
 
-            registration_code = topic_parts[1]
-            log_type = topic_parts[2]
-
-            # Create database session
-            async with AsyncSessionLocal() as db:
-                # Lookup vehicle by registration_code
-                from app.models.vehicle import Vehicle
-                from sqlalchemy import select
-
-                result = await db.execute(
-                    select(Vehicle).where(Vehicle.code == registration_code)
-                )
-                vehicle = result.scalars().first()
-
-                if not vehicle:
-                    logger.error(f"Vehicle not found with code: {registration_code}")
-                    return
-
-                vehicle_id = vehicle.id
-                logger.info(
-                    f"Found vehicle ID {vehicle_id} for code {registration_code}"
-                )
-
-                if log_type == "raw_log":
-                    await self.handle_raw_log(
-                        db, payload, vehicle_id, registration_code
-                    )
-                elif log_type == "sensor_log":
-                    await self.handle_sensor_log(
-                        db, payload, vehicle_id, registration_code
-                    )
-                elif log_type == "vehicle_log":
-                    await self.handle_vehicle_log(
-                        db, payload, vehicle_id, registration_code
-                    )
-                else:
-                    logger.warning(f"Unknown log type: {log_type}")
+            # New format: seano/{vehicle_code}/{sensor_code}/sensor_log
+            # Old format: seano/{vehicle_code}/log_type
+            if len(topic_parts) == 4:
+                # New format with sensor code
+                await self.handle_new_format_message(topic_parts, payload)
+            elif len(topic_parts) == 3:
+                # Old format (backward compatibility)
+                await self.handle_old_format_message(topic_parts, payload)
+            else:
+                logger.error(f"Invalid topic format: {topic}")
 
         except Exception as e:
             logger.error(f"Error handling message from Jetson: {e}")
+
+    async def handle_new_format_message(self, topic_parts: list, payload: str):
+        """
+        Handle new format: seano/{vehicle_code}/{sensor_code}/sensor_log
+        Example: seano/USV-003/TEMP-001/sensor_log
+        """
+        vehicle_code = topic_parts[1]
+        sensor_code = topic_parts[2]
+        log_type = topic_parts[3]
+
+        async with AsyncSessionLocal() as db:
+            from app.models.vehicle import Vehicle
+            from app.models.sensor import Sensor
+            from app.models.vehicle_sensor import VehicleSensor
+            from sqlalchemy import select, and_
+
+            # Lookup vehicle by code
+            vehicle_result = await db.execute(
+                select(Vehicle).where(Vehicle.code == vehicle_code)
+            )
+            vehicle = vehicle_result.scalars().first()
+
+            if not vehicle:
+                logger.error(f"Vehicle not found with code: {vehicle_code}")
+                return
+
+            # Lookup sensor by code
+            sensor_result = await db.execute(
+                select(Sensor).where(Sensor.code == sensor_code)
+            )
+            sensor = sensor_result.scalars().first()
+
+            if not sensor:
+                logger.error(f"Sensor not found with code: {sensor_code}")
+                return
+
+            logger.info(
+                f"Found vehicle ID {vehicle.id} ({vehicle_code}) and sensor ID {sensor.id} ({sensor_code})"
+            )
+
+            # Update last_seen_at in vehicle_sensors
+            vs_result = await db.execute(
+                select(VehicleSensor).where(
+                    and_(
+                        VehicleSensor.vehicle_id == vehicle.id,
+                        VehicleSensor.sensor_id == sensor.id,
+                        VehicleSensor.is_installed == True,
+                    )
+                )
+            )
+            vehicle_sensor = vs_result.scalars().first()
+
+            if vehicle_sensor:
+                vehicle_sensor.last_seen_at = datetime.utcnow()
+                await db.commit()
+                logger.info(
+                    f"Updated last_seen_at for vehicle {vehicle_code} sensor {sensor_code}"
+                )
+            else:
+                logger.warning(
+                    f"Vehicle-sensor assignment not found for {vehicle_code}/{sensor_code}"
+                )
+
+            # Handle sensor_log
+            if log_type == "sensor_log":
+                await self.handle_sensor_log_new(
+                    db, payload, vehicle.id, sensor.id, vehicle_code, sensor_code
+                )
+            else:
+                logger.warning(f"Unknown log type in new format: {log_type}")
+
+    async def handle_old_format_message(self, topic_parts: list, payload: str):
+        """
+        Handle old format: seano/{vehicle_code}/log_type
+        For backward compatibility
+        """
+        registration_code = topic_parts[1]
+        log_type = topic_parts[2]
+
+        # Create database session
+        async with AsyncSessionLocal() as db:
+            # Lookup vehicle by registration_code
+            from app.models.vehicle import Vehicle
+            from sqlalchemy import select
+
+            result = await db.execute(
+                select(Vehicle).where(Vehicle.code == registration_code)
+            )
+            vehicle = result.scalars().first()
+
+            if not vehicle:
+                logger.error(f"Vehicle not found with code: {registration_code}")
+                return
+
+            vehicle_id = vehicle.id
+            logger.info(
+                f"Found vehicle ID {vehicle_id} for code {registration_code}"
+            )
+
+            if log_type == "raw_log":
+                await self.handle_raw_log(
+                    db, payload, vehicle_id, registration_code
+                )
+            elif log_type == "sensor_log":
+                await self.handle_sensor_log(
+                    db, payload, vehicle_id, registration_code
+                )
+            elif log_type == "vehicle_log":
+                await self.handle_vehicle_log(
+                    db, payload, vehicle_id, registration_code
+                )
+            else:
+                logger.warning(f"Unknown log type: {log_type}")
+
 
     async def handle_raw_log(
         self, db: AsyncSession, payload: str, vehicle_id: int, registration_code: str
@@ -239,6 +332,47 @@ class MQTTListener:
         except Exception as e:
             logger.error(
                 f"Error saving vehicle log from vehicle {registration_code}: {e}"
+            )
+            await db.rollback()
+
+    async def handle_sensor_log_new(
+        self,
+        db: AsyncSession,
+        payload: str,
+        vehicle_id: int,
+        sensor_id: int,
+        vehicle_code: str,
+        sensor_code: str,
+    ):
+        """Handle sensor log messages from new format (with sensor code in topic)"""
+        try:
+            data = json.loads(payload)
+
+            # Save sensor log
+            sensor_log = SensorLog(
+                vehicle_id=vehicle_id,
+                sensor_id=sensor_id,
+                data=data,
+            )
+
+            db.add(sensor_log)
+            await db.commit()
+            logger.info(
+                f"Sensor log saved for vehicle {vehicle_code} sensor {sensor_code}"
+            )
+
+            # Broadcast to WebSocket clients
+            await websocket_manager.broadcast_sensor_log(
+                vehicle_code, sensor_id, data
+            )
+
+        except json.JSONDecodeError as e:
+            logger.error(
+                f"Invalid JSON in sensor log from vehicle {vehicle_code} sensor {sensor_code}: {e}"
+            )
+        except Exception as e:
+            logger.error(
+                f"Error saving sensor log from vehicle {vehicle_code} sensor {sensor_code}: {e}"
             )
             await db.rollback()
 

@@ -11,6 +11,7 @@ from .routes import (
     vehicle,
     raw_log,
     vehicle_log,
+    vehicle_sensor,
     user,
     role,
     permission,
@@ -19,6 +20,8 @@ from .routes import (
     websocket,
 )
 from .services.mqtt_service import mqtt_listener
+from .services.connection_monitor import connection_monitor
+from .services.websocket_service import websocket_manager
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -31,13 +34,23 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    # Set websocket manager for connection monitor
+    connection_monitor.set_websocket_manager(websocket_manager)
+
     # Start MQTT listener as background task
     mqtt_task = asyncio.create_task(mqtt_listener.start_listener())
     logger.info("MQTT listener started")
 
+    # Start connection monitor as background task
+    await connection_monitor.start()
+    logger.info("Connection monitor started")
+
     yield
 
     # Shutdown
+    await connection_monitor.stop()
+    logger.info("Connection monitor stopped")
+    
     await mqtt_listener.stop_listener()
     mqtt_task.cancel()
     try:
@@ -65,6 +78,7 @@ app.include_router(sensor.router, prefix="/sensors", tags=["Sensors"])
 app.include_router(sensor_type.router, prefix="/sensor-types", tags=["Sensor Types"])
 app.include_router(sensor_log.router, prefix="/sensor-logs", tags=["Sensor Logs"])
 app.include_router(vehicle.router, prefix="/vehicles", tags=["Vehicles"])
+app.include_router(vehicle_sensor.router, tags=["Vehicle-Sensors"])  # No prefix, uses /vehicles/{id}/sensors
 app.include_router(raw_log.router, prefix="/raw-logs", tags=["Raw Logs"])
 app.include_router(vehicle_log.router, prefix="/vehicle-logs", tags=["Vehicle Logs"])
 app.include_router(mqtt.router, prefix="/api", tags=["MQTT"])

@@ -5,6 +5,7 @@ import pkgutil
 import traceback
 
 from app.database import engine, Base
+from sqlalchemy import text
 import app.models  # pastikan ada __init__.py di folder ini
 
 
@@ -28,6 +29,20 @@ async def reset_database():
         await conn.run_sync(Base.metadata.drop_all)
         print("[INFO] Creating all tables...")
         await conn.run_sync(Base.metadata.create_all)
+
+        # Convert to Hypertables (TimescaleDB)
+        print("[INFO] ⚡ Converting to Hypertables...")
+        try:
+            # Enable TimescaleDB extension if not exists
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;"))
+            
+            # Convert tables
+            await conn.execute(text("SELECT create_hypertable('sensor_logs', 'created_at', if_not_exists => TRUE);"))
+            await conn.execute(text("SELECT create_hypertable('vehicle_logs', 'created_at', if_not_exists => TRUE);"))
+            await conn.execute(text("SELECT create_hypertable('raw_logs', 'created_at', if_not_exists => TRUE);"))
+            print("[SUCCESS] ✅ Hypertables created.")
+        except Exception as e:
+            print(f"[WARN] ⚠️ Failed to create hypertables (Is TimescaleDB installed?): {e}")
 
     print("[SUCCESS] 🎉 Database reset completed.")
 

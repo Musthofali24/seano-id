@@ -13,6 +13,9 @@ class MQTTSettings(BaseSettings):
     MQTT_TOPIC_SENSOR_LOG: str = os.getenv(
         "MQTT_TOPIC_SENSOR_LOG", "seano/+/sensor_log"
     )
+    MQTT_TOPIC_SENSOR_LOG_NEW: str = os.getenv(
+        "MQTT_TOPIC_SENSOR_LOG_NEW", "seano/+/+/sensor_log"
+    )  # New format: seano/{vehicle_code}/{sensor_code}/sensor_log
     MQTT_TOPIC_VEHICLE_LOG: str = os.getenv(
         "MQTT_TOPIC_VEHICLE_LOG", "seano/+/vehicle_log"
     )

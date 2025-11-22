@@ -46,7 +46,7 @@ async def seed_users():
 
         # Create Regular user
         regular_user = User(
-            email="user@example.com",
+            email="seanouser@gmail.com",
             password_hash=hashed,
             full_name="Regular User",
             is_verified=True,
@@ -68,7 +68,7 @@ async def seed_users():
         print(f"   Password: {password}")
         print(f"   Role:     Admin (43 permissions)")
         print(f"\n📌 REGULAR USER:")
-        print(f"   Email:    user@example.com")
+        print(f"   Email:    seanouser@gmail.com")
         print(f"   Password: {password}")
         print(f"   Role:     User (25 permissions)")
         print("\n" + "=" * 70)
