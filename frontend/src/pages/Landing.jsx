@@ -1,6 +1,7 @@
 import Banner from "../components/Section/Landing/Banner";
 import Navbar from "../components/Section/Landing/Layout/Navbar";
 import Partner from "../components/Section/Landing/Partner";
+import Footer from "../components/Section/Landing/Layout/Footer";
 
 const Landing = () => {
   return (
@@ -8,6 +9,7 @@ const Landing = () => {
       <Navbar />
       <Banner />
       <Partner />
+      <Footer />
     </div>
   );
 };

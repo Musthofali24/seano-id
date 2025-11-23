@@ -1,4 +1,3 @@
-import React from "react";
 import KemendikbudLogo from "../../../assets/Partner/KemendikbudLogo.webp";
 import BrinLogo from "../../../assets/Partner/BrinLogo.webp";
 import BimaLogo from "../../../assets/Partner/BimaLogo.webp";
