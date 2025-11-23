@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Gradient1 from "../../../assets/Gradient1.webp";
 
 const timelineData = [
@@ -100,13 +101,116 @@ const timelineData = [
   },
 ];
 
-const Timeline = () => {
+const TimelineCard = ({ item, index, progress }) => {
+  // Calculate trigger points based on index
+  // Total 6 items. Range 0 to 1.
+  // We want the item to start appearing slightly before the line reaches it.
+  const start = index / timelineData.length;
+  const end = start + 0.1; // Animation duration in terms of scroll progress
+
+  const opacity = useTransform(progress, [start, end], [0, 1]);
+  const scale = useTransform(progress, [start, end], [0.5, 1]);
+  const x = useTransform(
+    progress,
+    [start, end],
+    [index % 2 === 0 ? -50 : 50, 0]
+  );
+
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden px-8 lg:px-0 py-20"
+      className={`flex flex-col lg:flex-row items-center justify-between w-full ${
+        index % 2 === 0 ? "lg:flex-row-reverse" : ""
+      }`}
+    >
+      {/* Empty Space for alignment */}
+      <div className="hidden lg:block w-5/12"></div>
+
+      {/* Center Dot */}
+      <motion.div
+        style={{ scale, opacity }}
+        className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-[#0B1120] z-10 hidden lg:block shadow-[0_0_10px_rgba(56,189,248,0.5)]"
+      ></motion.div>
+
+      {/* Card */}
+      <motion.div style={{ opacity, x }} className="w-full lg:w-5/12">
+        <div className="group relative bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:border-white/20 shadow-lg">
+          {/* Date Badge */}
+          <div className="absolute -top-4 right-8 bg-primary border border-primary/30 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
+            {item.date}
+          </div>
+
+          <div className="space-y-4 mt-2">
+            <div>
+              <h4 className="text-primary text-sm font-medium tracking-wide uppercase mb-1">
+                {item.focus}
+              </h4>
+              <h3 className="text-2xl font-bold text-white">{item.title}</h3>
+            </div>
+
+            <p className="text-gray-400 text-sm leading-relaxed">
+              {item.description}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+              <div>
+                <h5 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">
+                  Key Outputs
+                </h5>
+                <ul className="space-y-1">
+                  {item.outputs.map((output, i) => (
+                    <li
+                      key={i}
+                      className="text-gray-400 text-xs flex items-start gap-2"
+                    >
+                      <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0"></span>
+                      {output}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h5 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">
+                  Targets
+                </h5>
+                <ul className="space-y-1">
+                  {item.targets.map((target, i) => (
+                    <li
+                      key={i}
+                      className="text-gray-400 text-xs flex items-start gap-2"
+                    >
+                      <span className="w-1 h-1 rounded-full bg-green-400 mt-1.5 flex-shrink-0"></span>
+                      {target}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const Timeline = () => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start center", "end center"],
+  });
+
+  const scaleY = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  return (
+    <div
+      className="relative min-h-screen w-full overflow-hidden px-4 lg:px-0 pt-20 pb-40"
       id="timeline"
     >
-      {/* Gradient Background */}
+      {/* Gradient Background Left */}
       <div className="absolute top-1/4 left-0 w-[800px] h-[800px] pointer-events-none z-0 opacity-40">
         <img
           src={Gradient1}
@@ -125,100 +229,46 @@ const Timeline = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-start lg:text-center mb-20 space-y-5">
-          <div className="inline-flex border border-gray-700 py-2 px-4 rounded-full bg-white/5 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-20 space-y-4"
+        >
+          <div className="inline-block border border-gray-700 py-2 px-4 rounded-full bg-white/5 backdrop-blur-sm">
             <h3 className="text-gray-400 text-sm font-semibold tracking-wider uppercase">
               Roadmap
             </h3>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white">
-            SEANO Timeline
+            SEANO Development Timeline
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
             A strategic roadmap from concept to open-sea deployment, ensuring
             precision, reliability, and innovation at every stage.
           </p>
-        </div>
+        </motion.div>
 
         {/* Timeline Container */}
-        <div className="relative">
-          {/* Vertical Line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-transparent via-gray-700 to-transparent hidden lg:block"></div>
+        <div ref={ref} className="relative">
+          {/* Vertical Line Background (Static) */}
+          <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-white/10 hidden lg:block"></div>
+
+          {/* Vertical Line Animated */}
+          <motion.div
+            style={{ scaleY, originY: 0 }}
+            className="absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-gradient-to-b from-primary via-blue-400 to-primary hidden lg:block shadow-[0_0_15px_rgba(56,189,248,0.6)]"
+          ></motion.div>
 
           <div className="space-y-12 lg:space-y-0">
             {timelineData.map((item, index) => (
-              <div
+              <TimelineCard
                 key={index}
-                className={`flex flex-col lg:flex-row items-center justify-between w-full ${
-                  index % 2 === 0 ? "lg:flex-row-reverse" : ""
-                }`}
-              >
-                {/* Empty Space for alignment */}
-                <div className="hidden lg:block w-5/12"></div>
-
-                {/* Center Dot */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-4 border-[#0B1120] z-10 hidden lg:block shadow-[0_0_10px_rgba(56,189,248,0.5)]"></div>
-
-                {/* Card */}
-                <div className="w-full lg:w-5/12">
-                  <div className="group relative bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition-all duration-300 hover:border-white/20 shadow-lg">
-                    {/* Date Badge */}
-                    <div className="absolute -top-4 right-8 bg-primary border border-primary/30 text-white px-4 py-1 rounded-full text-sm font-semibold shadow-lg">
-                      {item.date}
-                    </div>
-
-                    <div className="space-y-4 mt-2">
-                      <div>
-                        <h4 className="text-primary text-sm font-medium tracking-wide uppercase mb-1">
-                          {item.focus}
-                        </h4>
-                        <h3 className="text-2xl font-bold text-white">
-                          {item.title}
-                        </h3>
-                      </div>
-
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {item.description}
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                        <div>
-                          <h5 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">
-                            Key Outputs
-                          </h5>
-                          <ul className="space-y-1">
-                            {item.outputs.map((output, i) => (
-                              <li
-                                key={i}
-                                className="text-gray-400 text-xs flex items-start gap-2"
-                              >
-                                <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0"></span>
-                                {output}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <h5 className="text-white text-xs font-semibold uppercase tracking-wider mb-2 opacity-80">
-                            Targets
-                          </h5>
-                          <ul className="space-y-1">
-                            {item.targets.map((target, i) => (
-                              <li
-                                key={i}
-                                className="text-gray-400 text-xs flex items-start gap-2"
-                              >
-                                <span className="w-1 h-1 rounded-full bg-green-400 mt-1.5 flex-shrink-0"></span>
-                                {target}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                item={item}
+                index={index}
+                progress={scaleY}
+              />
             ))}
           </div>
         </div>
