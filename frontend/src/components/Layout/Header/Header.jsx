@@ -1,7 +1,7 @@
 import { FaMoon, FaSun, FaRegUser, FaRegBell, FaBell } from "react-icons/fa";
 import { HiOutlineMenuAlt2 } from "react-icons/hi";
 import { FiLogOut } from "react-icons/fi";
-import SeanoLogo from "../../../assets/logo_seano.png";
+import SeanoLogo from "../../../assets/logo_seano.webp";
 import { useState, useRef, useEffect } from "react";
 import userDefault from "../../../assets/user01.png";
 import { useAuthContext } from "../../../hooks/useAuthContext";

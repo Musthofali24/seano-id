@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaMoon, FaSun } from "react-icons/fa6";
-import SeanoLogo from "../../assets/logo_seano.png";
+import SeanoLogo from "../../assets/logo_seano.webp";
 import useAuth from "../../hooks/useAuth";
 
 export default function EmailRegistration({ darkMode, toggleDarkMode }) {

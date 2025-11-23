@@ -1,4 +1,4 @@
-import SeanoLogo from "../../assets/logo_seano.png";
+import SeanoLogo from "../../assets/logo_seano.webp";
 import { Link } from "react-router-dom";
 import { FaEnvelope, FaMoon, FaSun } from "react-icons/fa6";
 

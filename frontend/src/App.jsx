@@ -151,12 +151,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black">
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Landing darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-            }
-          />
+          <Route path="/" element={<Landing />} />
           <Route
             path="/auth/login"
             element={

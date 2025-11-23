@@ -2,8 +2,6 @@ import asyncio
 import importlib
 import pkgutil
 import traceback
-
-# pastikan app.models adalah package (ada __init__.py)
 import app.models
 from app.database import AsyncSessionLocal, engine
 from app.seeds.seed_roles import seed_roles
@@ -26,7 +24,7 @@ async def import_all_models():
 
 
 async def run_seeders():
-    await import_all_models()  # <--- Tambahin ini sebelum seed jalan
+    await import_all_models()
     print("[INFO] Starting database seeding...")
     await seed_roles()
     await seed_permissions()
