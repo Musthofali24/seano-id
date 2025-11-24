@@ -207,7 +207,7 @@ const Timeline = () => {
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden px-4 lg:px-0 pt-20 pb-40"
+      className="relative min-h-screen w-full overflow-hidden px-8 lg:px-0 pt-20 pb-40"
       id="timeline"
     >
       {/* Gradient Background Left */}
@@ -242,7 +242,7 @@ const Timeline = () => {
             </h3>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white">
-            SEANO Development Timeline
+            SEANO Timeline
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto">
             A strategic roadmap from concept to open-sea deployment, ensuring
