@@ -130,7 +130,8 @@ const MissionSidebar = ({
         const zoneHeight = north - south;
         const zoneWidth = east - west;
 
-        const spacing = Math.min(0.0006, Math.max(0.0001, zoneHeight / 8));
+        // const spacing = Math.min(0.0006, Math.max(0.0001, zoneHeight / 8));
+        const spacing = Math.min(0.001, Math.max(0.0002, zoneHeight / 6));
         const waypointSpacing = Math.min(
           0.0008,
           Math.max(0.0001, zoneWidth / 10)
@@ -185,24 +186,15 @@ const MissionSidebar = ({
                 const startPoint = segment[0];
                 const endPoint = segment[segment.length - 1];
 
-                const segmentLength = Math.abs(endPoint.lng - startPoint.lng);
-                const numWaypoints = Math.max(
-                  2,
-                  Math.ceil(segmentLength / waypointSpacing)
-                );
+                // Only add start and end points (edges), no intermediate points
+                const pointsToAdd = [startPoint];
 
-                for (let i = 0; i < numWaypoints; i++) {
-                  const ratio = i / (numWaypoints - 1);
-                  let lng;
+                // Only add end point if it's distinct enough from start point
+                if (Math.abs(endPoint.lng - startPoint.lng) > 0.00001) {
+                  pointsToAdd.push(endPoint);
+                }
 
-                  if (isEvenLine) {
-                    lng =
-                      startPoint.lng + ratio * (endPoint.lng - startPoint.lng);
-                  } else {
-                    lng =
-                      endPoint.lng - ratio * (endPoint.lng - startPoint.lng);
-                  }
-
+                pointsToAdd.forEach((pt) => {
                   newPathWaypoints.push({
                     id:
                       Date.now() +
@@ -210,7 +202,7 @@ const MissionSidebar = ({
                       Math.random() * 1000,
                     type: "path",
                     lat: currentLat,
-                    lng: lng,
+                    lng: pt.lng,
                     altitude: 0,
                     speed: zone.speed || missionParams.speed,
                     delay: 0,
@@ -218,7 +210,7 @@ const MissionSidebar = ({
                     radius: missionParams.radius,
                     action: "waypoint",
                   });
-                }
+                });
               }
             });
           }
@@ -230,90 +222,45 @@ const MissionSidebar = ({
 
     if (newPathWaypoints.length > 0) {
       const filteredWaypoints = [];
-      const minDistance = 0.0003;
+      const minDistance = 0.00005; // Reduced min distance since we only have edge points
 
       let sortedWaypoints = [];
 
-      if (homeLocation && newPathWaypoints.length > 0) {
-        const latGroups = {};
-        const latSpacing = 0.0006;
+      // Always sort South to North (Bottom to Top)
+      const latGroups = {};
+      // Use a slightly larger epsilon for grouping to handle floating point errors
+      const latSpacing = 0.0006;
 
-        newPathWaypoints.forEach((wp) => {
-          const latKey = Math.round(wp.lat / latSpacing) * latSpacing;
-          if (!latGroups[latKey]) {
-            latGroups[latKey] = [];
-          }
-          latGroups[latKey].push(wp);
-        });
+      newPathWaypoints.forEach((wp) => {
+        // Group by latitude roughly to handle small variations
+        const latKey = Math.round(wp.lat / 0.00001) * 0.00001;
+        if (!latGroups[latKey]) {
+          latGroups[latKey] = [];
+        }
+        latGroups[latKey].push(wp);
+      });
 
-        const latKeys = Object.keys(latGroups)
-          .map((k) => parseFloat(k))
-          .sort((a, b) => a - b);
+      // Sort latitudes from South (low) to North (high)
+      const latKeys = Object.keys(latGroups)
+        .map((k) => parseFloat(k))
+        .sort((a, b) => a - b);
 
-        const closestLatKey = latKeys.reduce((closest, current) =>
-          Math.abs(current - homeLocation.lat) <
-          Math.abs(closest - homeLocation.lat)
-            ? current
-            : closest
-        );
+      sortedWaypoints = [];
+      latKeys.forEach((latKey, lineIndex) => {
+        const lineWaypoints = latGroups[latKey];
+        const isEvenLine = lineIndex % 2 === 0;
 
-        const shouldStartFromNorth =
-          homeLocation.lat > (latKeys[0] + latKeys[latKeys.length - 1]) / 2;
-
-        const closestLatIndex = latKeys.indexOf(closestLatKey);
-        let reorderedLatKeys;
-
-        if (shouldStartFromNorth) {
-          reorderedLatKeys = [
-            ...latKeys.slice(closestLatIndex).reverse(),
-            ...latKeys.slice(0, closestLatIndex).reverse(),
-          ];
+        // Zigzag pattern:
+        // Even lines: West -> East (Left -> Right)
+        // Odd lines: East -> West (Right -> Left)
+        if (isEvenLine) {
+          lineWaypoints.sort((a, b) => a.lng - b.lng);
         } else {
-          reorderedLatKeys = [
-            ...latKeys.slice(closestLatIndex),
-            ...latKeys.slice(0, closestLatIndex),
-          ];
+          lineWaypoints.sort((a, b) => b.lng - a.lng);
         }
 
-        sortedWaypoints = [];
-        reorderedLatKeys.forEach((latKey, lineIndex) => {
-          const lineWaypoints = latGroups[latKey];
-          const isEvenLine = lineIndex % 2 === 0;
-
-          if (lineIndex === 0) {
-            const homeIsWest =
-              homeLocation.lng <
-              (Math.min(...lineWaypoints.map((w) => w.lng)) +
-                Math.max(...lineWaypoints.map((w) => w.lng))) /
-                2;
-
-            if (homeIsWest) {
-              lineWaypoints.sort((a, b) => a.lng - b.lng);
-            } else {
-              lineWaypoints.sort((a, b) => b.lng - a.lng);
-            }
-          } else {
-            if (isEvenLine) {
-              lineWaypoints.sort((a, b) => a.lng - b.lng);
-            } else {
-              lineWaypoints.sort((a, b) => b.lng - a.lng);
-            }
-          }
-
-          sortedWaypoints.push(...lineWaypoints);
-        });
-      } else {
-        sortedWaypoints = newPathWaypoints.sort((a, b) => {
-          if (Math.abs(a.lat - b.lat) > 0.0001) {
-            return a.lat - b.lat;
-          }
-          const latIndex = Math.round(
-            (a.lat - newPathWaypoints[0].lat) / 0.0006
-          );
-          const isEvenLine = latIndex % 2 === 0;
-          return isEvenLine ? a.lng - b.lng : b.lng - a.lng;
-        });
-      }
+        sortedWaypoints.push(...lineWaypoints);
+      });
 
       sortedWaypoints.forEach((waypoint, index) => {
         if (index === 0) {
