@@ -7,12 +7,28 @@ import GeotronixLogo from "../../../assets/Partner/GeotronixLogo.webp";
 
 const Partner = () => {
   const partners = [
-    { name: "Kemendikbud", logo: KemendikbudLogo },
-    { name: "Brin", logo: BrinLogo },
-    { name: "Bima", logo: BimaLogo },
-    { name: "Polman", logo: PolmanLogo },
-    { name: "Dikti", logo: DiktiLogo },
-    { name: "Geotronix", logo: GeotronixLogo },
+    {
+      name: "Kemendiktisaintek",
+      logo: KemendikbudLogo,
+      link: "https://kemdiktisaintek.go.id/",
+    },
+    { name: "Brin", logo: BrinLogo, link: "https://www.brin.go.id/" },
+    {
+      name: "Bima",
+      logo: BimaLogo,
+      link: "https://bima.kemdiktisaintek.go.id/",
+    },
+    {
+      name: "Polman",
+      logo: PolmanLogo,
+      link: "https://www.polman-bandung.ac.id/",
+    },
+    { name: "Dikti", logo: DiktiLogo, link: "https://kemdiktisaintek.go.id/" },
+    {
+      name: "Geotronix",
+      logo: GeotronixLogo,
+      link: "https://www.geotronix.co.id/",
+    },
   ];
 
   return (
@@ -27,8 +43,11 @@ const Partner = () => {
             {/* First set of logos */}
             <div className="flex items-center gap-16 px-8">
               {partners.map((partner, index) => (
-                <div
+                <a
                   key={`partner-1-${index}`}
+                  href={partner.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
@@ -36,15 +55,18 @@ const Partner = () => {
                     alt={partner.name}
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
-                </div>
+                </a>
               ))}
             </div>
 
             {/* Second set of logos for seamless loop */}
             <div className="flex items-center gap-16 px-8">
               {partners.map((partner, index) => (
-                <div
+                <a
                   key={`partner-2-${index}`}
+                  href={partner.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
@@ -52,14 +74,17 @@ const Partner = () => {
                     alt={partner.name}
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
-                </div>
+                </a>
               ))}
             </div>
             {/* Third set of logos for extra safety on wide screens */}
             <div className="flex items-center gap-16 px-8">
               {partners.map((partner, index) => (
-                <div
+                <a
                   key={`partner-3-${index}`}
+                  href={partner.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
@@ -67,7 +92,7 @@ const Partner = () => {
                     alt={partner.name}
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
-                </div>
+                </a>
               ))}
             </div>
           </div>

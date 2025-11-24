@@ -67,7 +67,7 @@ const Banner = () => {
               <span className="text-white">
                 for{" "}
                 <span className="bg-gradient-to-b from-red-600 via-red-500 to-white bg-clip-text text-transparent font-extrabold">
-                  Indonesia's
+                  Indonesia
                 </span>{" "}
                 Maritime Future
               </span>
@@ -96,18 +96,18 @@ const Banner = () => {
             >
               <a
                 href="#learn-more"
-                className="group relative px-7 py-4 bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] bg-left hover:bg-right text-white rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all duration-500 ease-in-out inline-flex items-center gap-2 w-full sm:w-auto justify-center transform hover:scale-105"
+                className="group relative px-3 py-4 bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] bg-left hover:bg-right text-white rounded-full font-semibold shadow-xl hover:shadow-2xl transition-all duration-500 ease-in-out inline-flex items-center gap-2 w-full sm:w-auto justify-center transform hover:scale-105"
               >
                 Learn More
-                <HiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
 
               <a
                 href="#watch-demo"
-                className="group px-7 py-4 bg-transparent border-2 border-gray-700 hover:border-primary text-white rounded-full font-semibold transition-all duration-300 ease-in-out inline-flex items-center gap-2 w-full sm:w-auto justify-center hover:shadow-lg"
+                className="group px-3 py-4 bg-transparent border-2 border-gray-700 hover:border-primary text-white rounded-full font-semibold transition-all duration-300 ease-in-out inline-flex items-center gap-2 w-full sm:w-auto justify-center hover:shadow-lg"
               >
                 Watch Demo
-                <HiArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
             </motion.div>
           </div>
@@ -146,7 +146,7 @@ const Banner = () => {
         className="absolute inset-x-0 top-60 w-full h-full object-cover scale-130"
       />
       {/* Dark Gradient Overlay in Front of Boat (Bottom) */}
-      <div className="absolute inset-x-0 bottom-0 h-3/3 bg-gradient-to-t from-black via-black/50 to-transparent z-20 pointer-events-none"></div>
+      <div className="absolute inset-x-0 bottom-0 h-1/3 lg:h-3/3 bg-gradient-to-t from-black via-black/50 to-transparent z-20 pointer-events-none"></div>
     </div>
   );
 };

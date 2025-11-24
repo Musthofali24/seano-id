@@ -234,7 +234,7 @@ const Timeline = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20 space-y-4"
+          className="textstart lg:text-center mb-20 space-y-4"
         >
           <div className="inline-block border border-gray-700 py-2 px-4 rounded-full bg-white/5 backdrop-blur-sm">
             <h3 className="text-gray-400 text-sm font-semibold tracking-wider uppercase">
