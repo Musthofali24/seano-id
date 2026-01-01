@@ -1,41 +1,194 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
-import { RoleModal, RoleTable } from "../components/Widgets/Role";
+import { RoleModal, EditRoleModal, ViewRoleModal, RoleTable } from "../components/Widgets/Role";
+import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import useRoleData from "../hooks/useRoleData";
+import usePermissionData from "../hooks/usePermissionData";
+import { API_ENDPOINTS } from "../config";
 import { Title } from "../ui";
 
 const Role = () => {
   useTitle("Role");
   const { roleData, loading, actions } = useRoleData();
-  const [showModal, setShowModal] = useState(false);
+  const { permissionData } = usePermissionData();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  // Get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("access_token");
+    return {
+      "Content-Type": "application/json",
+      Authorization: token ? `Bearer ${token}` : "",
+    };
+  };
 
   const handleAddRole = async (formData) => {
-    const result = await actions.addRole(formData);
+    // First create the role
+    const result = await actions.addRole({
+      name: formData.name,
+      description: formData.description,
+    });
+
+    if (!result.success) {
+      return result;
+    }
+
+    // If role created successfully and has permissions, assign them
+    if (formData.permissions && formData.permissions.length > 0 && result.data?.id) {
+      try {
+        // Assign each permission to the role
+        for (const permissionId of formData.permissions) {
+          await fetch(API_ENDPOINTS.PERMISSIONS.ASSIGN_TO_ROLE, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              role_id: result.data.id,
+              permission_id: permissionId,
+            }),
+          });
+        }
+      } catch (error) {
+        console.error("Failed to assign permissions:", error);
+        // Role is created but permissions might not be assigned
+        // Still return success but log the error
+      }
+    }
+
     if (result.success) {
-      setShowModal(false);
+      setShowAddModal(false);
+      // Refresh role data to get updated permissions
+      actions.refreshData();
     }
     return result;
   };
 
-  const handleEditRole = (role) => {
-    // TODO: Implement edit role functionality
-    console.log("Edit role:", role);
+  const handleEditRole = async (role) => {
+    // Fetch full role data with permissions
+    try {
+      const response = await fetch(API_ENDPOINTS.ROLES.BY_ID(role.id), {
+        headers: getAuthHeaders(),
+      });
+      if (response.ok) {
+        const fullRole = await response.json();
+        setSelectedRole(fullRole);
+        setShowEditModal(true);
+      } else {
+        // Fallback to role from table if fetch fails
+        setSelectedRole(role);
+        setShowEditModal(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch role details:", error);
+      setSelectedRole(role);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdateRole = async (formData) => {
+    if (!selectedRole) return { success: false };
+
+    // First update the role
+    const result = await actions.updateRole(selectedRole.id, {
+      name: formData.name,
+      description: formData.description,
+    });
+
+    if (!result.success) {
+      return result;
+    }
+
+    // Handle permissions update
+    if (formData.permissions !== undefined) {
+      try {
+        // Get current role permissions from selectedRole (already fetched with permissions)
+        const currentPermissionIds = selectedRole?.permissions?.map(p => p.id) || [];
+
+        // Find permissions to add and remove
+        const toAdd = formData.permissions.filter(id => !currentPermissionIds.includes(id));
+        const toRemove = currentPermissionIds.filter(id => !formData.permissions.includes(id));
+
+        // Add new permissions
+        for (const permissionId of toAdd) {
+          await fetch(API_ENDPOINTS.PERMISSIONS.ASSIGN_TO_ROLE, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              role_id: selectedRole.id,
+              permission_id: permissionId,
+            }),
+          });
+        }
+
+        // Remove permissions
+        for (const permissionId of toRemove) {
+          await fetch(API_ENDPOINTS.PERMISSIONS.REMOVE_FROM_ROLE(selectedRole.id, permissionId), {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          });
+        }
+      } catch (error) {
+        console.error("Failed to update permissions:", error);
+      }
+    }
+
+    if (result.success) {
+      setShowEditModal(false);
+      setSelectedRole(null);
+      actions.refreshData();
+    }
+    return result;
   };
 
   const handleDeleteRole = (roleId, roleName) => {
-    // TODO: Implement delete role functionality
-    console.log("Delete role:", roleId, roleName);
+    setSelectedRole({ id: roleId, name: roleName });
+    setShowDeleteModal(true);
   };
 
-  const handleViewRole = (role) => {
-    // TODO: Implement view role functionality
-    console.log("View role:", role);
+  const handleConfirmDelete = async () => {
+    if (!selectedRole) return;
+
+    const result = await actions.deleteRole(selectedRole.id);
+    if (result.success) {
+      setShowDeleteModal(false);
+      setSelectedRole(null);
+    } else {
+      alert(`Failed to delete role: ${result.message}`);
+    }
   };
 
-  const handleBulkDeleteRoles = (selectedIds) => {
-    // TODO: Implement bulk delete roles functionality
-    console.log("Bulk delete roles:", selectedIds);
+  const handleViewRole = async (role) => {
+    // Fetch full role data with permissions
+    try {
+      const response = await fetch(API_ENDPOINTS.ROLES.BY_ID(role.id), {
+        headers: getAuthHeaders(),
+      });
+      if (response.ok) {
+        const fullRole = await response.json();
+        setSelectedRole(fullRole);
+        setShowViewModal(true);
+      } else {
+        setSelectedRole(role);
+        setShowViewModal(true);
+      }
+    } catch (error) {
+      console.error("Failed to fetch role details:", error);
+      setSelectedRole(role);
+      setShowViewModal(true);
+    }
+  };
+
+  const handleBulkDeleteRoles = async (selectedIds) => {
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} role(s)?`)) {
+      for (const id of selectedIds) {
+        await actions.deleteRole(id);
+      }
+      actions.refreshData();
+    }
   };
 
   return (
@@ -44,8 +197,8 @@ const Role = () => {
       <div className="flex items-center justify-between p-4">
         <Title title="Role Management" subtitle="Manage your roles" />
         <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer"
         >
           <FaPlus size={16} />
           Add Role
@@ -63,12 +216,54 @@ const Role = () => {
       />
 
       {/* Add Role Modal */}
-      {showModal && (
+      {showAddModal && (
         <RoleModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
           onSubmit={handleAddRole}
-          title="Add New Role"
+          permissionData={permissionData}
+        />
+      )}
+
+      {/* Edit Role Modal */}
+      {showEditModal && selectedRole && (
+        <EditRoleModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedRole(null);
+          }}
+          onSubmit={handleUpdateRole}
+          role={selectedRole}
+          permissionData={permissionData}
+        />
+      )}
+
+      {/* View Role Modal */}
+      {showViewModal && selectedRole && (
+        <ViewRoleModal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setSelectedRole(null);
+          }}
+          role={selectedRole}
+          permissionData={permissionData}
+        />
+      )}
+
+      {/* Delete Confirm Modal */}
+      {showDeleteModal && selectedRole && (
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedRole(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          title="Delete Role"
+          itemName={selectedRole.name}
+          itemType="role"
         />
       )}
     </div>

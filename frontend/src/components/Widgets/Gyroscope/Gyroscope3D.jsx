@@ -208,7 +208,7 @@ const Gyroscope3D = ({ gyroscopeData }) => {
   }, [gyroscopeData]);
 
   return (
-    <div className="w-full h-full bg-gray-50 dark:bg-secondary rounded-2xl">
+    <div className="w-full h-full bg-gray-50 dark:bg-black rounded-2xl">
       {/* 2D Compass */}
       <div className="absolute top-4 left-4 z-10 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md">
         <div className="flex items-center gap-4">

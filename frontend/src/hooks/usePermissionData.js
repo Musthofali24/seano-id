@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react'
+import { API_ENDPOINTS } from '../config'
 
 const usePermissionData = () => {
   const [permissionData, setPermissionData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('access_token')
+    return {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : ''
+    }
+  }
 
   // Stats derived from permission data
   const getPermissionStats = () => {
@@ -64,15 +74,34 @@ const usePermissionData = () => {
       setLoading(true)
       setError(null)
 
-      // API call would go here
-      // const response = await fetch('/api/permissions');
-      // const data = await response.json();
-      // setPermissionData(data);
+      const response = await fetch(API_ENDPOINTS.PERMISSIONS.LIST, {
+        headers: getAuthHeaders()
+      })
 
-      // For now, set empty array - will be populated by actual API
-      setPermissionData([])
+      if (!response.ok) {
+        // Handle 401/403 - user not authenticated
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          throw new Error('Authentication required. Please login again.')
+        }
+        
+        let errorMessage = 'Failed to fetch permissions'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.detail || errorMessage
+        } catch (parseError) {
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      setPermissionData(Array.isArray(data) ? data : [])
     } catch (err) {
+      console.error('Fetch permissions error:', err)
       setError(err.message)
+      setPermissionData([])
     } finally {
       setLoading(false)
     }
@@ -84,27 +113,23 @@ const usePermissionData = () => {
       setLoading(true)
       setError(null)
 
-      // API call would go here
-      // const response = await fetch('/api/permissions', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(permissionData)
-      // });
-      // const newPermission = await response.json();
+      const response = await fetch(API_ENDPOINTS.PERMISSIONS.CREATE, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(permissionData)
+      })
 
-      // For demo: create a new permission with current timestamp
-      const newPermission = {
-        id: Date.now(),
-        name: permissionData.name,
-        description: permissionData.description,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create permission')
       }
 
+      const newPermission = await response.json()
       setPermissionData(prev => [newPermission, ...prev])
 
       return { success: true, message: 'Permission added successfully!' }
     } catch (err) {
+      console.error('Add permission error:', err)
       setError(err.message)
       return { success: false, message: err.message }
     } finally {
@@ -118,29 +143,27 @@ const usePermissionData = () => {
       setLoading(true)
       setError(null)
 
-      // API call would go here
-      // const response = await fetch(`/api/permissions/${id}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(updatedData)
-      // });
-      // const updatedPermission = await response.json();
+      const response = await fetch(API_ENDPOINTS.PERMISSIONS.UPDATE(id), {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updatedData)
+      })
 
-      // For demo: update the permission in local state
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update permission')
+      }
+
+      const updatedPermission = await response.json()
       setPermissionData(prev =>
         prev.map(permission =>
-          permission.id === id
-            ? {
-                ...permission,
-                ...updatedData,
-                updated_at: new Date().toISOString()
-              }
-            : permission
+          permission.id === id ? updatedPermission : permission
         )
       )
 
       return { success: true, message: 'Permission updated successfully!' }
     } catch (err) {
+      console.error('Update permission error:', err)
       setError(err.message)
       return { success: false, message: err.message }
     } finally {
@@ -154,14 +177,21 @@ const usePermissionData = () => {
       setLoading(true)
       setError(null)
 
-      // API call would go here
-      // await fetch(`/api/permissions/${id}`, { method: 'DELETE' });
+      const response = await fetch(API_ENDPOINTS.PERMISSIONS.DELETE(id), {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
 
-      // For demo: remove from local state
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete permission')
+      }
+
       setPermissionData(prev => prev.filter(permission => permission.id !== id))
 
       return { success: true, message: 'Permission deleted successfully!' }
     } catch (err) {
+      console.error('Delete permission error:', err)
       setError(err.message)
       return { success: false, message: err.message }
     } finally {

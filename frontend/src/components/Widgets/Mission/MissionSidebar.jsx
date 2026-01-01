@@ -346,7 +346,7 @@ const MissionSidebar = ({
           </button>
           <button
             onClick={handleLoadMission}
-            className="px-3 py-2 bg-white hover:bg-gray-50 dark:bg-secondary dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl transition-all border border-gray-200 dark:border-slate-600"
+            className="px-3 py-2 bg-white hover:bg-gray-50 dark:bg-black dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-xl transition-all border border-gray-200 dark:border-slate-600"
           >
             Load
           </button>
@@ -358,7 +358,7 @@ const MissionSidebar = ({
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
           Mission Info
         </h3>
-        <div className="bg-white dark:bg-secondary p-4 rounded-2xl border border-gray-200 dark:border-slate-600 space-y-3">
+        <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-200 dark:border-slate-600 space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-500 dark:text-gray-400">
               Name
@@ -465,7 +465,7 @@ const MissionSidebar = ({
           Home Location
         </h3>
         {homeLocation ? (
-          <div className="bg-white dark:bg-secondary p-4 rounded-2xl border border-green-200 dark:border-green-800">
+          <div className="bg-white dark:bg-black p-4 rounded-2xl border border-green-200 dark:border-green-800">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <FaHome
@@ -492,7 +492,7 @@ const MissionSidebar = ({
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-secondary p-4 rounded-2xl border border-red-200 dark:border-red-800">
+          <div className="bg-white dark:bg-black p-4 rounded-2xl border border-red-200 dark:border-red-800">
             <div className="flex items-center gap-2 mb-2">
               <FaHome className="text-red-600 dark:text-red-400" size={12} />
               <span className="text-xs font-medium text-red-600 dark:text-red-400">
@@ -526,7 +526,7 @@ const MissionSidebar = ({
                 !homeLocation ||
                 hasGeneratedWaypoints ||
                 waypoints.some((wp) => wp.type === "path")
-                  ? "bg-gray-200 dark:bg-gray-800 text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700 cursor-not-allowed"
+                  ? "bg-gray-200 dark:bg-black text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700 cursor-not-allowed"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
@@ -558,7 +558,7 @@ const MissionSidebar = ({
               .map((waypoint) => (
                 <div
                   key={waypoint.id}
-                  className="bg-white dark:bg-secondary p-3 rounded-2xl border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="bg-white dark:bg-black p-3 rounded-2xl border border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-sm font-medium text-gray-800 dark:text-white flex items-center gap-2">
@@ -591,7 +591,7 @@ const MissionSidebar = ({
                 </div>
               ))
           ) : (
-            <div className="bg-white dark:bg-secondary p-4 rounded-2xl border border-gray-200 dark:border-slate-600">
+            <div className="bg-white dark:bg-black p-4 rounded-2xl border border-gray-200 dark:border-slate-600">
               <div className="text-center py-6">
                 <FaMapMarkerAlt
                   className="mx-auto text-gray-400 dark:text-gray-600 mb-3"

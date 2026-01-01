@@ -1,47 +1,25 @@
-# Build stage
-FROM node:20-alpine AS builder
+# --- Stage 1: Builder ---
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json bun.lock ./
 
-# Install dependencies
-RUN npm install
+RUN bun install --frozen-lockfile
 
-# Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+RUN bun run build
 
-# Production stage
-FROM node:20-alpine
+# --- Stage 2: Production ---
+FROM oven/bun:1-alpine
 
 WORKDIR /app
-
-# Install serve to run the application
-RUN npm install -g serve
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
-
-# Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
-# Change ownership to nextjs user
-RUN chown -R nextjs:nodejs /app
-
-# Switch to non-root user
-USER nextjs
-
-# Expose port
 EXPOSE 5173
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5173', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
+  CMD bun -e "const http = require('http'); http.get('http://localhost:5173', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-# Start the application
-CMD ["serve", "-s", "dist", "-l", "5173"]
+CMD ["bun", "x", "serve", "dist", "-s", "-p", "5173", "--no-clipboard"]

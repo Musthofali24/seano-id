@@ -30,7 +30,7 @@ const RecentMissions = () => {
           </button>
           <Link
             to="/missions"
-            className="text-white hover:bg-white hover:text-blue-500 dark:hover:bg-secondary transition-colors duration-200 text-sm font-medium bg-blue-500 px-3 py-1 rounded-2xl"
+            className="text-white hover:bg-white hover:text-blue-500 dark:hover:bg-black transition-colors duration-200 text-sm font-medium bg-blue-500 px-3 py-1 rounded-2xl"
           >
             View All →
           </Link>

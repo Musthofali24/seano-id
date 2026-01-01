@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
+import RoleTableSkeleton from "../../Skeleton/RoleTableSkeleton";
 
 const RoleTable = ({
   roleData,
@@ -100,18 +101,8 @@ const RoleTable = ({
       header: "Role",
       accessorKey: "name",
       cell: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-            {row.roleIcon}
-          </div>
-          <div>
             <div className="font-medium text-gray-900 dark:text-white">
               {row.name}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {row.roleId}
-            </div>
-          </div>
         </div>
       ),
     },
@@ -153,7 +144,7 @@ const RoleTable = ({
           {onView && (
             <button
               onClick={() => onView(row)}
-              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20"
+              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20 cursor-pointer"
               title="View role"
             >
               <FaEye size={16} />
@@ -162,7 +153,7 @@ const RoleTable = ({
           {onEdit && (
             <button
               onClick={() => onEdit(row)}
-              className="inline-flex items-center justify-center p-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition-colors rounded hover:bg-green-50 dark:hover:bg-green-900/20"
+              className="inline-flex items-center justify-center p-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition-colors rounded hover:bg-green-50 dark:hover:bg-green-900/20 cursor-pointer"
               title="Edit role"
             >
               <FaEdit size={16} />
@@ -171,7 +162,7 @@ const RoleTable = ({
           {onDelete && (
             <button
               onClick={() => onDelete(row.id, row.name)}
-              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
               title="Delete role"
             >
               <FaTrash size={16} />
@@ -228,8 +219,10 @@ const RoleTable = ({
         data={transformedData}
         columns={columns}
         searchKeys={["name", "description"]}
-        loading={loading}
         pageSize={10}
+        loading={loading && transformedData.length === 0}
+        skeletonRows={5}
+        SkeletonComponent={RoleTableSkeleton}
       />
     </DataCard>
   );

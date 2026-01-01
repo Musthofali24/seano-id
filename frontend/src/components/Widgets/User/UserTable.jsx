@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
+import UserTableSkeleton from "../../Skeleton/UserTableSkeleton";
 
 const UserTable = ({
   userData,
@@ -14,22 +15,26 @@ const UserTable = ({
   const [selectedIds, setSelectedIds] = useState([]);
 
   const transformedData = userData.map((user) => {
+    // Get display name - use username if available, otherwise use email prefix
+    const displayName = user.username || user.email?.split('@')[0] || "Unknown User";
+    
     return {
       id: user.id,
       email: user.email || "No email",
-      fullName: user.full_name || "Unknown User",
-      status: user.is_active ? "Active" : "Inactive",
-      statusColor: user.is_active
+      fullName: displayName,
+      status: user.is_verified ? "Verified" : "Pending",
+      statusColor: user.is_verified
         ? "text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30"
-        : "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30",
+        : "text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30",
       created: user.created_at
         ? new Date(user.created_at).toLocaleDateString()
         : "Unknown",
       updated: user.updated_at
         ? new Date(user.updated_at).toLocaleDateString()
         : "Unknown",
-      avatar: getInitials(user.full_name),
+      avatar: getInitials(displayName),
       userId: `U${String(user.id).padStart(3, "0")}`,
+      originalUser: user
     };
   });
 
@@ -116,9 +121,6 @@ const UserTable = ({
             <div className="font-medium text-gray-900 dark:text-white">
               {row.fullName}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              {row.userId}
-            </div>
           </div>
         </div>
       ),
@@ -172,7 +174,7 @@ const UserTable = ({
           {onView && (
             <button
               onClick={() => onView(row)}
-              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20"
+              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20 cursor-pointer"
               title="View user"
             >
               <FaEye size={16} />
@@ -181,7 +183,7 @@ const UserTable = ({
           {onEdit && (
             <button
               onClick={() => onEdit(row)}
-              className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
               title="Edit user"
             >
               <FaEdit size={16} />
@@ -190,7 +192,7 @@ const UserTable = ({
           {onDelete && (
             <button
               onClick={() => onDelete(row.id, row.fullName)}
-              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
               title="Delete user"
             >
               <FaTrash size={16} />
@@ -200,16 +202,6 @@ const UserTable = ({
       ),
     },
   ];
-
-  if (loading && transformedData.length === 0) {
-    return (
-      <DataCard title="User Management">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </DataCard>
-    );
-  }
 
   return (
     <DataCard title="User Management">
@@ -251,6 +243,9 @@ const UserTable = ({
         pageSize={10}
         showPagination={true}
         emptyMessage="No users found. Click 'Add User' to create one."
+        loading={loading && transformedData.length === 0}
+        skeletonRows={5}
+        SkeletonComponent={UserTableSkeleton}
       />
     </DataCard>
   );

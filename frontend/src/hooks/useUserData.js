@@ -1,15 +1,25 @@
 import { useState, useEffect } from 'react'
+import { API_ENDPOINTS } from '../config'
 
 const useUserData = () => {
   const [userData, setUserData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Get auth token
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('access_token')
+    return {
+      'Content-Type': 'application/json',
+      Authorization: token ? `Bearer ${token}` : ''
+    }
+  }
+
   // Stats derived from user data
   const getUserStats = () => {
     const total = userData.length
-    const active = userData.filter(user => user.is_active).length
-    const inactive = total - active
+    const verified = userData.filter(user => user.is_verified).length
+    const unverified = total - verified
 
     // Email domain distribution
     const domainCounts = userData.reduce((acc, user) => {
@@ -26,10 +36,10 @@ const useUserData = () => {
 
     return {
       total,
-      active,
-      inactive,
+      verified,
+      unverified,
       topDomain: topDomain ? topDomain[0] : 'N/A',
-      activeRate: total > 0 ? ((active / total) * 100).toFixed(1) : '0'
+      verifiedRate: total > 0 ? ((verified / total) * 100).toFixed(1) : '0'
     }
   }
 
@@ -39,14 +49,35 @@ const useUserData = () => {
       setLoading(true)
       setError(null)
 
-      // API call would go here
-      // const response = await fetch('/api/users');
-      // const data = await response.json();
-      // setUserData(data);
+      const response = await fetch(API_ENDPOINTS.USERS.LIST, {
+        headers: getAuthHeaders()
+      })
 
-      // For now, set empty array - will be populated by actual API
-      setUserData([])
+      if (!response.ok) {
+        // Handle 401/403 - user not authenticated
+        if (response.status === 401 || response.status === 403) {
+          // Clear invalid token
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          throw new Error('Authentication required. Please login again.')
+        }
+        
+        // Try to parse error response
+        let errorMessage = 'Failed to fetch users'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.detail || errorMessage
+        } catch (parseError) {
+          // If can't parse JSON, use status text
+          errorMessage = response.statusText || errorMessage
+        }
+        throw new Error(errorMessage)
+      }
+
+      const data = await response.json()
+      setUserData(Array.isArray(data) ? data : [])
     } catch (err) {
+      console.error('Fetch users error:', err)
       setError(err.message)
       setUserData([])
     } finally {
@@ -57,25 +88,22 @@ const useUserData = () => {
   // Add new user
   const addUser = async userData => {
     try {
-      // API call would go here
-      // const response = await fetch('/api/users', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(userData)
-      // });
-      // const newUser = await response.json();
+      const response = await fetch(API_ENDPOINTS.USERS.CREATE, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData)
+      })
 
-      // For now, simulate adding to local state
-      const newUser = {
-        id: Date.now(),
-        ...userData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create user')
       }
 
+      const newUser = await response.json()
       setUserData(prev => [...prev, newUser])
       return { success: true, data: newUser }
     } catch (err) {
+      console.error('Add user error:', err)
       return { success: false, error: err.message }
     }
   }
@@ -83,24 +111,24 @@ const useUserData = () => {
   // Update user
   const updateUser = async (userId, userData) => {
     try {
-      // API call would go here
-      // const response = await fetch(`/api/users/${userId}`, {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(userData)
-      // });
-      // const updatedUser = await response.json();
+      const response = await fetch(API_ENDPOINTS.USERS.UPDATE(userId), {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(userData)
+      })
 
-      // For now, simulate updating local state
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update user')
+      }
+
+      const updatedUser = await response.json()
       setUserData(prev =>
-        prev.map(user =>
-          user.id === userId
-            ? { ...user, ...userData, updated_at: new Date().toISOString() }
-            : user
-        )
+        prev.map(user => (user.id === userId ? updatedUser : user))
       )
-      return { success: true }
+      return { success: true, data: updatedUser }
     } catch (err) {
+      console.error('Update user error:', err)
       return { success: false, error: err.message }
     }
   }
@@ -108,13 +136,20 @@ const useUserData = () => {
   // Delete user
   const deleteUser = async userId => {
     try {
-      // API call would go here
-      // await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      const response = await fetch(API_ENDPOINTS.USERS.DELETE(userId), {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      })
 
-      // For now, simulate removing from local state
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete user')
+      }
+
       setUserData(prev => prev.filter(user => user.id !== userId))
       return { success: true }
     } catch (err) {
+      console.error('Delete user error:', err)
       return { success: false, error: err.message }
     }
   }

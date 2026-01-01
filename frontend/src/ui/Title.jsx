@@ -7,7 +7,7 @@ const Title = ({ title, subtitle, children, showBreadcrumb = true }) => {
   // Generate breadcrumb items from current path
   const getBreadcrumbs = () => {
     const paths = location.pathname.split("/").filter((path) => path);
-    const breadcrumbs = [{ name: "Home", path: "/" }];
+    const breadcrumbs = [{ name: "Home", path: "/dashboard" }];
 
     let currentPath = "";
     paths.forEach((path) => {

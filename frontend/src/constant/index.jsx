@@ -184,9 +184,9 @@ export const menuGroups = [
 
 export const linksbottom = [
   {
-    href: "/settings",
-    icon: TbSettings,
-    text: "Settings",
+    href: "/profile",
+    icon: FaUser,
+    text: "Profile",
     size: sizeIcon,
     type: "link",
   },
@@ -1174,24 +1174,24 @@ export const getUserWidgetData = (
           : `${stats.total} users registered`,
     },
     {
-      title: "Active Users",
-      value: users.length > 0 ? stats.active : 0,
+      title: "Verified Users",
+      value: users.length > 0 ? stats.verified : 0,
       icon: <HiOutlineStatusOnline size={26} className="text-green-500" />,
       trendIcon: <FaArrowRight className="text-gray-400" />,
       trendText:
         users.length === 0
           ? "No data available"
-          : `${stats.active} users active`,
+          : `${stats.verified} users verified`,
     },
     {
-      title: "Inactive Users",
-      value: users.length > 0 ? stats.inactive : 0,
-      icon: <HiOutlineStatusOffline size={26} className="text-red-500" />,
+      title: "Unverified Users",
+      value: users.length > 0 ? stats.unverified : 0,
+      icon: <HiOutlineStatusOffline size={26} className="text-yellow-500" />,
       trendIcon: <FaArrowRight className="text-gray-400" />,
       trendText:
         users.length === 0
           ? "No data available"
-          : `${stats.inactive} users inactive`,
+          : `${stats.unverified} users unverified`,
     },
     {
       title: "Total Roles",

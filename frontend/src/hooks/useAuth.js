@@ -26,7 +26,10 @@ const useAuth = () => {
       let errorMessage = 'Something went wrong. Please try again.'
 
       if (err.response?.status === 401) {
-        errorMessage = err.response.data.detail || 'Invalid credentials.'
+        errorMessage =
+          err.response.data.detail ||
+          err.response.data.error ||
+          'Invalid credentials.'
       }
 
       setError(errorMessage)
@@ -54,18 +57,20 @@ const useAuth = () => {
         return {
           success: true,
           message:
-            data.message || 'Verification link has been sent to your email'
+            data.message || 'Verification email sent successfully! Please check your inbox.'
         }
       } else {
-        setError(data.detail || 'Failed to register email')
+        // Handle different error formats from backend (error, detail, message)
+        const errorMsg = data.error || data.detail || data.message || 'Failed to register email. Please try again.'
+        setError(errorMsg)
         return {
           success: false,
-          error: data.detail || 'Failed to register email'
+          error: errorMsg
         }
       }
     } catch (err) {
-      console.error(err)
-      const errorMessage = 'Server error. Please try again later.'
+      console.error('Registration error:', err)
+      const errorMessage = 'Unable to connect to server. Please check your internet connection and try again.'
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {
@@ -131,18 +136,19 @@ const useAuth = () => {
       if (res.ok) {
         return {
           success: true,
-          message: 'Account activated successfully! Redirecting...'
+          message: data.message || 'Account activated successfully! Redirecting...'
         }
       } else {
-        setError(data.detail || 'Activation failed. Please try again.')
+        const errorMsg = data.error || data.detail || 'Failed to activate account. Please try again.'
+        setError(errorMsg)
         return {
           success: false,
-          error: data.detail || 'Activation failed. Please try again.'
+          error: errorMsg
         }
       }
     } catch (err) {
-      console.error(err)
-      const errorMessage = 'Server error. Please try again later.'
+      console.error('Set credentials error:', err)
+      const errorMessage = 'Unable to connect to server. Please check your internet connection.'
       setError(errorMessage)
       return { success: false, error: errorMessage }
     } finally {

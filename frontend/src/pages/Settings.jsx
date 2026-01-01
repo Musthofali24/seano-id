@@ -9,8 +9,8 @@ const Settings = () => {
     <div>
       <div className="flex items-center justify-between p-4">
         <Title
-          title="Application Settings"
-          subtitle="Configure system preferences and user settings"
+          title="Settings"
+          subtitle="Configure system preferences"
         />
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
+import { SensorTypeTableSkeleton } from "../../Skeleton";
 
 const SensorTypeTable = ({
   sensorTypeData,
@@ -203,16 +204,6 @@ const SensorTypeTable = ({
     },
   ];
 
-  if (loading && transformedData.length === 0) {
-    return (
-      <DataCard title="Sensor Type Management">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </DataCard>
-    );
-  }
-
   return (
     <DataCard title="Sensor Type Management">
       {selectedIds.length > 0 && (
@@ -253,6 +244,9 @@ const SensorTypeTable = ({
         pageSize={10}
         showPagination={true}
         emptyMessage="No sensor types found. Click 'Add Sensor Type' to create one."
+        loading={loading}
+        skeletonRows={5}
+        SkeletonComponent={SensorTypeTableSkeleton}
       />
     </DataCard>
   );

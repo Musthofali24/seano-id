@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaMoon, FaSun, FaEye, FaEyeSlash } from "react-icons/fa6";
+import { FaMoon, FaSun, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import SeanoLogo from "../../assets/logo_seano.webp";
 import { useAuthContext } from "../../hooks/useAuthContext";
+import { LoadingDots } from "../../components/UI";
 
 export default function Login({ darkMode, toggleDarkMode }) {
   const { login } = useAuthContext();
@@ -10,15 +11,19 @@ export default function Login({ darkMode, toggleDarkMode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
+  const [alert, setAlert] = useState({ show: false, type: "", message: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setAlert({ show: false, type: "", message: "" });
 
     if (!email || !password) {
-      setMessage("Please fill in all fields.");
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Please enter both email and password."
+      });
       return;
     }
 
@@ -31,8 +36,12 @@ export default function Login({ darkMode, toggleDarkMode }) {
       const errorMsg =
         typeof result.error === "string"
           ? result.error
-          : "Login failed. Please try again.";
-      setMessage(errorMsg);
+          : "Login failed. Please check your credentials and try again.";
+      setAlert({
+        show: true,
+        type: "error",
+        message: errorMsg
+      });
     }
   };
 
@@ -106,19 +115,44 @@ export default function Login({ darkMode, toggleDarkMode }) {
               </div>
             </div>
 
-            {/* Message */}
-            {message && (
-              <p className="text-center text-red-500 mt-3">{message}</p>
-            )}
-
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white py-2 rounded-xl mt-4 cursor-pointer hover:bg-blue-700 transition-all duration-300 disabled:opacity-50"
+              className="bg-blue-600 text-white py-3 rounded-xl mt-4 cursor-pointer hover:bg-blue-700 transition-all duration-300 disabled:opacity-50 font-semibold"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingDots size="sm" color="white" text="" />
+                </span>
+              ) : (
+                "Sign In"
+              )}
             </button>
+
+            {/* Alert Box */}
+            {alert.show && (
+              <div
+                className={`mt-4 p-4 rounded-lg border-l-4 flex items-start gap-3 animate-fadeIn ${
+                  alert.type === "success"
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-300"
+                    : "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-300"
+                }`}
+              >
+                <div className="mt-0.5">
+                  {alert.type === "success" ? (
+                    <FaCheckCircle className="text-xl" />
+                  ) : (
+                    <FaExclamationCircle className="text-xl" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm leading-relaxed">
+                    {alert.message}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Register Link */}
             <p className="text-center text-gray-700 dark:text-gray-300 mt-4">

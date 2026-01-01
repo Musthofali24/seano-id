@@ -8,11 +8,11 @@ const VehicleSelector = ({ vehicles, selectedVehicle, onVehicleChange }) => {
           value={selectedVehicle}
           onChange={(e) => onVehicleChange(e.target.value)}
         >
-          <option className="dark:bg-secondary" value="">
+          <option className="dark:bg-black" value="">
             -- Choose Vehicle --
           </option>
           {vehicles.map((v) => (
-            <option className="dark:bg-secondary" key={v.id} value={v.id}>
+            <option className="dark:bg-black" key={v.id} value={v.id}>
               {v.name}
             </option>
           ))}

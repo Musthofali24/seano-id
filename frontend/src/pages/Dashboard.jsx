@@ -7,6 +7,7 @@ import {
   VehicleQuickView,
   OverviewMap,
   LatestAlerts,
+  RealtimeMBES,
 } from "../components/Widgets";
 import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
@@ -85,6 +86,13 @@ function Dashboard({ darkMode }) {
       <div className="grid grid-cols-1 gap-4 my-4">
         <LatestAlerts />
       </div>
+
+      {/* Realtime MBES 3D Waterfall (Testing)
+      <div className="grid grid-cols-1 gap-4 my-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <RealtimeMBES />
+        </div>
+      </div> */}
     </div>
   );
 }

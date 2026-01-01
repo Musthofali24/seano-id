@@ -144,6 +144,9 @@ const Vehicle = () => {
         } else {
           errorMessage = error.response.data.detail;
         }
+      } else if (error.response?.data?.error) {
+        // Go backend uses "error" field
+        errorMessage = error.response.data.error;
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {

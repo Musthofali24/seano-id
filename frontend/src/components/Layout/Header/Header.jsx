@@ -3,7 +3,6 @@ import { HiOutlineMenuAlt2 } from "react-icons/hi";
 import { FiLogOut } from "react-icons/fi";
 import SeanoLogo from "../../../assets/logo_seano.webp";
 import { useState, useRef, useEffect } from "react";
-import userDefault from "../../../assets/user01.png";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 
 const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
@@ -14,6 +13,22 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
 
   const userMenuRef = useRef(null);
   const notificationsRef = useRef(null);
+
+  // Get initials for avatar (same logic as Profile page)
+  const getInitials = (username, email) => {
+    if (username) {
+      return username
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return "U";
+  };
 
   const handleUserClick = () => {
     setIsUserMenuOpen((prev) => !prev);
@@ -95,7 +110,7 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
           </div>
           <div className="flex items-center gap-4 relative justify-between">
             {/* Tanggal & Waktu */}
-            <div className="dark:text-white text-sm font-medium hidden md:block">
+            <div className="dark:text-white text-sm font-medium hidden md:flex md:items-center">
               {time.toLocaleTimeString("id-ID")} •{" "}
               {time.toLocaleDateString("id-ID", {
                 weekday: "long",
@@ -116,9 +131,9 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
               <div ref={notificationsRef} className="relative">
                 <button onClick={handleNotificationsClick}>
                   {isNotificationsOpen ? (
-                    <FaBell className="text-xl dark:text-white cursor-pointer duration-300" />
+                    <FaBell className="mt-1 text-xl dark:text-white cursor-pointer duration-300" />
                   ) : (
-                    <FaRegBell className="text-xl dark:text-white cursor-pointer duration-300" />
+                    <FaRegBell className="mt-1 text-xl dark:text-white cursor-pointer duration-300" />
                   )}
                 </button>
                 {isNotificationsOpen && (
@@ -138,14 +153,12 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
               {/* User Menu */}
               <div ref={userMenuRef} className="relative">
                 <button
-                  className="dark:bg-slate-50 dark:text-slate-700 rounded-full transition-all duration-300 cursor-pointer"
+                  className="rounded-full transition-all duration-300 cursor-pointer overflow-hidden"
                   onClick={handleUserClick}
                 >
-                  <img
-                    src={userDefault}
-                    alt="User"
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-fourth to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                    {getInitials(user?.username, user?.email)}
+                  </div>
                 </button>
                 {isUserMenuOpen && (
                   <div
@@ -170,15 +183,6 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
                         >
                           <FaRegUser />
                           <span>Profile</span>
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href="/settings"
-                          className="flex items-center gap-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white font-medium rounded px-3 py-2 transition"
-                        >
-                          <FaSun />
-                          <span>Settings</span>
                         </a>
                       </li>
                       <li className="border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">

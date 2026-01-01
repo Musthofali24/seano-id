@@ -1,5 +1,0 @@
-iteration,total_published,ack_received,success_rate,avg_latency_ms,min_latency_ms,max_latency_ms,std_latency_ms
-50,50,50,100.00%,37.15,2.71,45.67,10.45
-100,100,100,100.00%,37.16,2.95,50.40,8.02
-300,300,300,100.00%,39.34,3.99,61.65,6.95
-500,500,500,100.00%,38.22,2.19,53.48,5.42

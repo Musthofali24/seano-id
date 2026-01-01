@@ -1,0 +1,41 @@
+package model
+
+import "time"
+
+type Vehicle struct {
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	Code        string    `json:"code" gorm:"type:varchar(50);uniqueIndex;not null"` // Registration code & MQTT topic
+	Name        string    `json:"name" gorm:"type:varchar(100);not null"`
+	Description string    `json:"description" gorm:"type:text"`
+	Status      string    `json:"status" gorm:"type:varchar(20);default:'active'"` // active, inactive, maintenance
+	UserID      uint      `json:"user_id" gorm:"not null;index"`
+	User        *User     `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+type VehicleBattery struct {
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	VehicleID   uint      `json:"vehicle_id" gorm:"not null;index"`
+	Vehicle     *Vehicle  `json:"vehicle,omitempty" gorm:"foreignKey:VehicleID"`
+	Percentage  float64   `json:"percentage" gorm:"type:decimal(5,2)"` // 0.00 - 100.00
+	Voltage     float64   `json:"voltage" gorm:"type:decimal(5,2)"`    // Voltage in V
+	Status      string    `json:"status" gorm:"type:varchar(20)"`      // charging, discharging, full, low
+	Temperature float64   `json:"temperature" gorm:"type:decimal(5,2)"` // Battery temperature in Celsius
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+}
+
+// Request/Response Models for Vehicle
+type CreateVehicleRequest struct {
+	Code        string `json:"code" example:"VEH-001"`
+	Name        string `json:"name" example:"Vehicle A"`
+	Description string `json:"description" example:"Main delivery vehicle"`
+	Status      string `json:"status,omitempty" example:"active"`
+}
+
+type UpdateVehicleRequest struct {
+	Code        *string `json:"code,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Status      *string `json:"status,omitempty"`
+}

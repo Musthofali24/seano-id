@@ -81,7 +81,7 @@ export function AuthProvider({ children }) {
           const error = await response.json();
           console.error("Login error response:", error);
 
-          // Handle array detail (validation errors)
+          // Handle both Python (detail) and Go (error) response formats
           if (error.detail && Array.isArray(error.detail)) {
             errorMessage = error.detail
               .map((e) => e.msg || e.message || JSON.stringify(e))
@@ -91,6 +91,9 @@ export function AuthProvider({ children }) {
               typeof error.detail === "string"
                 ? error.detail
                 : JSON.stringify(error.detail);
+          } else if (error.error) {
+            // Go backend uses "error" field
+            errorMessage = error.error;
           } else if (error.message) {
             errorMessage = error.message;
           }

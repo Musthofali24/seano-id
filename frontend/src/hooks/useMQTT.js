@@ -29,17 +29,16 @@ const useMQTT = () => {
   const [messages, setMessages] = useState({})
   const subscribedTopicsRef = useRef(new Set())
   const reconnectTimeoutRef = useRef(null)
+  const token = localStorage.getItem('access_token')
 
-  // Initialize WebSocket connection to backend
   useEffect(() => {
     const connectWebSocket = () => {
       try {
-        // Convert http://api.seano.cloud to ws://api.seano.cloud
         const wsUrl =
           API_BASE_URL.replace('http://', 'ws://').replace(
             'https://',
             'wss://'
-          ) + '/ws'
+          ) + `/ws/sensor-data?token=${token}`
         console.log('🔌 Connecting to Backend WebSocket:', wsUrl)
 
         const ws = new WebSocket(wsUrl)

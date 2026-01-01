@@ -2,7 +2,8 @@ import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
 import { WidgetCard } from "../components/Widgets";
-import { UserModal, UserTable } from "../components/Widgets/User";
+import { UserModal, EditUserModal, ViewUserModal, UserTable } from "../components/Widgets/User";
+import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import useUserData from "../hooks/useUserData";
 import useRoleData from "../hooks/useRoleData";
 import usePermissionData from "../hooks/usePermissionData";
@@ -16,7 +17,11 @@ const User = () => {
   const { userData, loading, stats, actions } = useUserData();
   const { roleData } = useRoleData();
   const { permissionData } = usePermissionData();
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && userData.length === 0;
@@ -30,29 +35,59 @@ const User = () => {
   const handleAddUser = async (formData) => {
     const result = await actions.addUser(formData);
     if (result.success) {
-      setShowModal(false);
+      setShowAddModal(false);
     }
     return result;
   };
 
   const handleEditUser = (user) => {
-    console.log("Editing user:", user);
-    // TODO: Implement edit functionality
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateUser = async (formData) => {
+    if (!selectedUser) return { success: false };
+
+    const result = await actions.updateUser(selectedUser.id, {
+      username: formData.username,
+    });
+
+    if (result.success) {
+      setShowEditModal(false);
+      setSelectedUser(null);
+    }
+    return result;
   };
 
   const handleDeleteUser = (id, name) => {
-    console.log("Deleting user:", id, name);
-    // TODO: Implement delete functionality
+    setSelectedUser({ id, name });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    const result = await actions.deleteUser(selectedUser.id);
+    if (result.success) {
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    } else {
+      alert(`Failed to delete user: ${result.error}`);
+    }
   };
 
   const handleViewUser = (user) => {
-    console.log("Viewing user:", user);
-    // TODO: Implement view functionality
+    setSelectedUser(user);
+    setShowViewModal(true);
   };
 
-  const handleBulkDeleteUsers = (ids) => {
-    console.log("Bulk deleting users:", ids);
-    // TODO: Implement bulk delete functionality
+  const handleBulkDeleteUsers = async (ids) => {
+    if (window.confirm(`Are you sure you want to delete ${ids.length} user(s)?`)) {
+      for (const id of ids) {
+        await actions.deleteUser(id);
+      }
+      actions.refreshData();
+    }
   };
 
   return (
@@ -61,8 +96,8 @@ const User = () => {
       <div className="flex items-center justify-between p-4">
         <Title title="User Management" subtitle="Manage your user" />
         <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium cursor-pointer"
         >
           <FaPlus size={16} />
           Add User
@@ -91,12 +126,52 @@ const User = () => {
       />
 
       {/* Add User Modal */}
-      {showModal && (
+      {showAddModal && (
         <UserModal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
           onSubmit={handleAddUser}
           title="Add New User"
+        />
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && selectedUser && (
+        <EditUserModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedUser(null);
+          }}
+          onSubmit={handleUpdateUser}
+          user={selectedUser}
+        />
+      )}
+
+      {/* View User Modal */}
+      {showViewModal && selectedUser && (
+        <ViewUserModal
+          isOpen={showViewModal}
+          onClose={() => {
+            setShowViewModal(false);
+            setSelectedUser(null);
+          }}
+          user={selectedUser}
+        />
+      )}
+
+      {/* Delete Confirm Modal */}
+      {showDeleteModal && selectedUser && (
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedUser(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          title="Delete User"
+          itemName={selectedUser.name}
+          itemType="user"
         />
       )}
     </div>

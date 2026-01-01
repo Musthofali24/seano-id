@@ -17,6 +17,9 @@ const DataTable = ({
   pageSize: initialPageSize = 10,
   showPagination = true,
   emptyMessage = "No data available",
+  loading = false,
+  skeletonRows = 5,
+  SkeletonComponent = null,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -193,7 +196,7 @@ const DataTable = ({
               {columns.map((column, index) => (
                 <th
                   key={index}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider align-middle ${
+                  className={`px-6 py-3 text-left text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider align-middle ${
                     column.className || ""
                   } ${
                     column.sortable !== false
@@ -219,7 +222,9 @@ const DataTable = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-700">
-            {paginatedData.length === 0 ? (
+            {loading && SkeletonComponent ? (
+              <SkeletonComponent rows={skeletonRows} columns={columns} />
+            ) : paginatedData.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}

@@ -37,7 +37,7 @@ const MenuGroup = ({
   const filteredItems = useMemo(() => {
     if (!user) return [];
 
-    const isAdmin = user.role === "Admin";
+    const isAdmin = user.role?.toLowerCase() === "admin";
 
     return items.filter((item) => {
       // Admin-only items - only show to admins
@@ -55,12 +55,12 @@ const MenuGroup = ({
   }, [user, items, hasPermission]);
 
   // Don't show group if no items available or admin-only group for non-admins
-  if (adminOnly && user?.role !== "Admin") {
+  if (adminOnly && user?.role?.toLowerCase() !== "admin") {
     return null;
   }
 
   // Don't show group if user-only group for admins
-  if (userOnly && user?.role === "Admin") {
+  if (userOnly && user?.role?.toLowerCase() === "admin") {
     return null;
   }
 

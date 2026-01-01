@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
+import { VehicleTableSkeleton } from "../../Skeleton";
 
 const VehicleTable = ({
   vehicleData,
@@ -246,16 +247,6 @@ const VehicleTable = ({
     },
   ];
 
-  if (loading && transformedData.length === 0) {
-    return (
-      <DataCard title="Vehicle Management">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </DataCard>
-    );
-  }
-
   return (
     <DataCard title="Vehicle Record">
       {selectedIds.length > 0 && (
@@ -296,6 +287,9 @@ const VehicleTable = ({
         pageSize={10}
         showPagination={true}
         emptyMessage="No vehicles found. Click 'Add Vehicle' to create one."
+        loading={loading}
+        skeletonRows={5}
+        SkeletonComponent={VehicleTableSkeleton}
       />
     </DataCard>
   );

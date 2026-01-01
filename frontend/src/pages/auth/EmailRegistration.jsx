@@ -1,30 +1,59 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaMoon, FaSun } from "react-icons/fa6";
+import { FaMoon, FaSun, FaCheckCircle, FaExclamationCircle, FaInfoCircle } from "react-icons/fa";
 import SeanoLogo from "../../assets/logo_seano.webp";
 import useAuth from "../../hooks/useAuth";
+import { LoadingDots } from "../../components/UI";
 
 export default function EmailRegistration({ darkMode, toggleDarkMode }) {
   const [email, setEmail] = useState("");
   const { registerEmail, loading } = useAuth();
-  const [message, setMessage] = useState("");
+  const [alert, setAlert] = useState({ show: false, type: "", message: "" });
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
+    setAlert({ show: false, type: "", message: "" });
+
+    // Email validation
+    if (!email || email.trim() === "") {
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Please enter your email address."
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Please enter a valid email address."
+      });
+      return;
+    }
 
     const result = await registerEmail(email);
 
     if (result.success) {
-      setMessage(result.message);
+      setAlert({
+        show: true,
+        type: "success",
+        message: result.message || "Verification email sent! Please check your inbox."
+      });
       // Save email to localStorage for registration flow protection
       localStorage.setItem("registrationEmail", email);
       setTimeout(() => {
         navigate("/auth/email-verification", { state: { email } });
-      }, 100);
+      }, 1500);
     } else {
-      setMessage(result.error);
+      setAlert({
+        show: true,
+        type: "error",
+        message: result.error || "Failed to register. Please try again."
+      });
     }
   };
 
@@ -78,22 +107,50 @@ export default function EmailRegistration({ darkMode, toggleDarkMode }) {
             <button
               type="submit"
               disabled={loading}
-              className={`bg-blue-600 text-white py-2 rounded-xl mt-4 hover:bg-blue-700 transition ${
+              className={`bg-blue-600 text-white py-3 rounded-xl mt-4 hover:bg-blue-700 transition-all duration-300 font-semibold ${
                 loading && "opacity-70 cursor-not-allowed"
               }`}
             >
-              {loading ? "Sending..." : "Register"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingDots size="sm" color="white"/>
+                </span>
+              ) : (
+                "Register"
+              )}
             </button>
 
-            {message && (
-              <p className="text-center text-sm text-gray-700 dark:text-gray-300 mt-3">
-                {message}
-              </p>
+            {/* Alert Box */}
+            {alert.show && (
+              <div
+                className={`mt-4 p-4 rounded-lg border-l-4 flex items-start gap-3 animate-fadeIn ${
+                  alert.type === "success"
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-300"
+                    : alert.type === "error"
+                    ? "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-300"
+                    : "bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300"
+                }`}
+              >
+                <div className="mt-0.5">
+                  {alert.type === "success" ? (
+                    <FaCheckCircle className="text-xl" />
+                  ) : alert.type === "error" ? (
+                    <FaExclamationCircle className="text-xl" />
+                  ) : (
+                    <FaInfoCircle className="text-xl" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm leading-relaxed">
+                    {alert.message}
+                  </p>
+                </div>
+              </div>
             )}
 
-            <p className="text-black dark:text-gray-400 text-sm text-center mt-4">
+            <p className="text-black dark:text-gray-400 text-sm text-center mt-6">
               Already have an account?{" "}
-              <Link to="/auth/login" className="text-blue-600">
+              <Link to="/auth/login" className="text-blue-600 hover:text-blue-700 font-semibold transition-colors">
                 Login
               </Link>
             </p>

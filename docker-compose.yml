@@ -4,35 +4,35 @@ services:
     container_name: seano_timescaledb
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: da25f4bcdfe0147
-      POSTGRES_DB: seano_db
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+      POSTGRES_DB: appdb
+      PGDATA: /var/lib/postgresql/data
+      TZ: Asia/Jakarta
+      PGTZ: Asia/Jakarta
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
       - seano_net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
       retries: 5
-      start_period: 5s
 
   backend:
     build: ./backend
     container_name: seano_backend
     restart: always
     ports:
-      - "8000:8000"
+      - "3000:3000"
     env_file:
       - ./backend/.env
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
     networks:
       - seano_net
 
@@ -52,3 +52,6 @@ services:
 networks:
   seano_net:
     driver: bridge
+
+volumes:
+  pgdata:

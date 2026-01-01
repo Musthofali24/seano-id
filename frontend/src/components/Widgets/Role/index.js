@@ -1,2 +1,4 @@
 export { default as RoleModal } from './RoleModal'
+export { default as EditRoleModal } from './EditRoleModal'
+export { default as ViewRoleModal } from './ViewRoleModal'
 export { default as RoleTable } from './RoleTable'

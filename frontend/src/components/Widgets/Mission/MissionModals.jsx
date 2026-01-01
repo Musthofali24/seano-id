@@ -14,7 +14,7 @@ const MissionModals = ({
           className="fixed inset-0 bg-transparent backdrop-blur-xs bg-opacity-50 flex items-center justify-center"
           style={{ zIndex: 10003 }}
         >
-          <div className="bg-white dark:bg-secondary rounded-2xl p-6 w-96 max-w-md mx-4">
+          <div className="bg-white dark:bg-black rounded-2xl p-6 w-96 max-w-md mx-4">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
               Create New Mission
             </h3>
@@ -79,7 +79,7 @@ const MissionModals = ({
           className="fixed inset-0 bg-transparent backdrop-blur-xs bg-opacity-50 flex items-center justify-center"
           style={{ zIndex: 10003 }}
         >
-          <div className="bg-white dark:bg-secondary rounded-2xl p-6 w-96 max-w-md mx-4">
+          <div className="bg-white dark:bg-black rounded-2xl p-6 w-96 max-w-md mx-4">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
               Load Mission
             </h3>

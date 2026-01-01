@@ -1,8 +1,9 @@
 import SeanoLogo from "../../assets/logo_seano.webp";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { FaMoon, FaSun, FaEye, FaEyeSlash } from "react-icons/fa6";
+import { FaMoon, FaSun, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
+import { LoadingDots } from "../../components/UI";
 
 export default function SetAccount({ darkMode, toggleDarkMode }) {
   const [searchParams] = useSearchParams();
@@ -15,30 +16,65 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [message, setMessage] = useState("");
+  const [alert, setAlert] = useState({ show: false, type: "", message: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setAlert({ show: false, type: "", message: "" });
 
     if (!username || !password || !confirm) {
-      setMessage("All fields are required.");
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Please fill in all fields."
+      });
+      return;
+    }
+
+    if (username.length < 3) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Username must be at least 3 characters long."
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Password must be at least 6 characters long."
+      });
       return;
     }
 
     if (password !== confirm) {
-      setMessage("Passwords do not match.");
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Passwords do not match. Please re-enter your password."
+      });
       return;
     }
 
     const result = await setCredentials(token, username, password);
 
     if (result.success) {
-      setMessage(result.message);
+      setAlert({
+        show: true,
+        type: "success",
+        message: result.message || "Account created successfully! Redirecting to login..."
+      });
       // Clear registration data from localStorage
       localStorage.removeItem("registrationEmail");
       setTimeout(() => navigate("/auth/login"), 2000);
     } else {
-      setMessage(result.error);
+      setAlert({
+        show: true,
+        type: "error",
+        message: result.error || "Failed to create account. Please try again."
+      });
     }
   };
 
@@ -70,7 +106,7 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
               Set Up Your Account
             </h1>
             <p className="font-medium text-gray-700 dark:text-gray-300 text-xl">
-              Create a username and secure password to start monitoring your{" "}
+              Create your username and secure password to start monitoring your{" "}
               <span className="text-blue-500 font-semibold">USV</span>.
             </p>
           </div>
@@ -87,7 +123,8 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full border rounded-xl py-2 px-3 border-gray-700 text-black dark:text-white"
-                placeholder="Enter your username"
+                placeholder="Choose a unique username"
+                minLength={3}
               />
             </div>
 
@@ -137,27 +174,44 @@ export default function SetAccount({ darkMode, toggleDarkMode }) {
               </div>
             </div>
 
-            {/* Message */}
-            {message && (
-              <p
-                className={`text-center mt-3 ${
-                  message.includes("successfully")
-                    ? "text-green-500"
-                    : "text-red-500"
-                }`}
-              >
-                {message}
-              </p>
-            )}
-
             {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 text-white py-2 rounded-xl mt-4 cursor-pointer hover:bg-blue-700 transition-all duration-300 disabled:opacity-50"
+              className="bg-blue-600 text-white py-3 rounded-xl mt-4 cursor-pointer hover:bg-blue-700 transition-all duration-300 disabled:opacity-50 font-semibold"
             >
-              {loading ? "Creating..." : "Create Account"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <LoadingDots size="sm" color="white"/>
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </button>
+
+            {/* Alert Box */}
+            {alert.show && (
+              <div
+                className={`mt-4 p-4 rounded-lg border-l-4 flex items-start gap-3 animate-fadeIn ${
+                  alert.type === "success"
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-500 text-green-700 dark:text-green-300"
+                    : "bg-red-50 dark:bg-red-900/20 border-red-500 text-red-700 dark:text-red-300"
+                }`}
+              >
+                <div className="mt-0.5">
+                  {alert.type === "success" ? (
+                    <FaCheckCircle className="text-xl" />
+                  ) : (
+                    <FaExclamationCircle className="text-xl" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-sm leading-relaxed">
+                    {alert.message}
+                  </p>
+                </div>
+              </div>
+            )}
           </form>
         </div>
       </div>

@@ -1,27 +1,27 @@
 // Core Widgets
-export { default as WidgetCard } from './WidgetCard'
-export { default as Dropdown } from './Dropdown'
-export { default as DataCard } from './DataCard'
+export { default as WidgetCard } from "./WidgetCard";
+export { default as Dropdown } from "./Dropdown";
+export { default as DataCard } from "./DataCard";
 
 // Vehicle Widgets
 export {
   VehicleDropdown,
   VehicleSelector,
   VehicleTable,
-  VehicleModal
-} from './Vehicle'
+  VehicleModal,
+} from "./Vehicle";
 
 // Sensor Widgets
-export { SensorChart, SensorModal, SensorTable } from './Sensor'
+export { SensorChart, SensorModal, SensorTable } from "./Sensor";
 
 // SensorType Widgets
-export { SensorTypeModal, SensorTypeTable } from './SensorType'
+export { SensorTypeModal, SensorTypeTable } from "./SensorType";
 
 // Gyroscope Widgets
-export { Gyroscope3D } from './Gyroscope'
+export { Gyroscope3D } from "./Gyroscope";
 
 // Map Widgets
-export { ViewMap } from './Map'
+export { ViewMap } from "./Map";
 
 // Dashboard Widgets
 export {
@@ -29,25 +29,26 @@ export {
   MissionAnalytics,
   VehicleQuickView,
   OverviewMap,
-  LatestAlerts
-} from './Dashboard'
+  LatestAlerts,
+  RealtimeMBES,
+} from "./Dashboard";
 
 // Data Management Widgets
-export { DataHeader, DataStats, DataTable, DataFilters } from './Data'
+export { DataHeader, DataStats, DataTable, DataFilters } from "./Data";
 
 // Telemetry Widgets
 export {
   TelemetryCards,
   TelemetryFilters,
   TelemetryHeader,
-  TelemetryStatusInfo
-} from './Telemetry'
+  TelemetryStatusInfo,
+} from "./Telemetry";
 
 // User Management Widgets
-export { UserModal, UserTable } from './User'
+export { UserModal, UserTable } from "./User";
 
 // Role Management Widgets
-export { RoleModal, RoleTable } from './Role'
+export { RoleModal, RoleTable } from "./Role";
 
 // Permission Management Widgets
-export { PermissionModal, PermissionTable } from './Permission'
+export { PermissionModal, PermissionTable } from "./Permission";
