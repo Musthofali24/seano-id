@@ -29,7 +29,7 @@ const useVehicleData = () => {
         setLoading(true)
         console.log('Fetching vehicles with token...')
 
-        const response = await fetch(`${API_BASE_URL}/vehicles/`, {
+        const response = await fetch(`${API_BASE_URL}/vehicles`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -37,15 +37,32 @@ const useVehicleData = () => {
         })
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          const errorText = await response.text()
+          console.error('❌ Vehicles API error:', response.status, errorText)
+          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
         }
 
         const data = await response.json()
-        console.log('Vehicles fetched:', data.length)
+        console.log('📦 Vehicles API response:', data)
+        console.log('📦 Response type:', typeof data)
+        console.log('📦 Is array?:', Array.isArray(data))
+        
+        // Handle different response formats
+        let vehiclesArray = []
+        if (Array.isArray(data)) {
+          vehiclesArray = data
+        } else if (data && Array.isArray(data.data)) {
+          vehiclesArray = data.data
+        } else if (data && data.vehicles && Array.isArray(data.vehicles)) {
+          vehiclesArray = data.vehicles
+        } else {
+          console.warn('⚠️ Unexpected vehicles response format:', data)
+        }
+        
+        console.log('✅ Vehicles array length:', vehiclesArray.length)
 
         // Process and validate API data
-        const processedVehicles = Array.isArray(data)
-          ? data.map(vehicle => ({
+        const processedVehicles = vehiclesArray.map(vehicle => ({
               id: vehicle.id,
               name: vehicle.name || `Vehicle ${vehicle.id}`,
               code:
@@ -58,7 +75,6 @@ const useVehicleData = () => {
               longitude: vehicle.longitude || null,
               created_at: vehicle.created_at || new Date().toISOString()
             }))
-          : []
 
         // Only update state if data actually changed
         setVehicles(prevVehicles => {

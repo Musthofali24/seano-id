@@ -64,6 +64,11 @@ const MenuGroup = ({
     return null;
   }
 
+  // Check requiredPermission at group level
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return null;
+  }
+
   if (filteredItems.length === 0) {
     return null;
   }

@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FaWifi,
   FaShieldAlt,
   FaLocationArrow,
-  FaPlay,
-  FaPause,
-  FaHome,
   FaExclamationTriangle,
-  FaStop,
+  FaArrowUp,
+  FaThermometerHalf,
 } from "react-icons/fa";
-import { MdAutoMode, MdGpsFixed, MdGpsNotFixed } from "react-icons/md";
-import { API_ENDPOINTS } from "../../../config";
+import { MdGpsFixed, MdGpsNotFixed } from "react-icons/md";
 import useVehicleData from "../../../hooks/useVehicleData";
-import useMQTT from "../../../hooks/useMQTT";
+import { useLogData } from "../../../hooks/useLogData";
 
 /**
  * VehicleStatusPanel - Panel Status Kendaraan
@@ -29,132 +26,31 @@ import useMQTT from "../../../hooks/useMQTT";
  */
 const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   const { vehicles, loading } = useVehicleData();
-  const { subscribe, unsubscribe, messages } = useMQTT();
+  const { vehicleLogs, ws } = useLogData(); // Get vehicle logs from WebSocket
   const [showTimeout, setShowTimeout] = useState(false);
-  const [historicalData, setHistoricalData] = useState(null);
-  const [realtimeData, setRealtimeData] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeActions, setActiveActions] = useState({
-    start: false,
-    pause: false,
-    stop: false,
-    auto: false,
-    arm: false,
-    rtl: false,
-  });
 
-  // Handle quick action button clicks
-  const handleActionClick = (action) => {
-    setActiveActions((prev) => ({
-      ...prev,
-      [action]: !prev[action],
-    }));
-  };
+  // Find latest vehicle log for selected vehicle from useLogData
+  const vehicleLog = useMemo(() => {
+    if (!selectedVehicle?.id || vehicleLogs.length === 0) return null;
+    
+    // Filter by vehicle ID and get the latest (first in array, newest first)
+    const filtered = vehicleLogs.filter(
+      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
+    );
+    
+    return filtered.length > 0 ? filtered[0] : null;
+  }, [vehicleLogs, selectedVehicle]);
 
-  // Fetch historical vehicle log data from database
+  // Check WebSocket connection status
   useEffect(() => {
-    const fetchHistoricalData = async () => {
-      // Only fetch when we have a selected vehicle
-      if (!selectedVehicle?.id) {
-        console.log("📡 VehicleStatusPanel: No vehicle selected yet");
-        return;
-      }
-
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        console.error(
-          "📡 VehicleStatusPanel: No access_token found in localStorage"
-        );
-        return;
-      }
-
-      try {
-        console.log(
-          "📡 VehicleStatusPanel: Fetching historical data for vehicle",
-          selectedVehicle.id
-        );
-        const url = `${API_ENDPOINTS.VEHICLE_LOGS.LIST}?vehicle_id=${selectedVehicle.id}&limit=1`;
-        console.log("📡 VehicleStatusPanel: URL:", url);
-
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log(
-          "📡 VehicleStatusPanel: Fetch response status:",
-          response.status
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("📡 VehicleStatusPanel: Received data:", data);
-          if (data && Array.isArray(data) && data.length > 0) {
-            console.log(
-              "✅ VehicleStatusPanel: Setting historical data:",
-              data[0]
-            );
-            setHistoricalData(data[0]);
-          } else {
-            console.warn("📡 VehicleStatusPanel: No data returned from API");
-          }
-        } else {
-          console.error(
-            "📡 VehicleStatusPanel: API response error:",
-            response.status,
-            response.statusText
-          );
-          const errorText = await response.text();
-          console.error("📡 VehicleStatusPanel: Error details:", errorText);
-        }
-      } catch (error) {
-        console.error("📡 VehicleStatusPanel: Fetch error:", error.message);
-      }
-    };
-
-    fetchHistoricalData();
-  }, [selectedVehicle?.id]);
-
-  // Subscribe to WebSocket for real-time updates
-  useEffect(() => {
-    if (!selectedVehicle?.code) return;
-
-    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
-    console.log("📡 VehicleStatusPanel: Subscribing to:", topic);
-    subscribe(topic);
-
-    return () => {
-      unsubscribe(topic);
-    };
-  }, [selectedVehicle, subscribe, unsubscribe]);
-
-  // Listen to real-time messages and track connection timeout
-  useEffect(() => {
-    if (!selectedVehicle?.code) return;
-
-    const topic = `seano/${selectedVehicle.code}/vehicle_log`;
-    const message = messages[topic];
-
-    if (message && message.data) {
-      console.log("📡 VehicleStatusPanel: Real-time update:", message.data);
-      setRealtimeData(message.data);
-      setIsConnected(true);
-    } else {
-      // If no real-time data but we have historical data, still show as connected
-      if (historicalData) {
-        console.log(
-          "📡 VehicleStatusPanel: No real-time data, using historical data"
-        );
-        setIsConnected(true);
-      }
-    }
-  }, [messages, selectedVehicle, historicalData]);
+    const wsConnected = ws && ws.readyState === WebSocket.OPEN;
+    setIsConnected(wsConnected && vehicleLog !== null);
+  }, [ws, vehicleLog]);
 
   // Monitor connection status with 15-second timeout
   useEffect(() => {
-    if (!realtimeData) return;
+    if (!vehicleLog) return;
 
     const timeout = setTimeout(() => {
       setIsConnected(false);
@@ -164,7 +60,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     }, 15000);
 
     return () => clearTimeout(timeout);
-  }, [realtimeData]);
+  }, [vehicleLog]);
 
   // Set timeout to show default values after 5 seconds
   useEffect(() => {
@@ -177,21 +73,20 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  // Find current vehicle data and merge with real-time and historical data
+  // Find current vehicle data and merge with vehicle log data
   const currentVehicle =
     vehicles.find((v) => v.id === selectedVehicle?.id) || {};
 
-  // Merge: currentVehicle (vehicle metadata) → historicalData (latest DB data) → realtimeData (live WebSocket)
-  // Real-time takes priority, then historical DB data, then fallback to vehicle metadata
-  const mergedData = { ...currentVehicle, ...historicalData, ...realtimeData };
+  // Merge: currentVehicle (vehicle metadata) → vehicleLog (latest from WebSocket)
+  const mergedData = { ...currentVehicle, ...vehicleLog };
 
   // Vehicle states with proper data fallback
   const vehicleStates = {
     connected:
       isConnected ||
-      (historicalData &&
-        historicalData.rssi !== undefined &&
-        historicalData.rssi !== null)
+      (vehicleLog &&
+        vehicleLog.rssi !== undefined &&
+        vehicleLog.rssi !== null)
         ? true
         : false,
     armed: mergedData.armed !== undefined ? mergedData.armed : null,
@@ -199,7 +94,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     manual_input:
       mergedData.manual_input !== undefined ? mergedData.manual_input : null,
     mode: mergedData.mode || null,
-    gps_fix: mergedData.gps_fix !== undefined ? mergedData.gps_fix : null,
+    gps_fix: mergedData.gps_ok !== undefined ? mergedData.gps_ok : (mergedData.gps_fix !== undefined ? mergedData.gps_fix : null),
     system_status:
       mergedData.system_status !== undefined ? mergedData.system_status : null,
   };
@@ -274,6 +169,49 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   };
 
   const systemStatus = getSystemStatusText(vehicleStates.system_status);
+
+  // Helper functions for formatting
+  const formatCoordinate = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num) ? "N/A" : `${num.toFixed(8)}`;
+  };
+
+  const formatValue = (value, unit = "") => {
+    if (value === null || value === undefined) return "N/A";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num) ? "N/A" : `${num.toFixed(2)}${unit}`;
+  };
+
+  const formatTemperature = (value) => {
+    if (value === null || value === undefined) return "N/A";
+    if (typeof value === "string") {
+      const num = parseFloat(value);
+      if (!isNaN(num)) {
+        return `${num.toFixed(2)}°C`;
+      }
+      return value;
+    }
+    return `${value.toFixed(2)}°C`;
+  };
+
+  const getRSSIColor = (rssi) => {
+    if (rssi === null || rssi === undefined) return "text-gray-500";
+    if (rssi >= -50) return "text-green-600";
+    if (rssi >= -60) return "text-green-400";
+    if (rssi >= -70) return "text-yellow-500";
+    if (rssi >= -80) return "text-orange-500";
+    return "text-red-500";
+  };
+
+  const getSignalBars = (rssi) => {
+    if (rssi === null || rssi === undefined) return 0;
+    if (rssi >= -50) return 4;
+    if (rssi >= -60) return 3;
+    if (rssi >= -70) return 2;
+    if (rssi >= -80) return 1;
+    return 0;
+  };
 
   if (loading && !showTimeout) {
     return (
@@ -462,168 +400,76 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="mt-auto">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          Quick Actions
-        </h4>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => handleActionClick("start")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.start
-                ? "bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FaPlay
-              className={`mx-auto ${
-                activeActions.start
-                  ? "text-blue-600 dark:text-blue-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.start
-                  ? "text-blue-700 dark:text-blue-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              Start
+      {/* Position Data */}
+      <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+        <div className="flex items-center gap-2 mb-2">
+          <FaArrowUp className="text-purple-600" />
+          <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+            Position
+          </span>
+        </div>
+        <div className="space-y-1 text-xs">
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Latitude:</span>
+            <span className="font-mono text-purple-700 dark:text-purple-300">
+              {formatCoordinate(mergedData.latitude)}
             </span>
-          </button>
-          <button
-            onClick={() => handleActionClick("pause")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.pause
-                ? "bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FaPause
-              className={`mx-auto ${
-                activeActions.pause
-                  ? "text-orange-600 dark:text-orange-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.pause
-                  ? "text-orange-700 dark:text-orange-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              Pause
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Longitude:</span>
+            <span className="font-mono text-purple-700 dark:text-purple-300">
+              {formatCoordinate(mergedData.longitude)}
             </span>
-          </button>
-          <button
-            onClick={() => handleActionClick("stop")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.stop
-                ? "bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FaStop
-              className={`mx-auto ${
-                activeActions.stop
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.stop
-                  ? "text-red-700 dark:text-red-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              Stop
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600 dark:text-gray-400">Altitude:</span>
+            <span className="font-mono text-purple-700 dark:text-purple-300">
+              {formatValue(mergedData.altitude, " m")}
             </span>
-          </button>
-          <button
-            onClick={() => handleActionClick("auto")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.auto
-                ? "bg-teal-100 hover:bg-teal-200 dark:bg-teal-900/30 dark:hover:bg-teal-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <MdAutoMode
-              className={`mx-auto ${
-                activeActions.auto
-                  ? "text-teal-600 dark:text-teal-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.auto
-                  ? "text-teal-700 dark:text-teal-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              Auto
+          </div>
+        </div>
+      </div>
+
+      {/* Signal & Temperature */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <FaWifi className={getRSSIColor(mergedData.rssi)} />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Signal
             </span>
-          </button>
-          <button
-            onClick={() => handleActionClick("arm")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.arm
-                ? "bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/30 dark:hover:bg-purple-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FaShieldAlt
-              className={`mx-auto ${
-                activeActions.arm
-                  ? "text-purple-600 dark:text-purple-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.arm
-                  ? "text-purple-700 dark:text-purple-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              Disarm/Arm
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1 h-3 rounded ${
+                    i < getSignalBars(mergedData.rssi)
+                      ? getRSSIColor(mergedData.rssi).replace("text-", "bg-")
+                      : "bg-gray-300 dark:bg-gray-600"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className={`text-xs font-mono ${getRSSIColor(mergedData.rssi)}`}>
+              {mergedData.rssi !== null && mergedData.rssi !== undefined
+                ? `${mergedData.rssi} dBm`
+                : "N/A"}
             </span>
-          </button>
-          <button
-            onClick={() => handleActionClick("rtl")}
-            className={`p-2 rounded-lg transition-colors ${
-              activeActions.rtl
-                ? "bg-green-100 hover:bg-green-200 dark:bg-green-900/30 dark:hover:bg-green-900/50"
-                : "bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-700"
-            }`}
-          >
-            <FaHome
-              className={`mx-auto ${
-                activeActions.rtl
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-gray-400 dark:text-gray-500"
-              }`}
-              size={14}
-            />
-            <span
-              className={`text-xs mt-1 block ${
-                activeActions.rtl
-                  ? "text-green-700 dark:text-green-300"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}
-            >
-              RTL
+          </div>
+        </div>
+
+        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <FaThermometerHalf className="text-orange-500" />
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Temp
             </span>
-          </button>
+          </div>
+          <p className="text-sm font-mono font-semibold text-orange-600 dark:text-orange-400">
+            {formatTemperature(mergedData.temperature_system || mergedData.temperature)}
+          </p>
         </div>
       </div>
     </div>

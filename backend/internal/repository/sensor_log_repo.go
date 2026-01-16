@@ -24,22 +24,22 @@ func (r *SensorLogRepository) CreateSensorLog(log *model.SensorLog) error {
 func (r *SensorLogRepository) GetSensorLogs(query model.SensorLogQuery) ([]model.SensorLog, error) {
 	var logs []model.SensorLog
 	
-	db := r.db.Model(&model.SensorLog{})
+	db := r.db.Model(&model.SensorLog{}).Preload("Vehicle").Preload("Sensor").Preload("Sensor.SensorType")
 	
-	if query.VehicleCode != "" {
-		db = db.Where("vehicle_code = ?", query.VehicleCode)
+	if query.VehicleID != 0 {
+		db = db.Where("vehicle_id = ?", query.VehicleID)
 	}
 	
-	if query.SensorCode != "" {
-		db = db.Where("sensor_code = ?", query.SensorCode)
+	if query.SensorID != 0 {
+		db = db.Where("sensor_id = ?", query.SensorID)
 	}
 	
 	if !query.StartTime.IsZero() {
-		db = db.Where("timestamp >= ?", query.StartTime)
+		db = db.Where("created_at >= ?", query.StartTime)
 	}
 	
 	if !query.EndTime.IsZero() {
-		db = db.Where("timestamp <= ?", query.EndTime)
+		db = db.Where("created_at <= ?", query.EndTime)
 	}
 	
 	if query.Limit > 0 {
@@ -52,15 +52,26 @@ func (r *SensorLogRepository) GetSensorLogs(query model.SensorLogQuery) ([]model
 		db = db.Offset(query.Offset)
 	}
 	
-	err := db.Order("timestamp DESC").Find(&logs).Error
+	err := db.Order("created_at DESC").Find(&logs).Error
 	return logs, err
 }
 
-// GetLatestLog retrieves the latest log for a specific vehicle and sensor
-func (r *SensorLogRepository) GetLatestLog(vehicleCode, sensorCode string) (*model.SensorLog, error) {
+// GetSensorLogByID retrieves a sensor log by ID
+func (r *SensorLogRepository) GetSensorLogByID(id uint) (*model.SensorLog, error) {
 	var log model.SensorLog
-	err := r.db.Where("vehicle_code = ? AND sensor_code = ?", vehicleCode, sensorCode).
-		Order("timestamp DESC").
+	err := r.db.Preload("Vehicle").Preload("Sensor").Preload("Sensor.SensorType").First(&log, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &log, nil
+}
+
+// GetLatestLog retrieves the latest log for a specific vehicle and sensor
+func (r *SensorLogRepository) GetLatestLog(vehicleID, sensorID uint) (*model.SensorLog, error) {
+	var log model.SensorLog
+	err := r.db.Where("vehicle_id = ? AND sensor_id = ?", vehicleID, sensorID).
+		Order("created_at DESC").
+		Preload("Vehicle").Preload("Sensor").Preload("Sensor.SensorType").
 		First(&log).Error
 	
 	if err != nil {
@@ -76,28 +87,33 @@ func (r *SensorLogRepository) CountLogs(query model.SensorLogQuery) (int64, erro
 	
 	db := r.db.Model(&model.SensorLog{})
 	
-	if query.VehicleCode != "" {
-		db = db.Where("vehicle_code = ?", query.VehicleCode)
+	if query.VehicleID != 0 {
+		db = db.Where("vehicle_id = ?", query.VehicleID)
 	}
 	
-	if query.SensorCode != "" {
-		db = db.Where("sensor_code = ?", query.SensorCode)
+	if query.SensorID != 0 {
+		db = db.Where("sensor_id = ?", query.SensorID)
 	}
 	
 	if !query.StartTime.IsZero() {
-		db = db.Where("timestamp >= ?", query.StartTime)
+		db = db.Where("created_at >= ?", query.StartTime)
 	}
 	
 	if !query.EndTime.IsZero() {
-		db = db.Where("timestamp <= ?", query.EndTime)
+		db = db.Where("created_at <= ?", query.EndTime)
 	}
 	
 	err := db.Count(&count).Error
 	return count, err
 }
 
+// DeleteSensorLog deletes a sensor log by ID
+func (r *SensorLogRepository) DeleteSensorLog(id uint) error {
+	return r.db.Delete(&model.SensorLog{}, id).Error
+}
+
 // DeleteOldLogs deletes logs older than the specified date
 func (r *SensorLogRepository) DeleteOldLogs(beforeDate time.Time) (int64, error) {
-	result := r.db.Where("timestamp < ?", beforeDate).Delete(&model.SensorLog{})
+	result := r.db.Where("created_at < ?", beforeDate).Delete(&model.SensorLog{})
 	return result.RowsAffected, result.Error
 }

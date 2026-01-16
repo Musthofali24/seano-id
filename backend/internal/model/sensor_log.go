@@ -4,25 +4,32 @@ import "time"
 
 // SensorLog stores all sensor readings/logs from vehicles
 type SensorLog struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	VehicleCode string    `json:"vehicle_code" gorm:"type:varchar(50);not null;index"`
-	SensorCode  string    `json:"sensor_code" gorm:"type:varchar(50);not null;index"`
-	Timestamp   time.Time `json:"timestamp" gorm:"not null;index"`
-	Data        string    `json:"data" gorm:"type:jsonb;not null"` // JSON data from sensor
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	VehicleID uint      `json:"vehicle_id" gorm:"not null;index"`
+	Vehicle   *Vehicle  `json:"vehicle,omitempty" gorm:"foreignKey:VehicleID"`
+	SensorID  uint      `json:"sensor_id" gorm:"not null;index"`
+	Sensor    *Sensor   `json:"sensor,omitempty" gorm:"foreignKey:SensorID"`
+	Data      string    `json:"data" gorm:"type:jsonb;not null"` // JSON data from sensor
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 }
 
-// Index for faster queries
 func (SensorLog) TableName() string {
 	return "sensor_logs"
 }
 
 // SensorLogQuery for filtering logs
 type SensorLogQuery struct {
-	VehicleCode string    `query:"vehicle_code"`
-	SensorCode  string    `query:"sensor_code"`
-	StartTime   time.Time `query:"start_time"`
-	EndTime     time.Time `query:"end_time"`
-	Limit       int       `query:"limit"`
-	Offset      int       `query:"offset"`
+	VehicleID uint      `query:"vehicle_id"`
+	SensorID  uint      `query:"sensor_id"`
+	StartTime time.Time `query:"start_time"`
+	EndTime   time.Time `query:"end_time"`
+	Limit     int       `query:"limit"`
+	Offset    int       `query:"offset"`
+}
+
+// Request/Response Models for SensorLog
+type CreateSensorLogRequest struct {
+	VehicleID uint   `json:"vehicle_id" example:"1"`
+	SensorID  uint   `json:"sensor_id" example:"1"`
+	Data      string `json:"data" example:"{\"temperature\":25.5,\"pressure\":1013}"`
 }

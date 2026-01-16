@@ -1,131 +1,72 @@
 import React, { useEffect, useState, useRef } from "react";
-import useMQTT from "../../../hooks/useMQTT";
 import { LogSkeleton } from "../../Skeleton";
 import useLoadingTimeout from "../../../hooks/useLoadingTimeout";
-import { API_ENDPOINTS } from "../../../config";
+import { useLogData } from "../../../hooks/useLogData";
 
 /**
  * RawDataLog - Log Data Mentah
  *
  * SUMBER DATA:
  * - Historis: GET /raw-logs/?vehicle_id={id}&limit=50 (API)
- * - Real-time: MQTT WebSocket topic `seano/{vehicleId}/raw_log`
+ * - Real-time: WebSocket `/ws/logs` untuk update real-time
  *
  * CARA KERJA:
- * - Fetch log historis dari API saat mount/ubah kendaraan
- * - Subscribe ke MQTT topic untuk update real-time
- * - Tampilkan indicator "Live" ketika MQTT terhubung
- * - Gabung data API dengan pesan MQTT real-time
+ * - Ambil data dari useLogData hook (shared dengan halaman Log)
+ * - Filter log berdasarkan selectedVehicle
+ * - Tampilkan indicator "Live" ketika WebSocket terhubung
  * - Handle format JSON dan plain text
- * - Deteksi duplikat menggunakan timestamp pesan
  * - Maksimal 50 log, paling baru di atas
  *
- * @param {number} selectedVehicle - ID Kendaraan dari parent (halaman Tracking)
+ * @param {object} selectedVehicle - Objek kendaraan dari parent (halaman Tracking)
  */
 const RawDataLog = ({ selectedVehicle }) => {
-  const [logs, setLogs] = useState([]);
+  const { rawLogs, ws } = useLogData(); // Ambil dari useLogData
   const [hasNewData, setHasNewData] = useState(false);
-  const { loading } = useLoadingTimeout(true);
-  const { isConnected, getMessage, subscribe } = useMQTT();
-  const lastMessageRef = useRef(null);
+  const { loading } = useLoadingTimeout(true, 2000);
   const updateTimeoutRef = useRef(null);
+  const prevLogsLengthRef = useRef(0);
 
-  // Fetch initial logs from API on mount or vehicle change
+  // Monitor perubahan rawLogs untuk menampilkan animasi "new data"
   useEffect(() => {
-    const fetchLogs = async () => {
-      if (!selectedVehicle?.id) return;
-
-      try {
-        const token = localStorage.getItem("access_token");
-        const response = await fetch(
-          API_ENDPOINTS.RAW_LOGS.LIST +
-            `?vehicle_id=${selectedVehicle.id}&limit=50`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setLogs(
-            data.map((log) => ({
-              ...log,
-              _isMQTT: false,
-            }))
-          );
-        }
-      } catch (err) {
-        console.error("Failed to fetch raw logs from API:", err);
-      }
-    };
-
-    fetchLogs();
-  }, [selectedVehicle]);
-
-  // Subscribe to raw_log topic when component mounts or selectedVehicle changes
-  useEffect(() => {
-    if (!selectedVehicle?.code) return;
-    const topic = `seano/${selectedVehicle.code}/raw_log`;
-    subscribe(topic);
-  }, [selectedVehicle, subscribe]);
-
-  // Listen for real-time MQTT raw_log messages
-  useEffect(() => {
-    if (!selectedVehicle?.code) return;
-    const interval = setInterval(() => {
-      const topic = `seano/${selectedVehicle.code}/raw_log`;
-      const messageObj = getMessage(topic);
-
-      // Check if message exists and is newer than last processed (using timestamp)
-      if (
-        messageObj &&
-        (!lastMessageRef.current ||
-          messageObj.timestamp !== lastMessageRef.current)
-      ) {
-        lastMessageRef.current = messageObj.timestamp;
-        setHasNewData(true);
-
-        try {
-          let logText = messageObj.payload;
-
-          // Try to parse as JSON first
-          try {
-            const parsedData = JSON.parse(messageObj.payload);
-            logText = parsedData.logs || JSON.stringify(parsedData);
-          } catch {
-            // If not valid JSON, use raw string as log text
-            logText = messageObj.payload;
-          }
-
-          // Add MQTT message to logs (prepend to show latest first)
-          setLogs((prevLogs) => [
-            {
-              id: `mqtt-${Date.now()}-${Math.random()}`,
-              logs: logText,
-              created_at: messageObj.timestamp || new Date().toISOString(),
-              _isMQTT: true,
-            },
-            ...prevLogs.slice(0, 49), // Keep 50 entries max
-          ]);
-
-          // Reset new data indicator after 2 seconds
-          if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-          updateTimeoutRef.current = setTimeout(() => {
-            setHasNewData(false);
-          }, 2000);
-        } catch (e) {
-          console.error("Failed to process MQTT message:", e);
-        }
-      }
-    }, 500);
-
-    return () => {
-      clearInterval(interval);
+    if (rawLogs.length > prevLogsLengthRef.current) {
+      setHasNewData(true);
       if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-    };
-  }, [selectedVehicle, getMessage]);
+      updateTimeoutRef.current = setTimeout(() => {
+        setHasNewData(false);
+      }, 2000);
+    }
+    prevLogsLengthRef.current = rawLogs.length;
+  }, [rawLogs]);
+
+  // Debug: Check raw log structure
+  if (rawLogs.length > 0) {
+    console.log('RawDataLog - First raw log structure:', rawLogs[0]);
+    console.log('RawDataLog - First log vehicle:', rawLogs[0].vehicle);
+    console.log('RawDataLog - First log vehicle_id:', rawLogs[0].vehicle_id);
+  }
+
+  // Filter logs by selected vehicle (handle both number and string IDs)
+  const filteredLogs = selectedVehicle?.id
+    ? rawLogs.filter((log) => {
+        const logVehicleId = log.vehicle?.id || log.vehicle_id;
+        const match = logVehicleId == selectedVehicle.id;
+        if (!match && rawLogs.indexOf(log) === 0) {
+          console.log('RawDataLog - Filter mismatch:', {
+            logVehicleId,
+            selectedVehicleId: selectedVehicle.id,
+            logVehicle: log.vehicle,
+          });
+        }
+        return match;
+      })
+    : rawLogs;
+
+  console.log('RawDataLog - Selected Vehicle:', selectedVehicle);
+  console.log('RawDataLog - Total raw logs:', rawLogs.length);
+  console.log('RawDataLog - Filtered logs:', filteredLogs.length);
+  if (filteredLogs.length > 0) {
+    console.log('RawDataLog - Sample filtered log:', filteredLogs[0]);
+  }
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString("en-US", {
@@ -169,7 +110,9 @@ const RawDataLog = ({ selectedVehicle }) => {
     }
   };
 
-  if (loading && logs.length === 0) {
+  const isConnected = ws && ws.readyState === WebSocket.OPEN;
+
+  if (loading && filteredLogs.length === 0) {
     return (
       <div className="p-4 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4">
@@ -217,14 +160,12 @@ const RawDataLog = ({ selectedVehicle }) => {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-1 font-mono text-xs scrollbar-hide">
-        {logs.map((log, index) => {
+        {filteredLogs.map((log, index) => {
           const level = getLogLevel(log.logs);
           return (
             <div
               key={log.id || index}
               className={`p-2 rounded border-l-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                log._isMQTT ? "bg-green-50 dark:bg-green-900/10" : ""
-              } ${
                 level === "ERROR"
                   ? "border-red-500"
                   : level === "WARN"
@@ -253,7 +194,7 @@ const RawDataLog = ({ selectedVehicle }) => {
           );
         })}
 
-        {logs.length === 0 && !loading && (
+        {filteredLogs.length === 0 && !loading && (
           <div className="text-center text-gray-500 font-openSans dark:text-gray-400 py-20">
             No logs available
           </div>
@@ -262,7 +203,7 @@ const RawDataLog = ({ selectedVehicle }) => {
 
       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>{logs.length} entries</span>
+          <span>{filteredLogs.length} entries</span>
           <span>Last updated: {formatTime(new Date().toISOString())}</span>
         </div>
       </div>

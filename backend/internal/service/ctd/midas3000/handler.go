@@ -3,7 +3,6 @@ package midas3000
 import (
 	"encoding/json"
 	"fmt"
-	"go-fiber-pgsql/internal/model"
 	"go-fiber-pgsql/internal/repository"
 	wsocket "go-fiber-pgsql/internal/websocket"
 	"log"
@@ -37,30 +36,21 @@ func (h *DataHandler) ProcessData(data *CTDMidas3000Data) error {
 		data.VehicleCode, data.SensorCode, data.Depth, data.Temperature, data.Salinity)
 
 	// Convert data to JSON for storage
-	dataJSON, err := json.Marshal(data)
+	_, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal data: %w", err)
 	}
 
-	// Save to sensor_logs table
-	sensorLog := &model.SensorLog{
-		VehicleCode: data.VehicleCode,
-		SensorCode:  data.SensorCode,
-		Timestamp:   data.Timestamp,
-		Data:        string(dataJSON),
-	}
-
-	if err := h.sensorLogRepo.CreateSensorLog(sensorLog); err != nil {
-		return fmt.Errorf("failed to save sensor log: %w", err)
-	}
+	// TODO: Save to sensor_logs table
+	// Need to lookup VehicleID and SensorID from VehicleCode and SensorCode first
+	// The new SensorLog model requires vehicle_id and sensor_id (not codes)
+	log.Printf("TODO: Save MIDAS 3000 data to sensor_logs (need vehicle/sensor ID lookup from codes)")
 
 	// Update vehicle_sensor last reading
 	if err := h.updateVehicleSensorLastReading(data); err != nil {
 		log.Printf("Warning: failed to update vehicle sensor last reading: %v", err)
 		// Don't fail the whole process if this update fails
 	}
-
-	log.Printf("Successfully saved MIDAS 3000 data to database (log_id=%d)", sensorLog.ID)
 
 	// Broadcast data via WebSocket to connected clients
 	if h.wsHub != nil {

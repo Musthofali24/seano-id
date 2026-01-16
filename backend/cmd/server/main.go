@@ -13,6 +13,7 @@ import (
 	"go-fiber-pgsql/internal/route"
 	"go-fiber-pgsql/internal/seeder"
 	"go-fiber-pgsql/internal/service/ctd/midas3000"
+	mqttservice "go-fiber-pgsql/internal/service/mqtt"
 	wsocket "go-fiber-pgsql/internal/websocket"
 )
 
@@ -41,8 +42,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := config.MigrateDB(db, &model.User{}, &model.Role{}, &model.Permission{}, &model.SensorType{}, &model.Sensor{}, &model.Vehicle{}, &model.VehicleBattery{}, &model.VehicleSensor{}, &model.SensorLog{}); err != nil {
+	if err := config.MigrateDB(db, &model.User{}, &model.Role{}, &model.Permission{}, &model.SensorType{}, &model.Sensor{}, &model.Vehicle{}, &model.VehicleBattery{}, &model.VehicleSensor{}, &model.SensorLog{}, &model.VehicleLog{}, &model.RawLog{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
+	}
+
+	// Setup TimescaleDB hypertables for time-series data
+	if err := config.SetupHypertables(db); err != nil {
+		log.Printf("Warning: Failed to setup hypertables: %v", err)
 	}
 
 	seeder.SeedRolesAndPermissions(db)
@@ -59,8 +65,15 @@ func main() {
 	go wsHub.Run()
 	log.Println("WebSocket Hub started")
 
+	// Initialize repositories
 	sensorLogRepo := repository.NewSensorLogRepository(db)
+	vehicleLogRepo := repository.NewVehicleLogRepository(db)
+	rawLogRepo := repository.NewRawLogRepository(db)
 	vehicleSensorRepo := repository.NewVehicleSensorRepository(db)
+	vehicleRepo := repository.NewVehicleRepository(db)
+	sensorRepo := repository.NewSensorRepository(db)
+	
+	// MIDAS 3000 handler (legacy)
 	midas3000Handler := midas3000.NewDataHandler(sensorLogRepo, vehicleSensorRepo, wsHub)
 
 	mqttBroker := getEnv("MQTT_BROKER", "")
@@ -85,6 +98,7 @@ func main() {
 	}
 	
 	if brokerURL != "" {
+		// MIDAS 3000 listener (legacy)
 		mqttListener, err := midas3000.NewMQTTListener(mqttConfig, midas3000Handler)
 		if err != nil {
 			log.Printf("Warning: Failed to create MQTT listener: %v", err)
@@ -96,6 +110,27 @@ func main() {
 					log.Printf("Warning: Failed to subscribe to MQTT topics: %v", err)
 				} else {
 					log.Println("MQTT Listener started and subscribed to topics")
+				}
+				
+				// Start new log listeners
+				mqttClient := mqttListener.GetClient()
+				
+				// Vehicle Log Listener
+				vehicleLogListener := mqttservice.NewVehicleLogListener(mqttClient, vehicleLogRepo, vehicleRepo, wsHub)
+				if err := vehicleLogListener.Start(); err != nil {
+					log.Printf("Warning: Failed to start vehicle log listener: %v", err)
+				}
+				
+				// Sensor Log Listener
+				sensorLogListener := mqttservice.NewSensorLogListener(mqttClient, sensorLogRepo, vehicleRepo, sensorRepo, wsHub)
+				if err := sensorLogListener.Start(); err != nil {
+					log.Printf("Warning: Failed to start sensor log listener: %v", err)
+				}
+				
+				// Raw Log Listener
+				rawLogListener := mqttservice.NewRawLogListener(mqttClient, rawLogRepo, vehicleRepo, wsHub)
+				if err := rawLogListener.Start(); err != nil {
+					log.Printf("Warning: Failed to start raw log listener: %v", err)
 				}
 			}
 		}

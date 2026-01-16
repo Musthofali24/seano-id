@@ -1,22 +1,343 @@
-import useTitle from "../hooks/useTitle";
-import Title from "../ui/Title";
+import React, { useState } from 'react';
+import { useLogData } from '../hooks/useLogData';
+import Title from '../ui/Title';
+import { WidgetCard } from '../components/Widgets';
+import { WidgetCardSkeleton } from '../components/Skeleton';
+import { DataTable } from '../components/UI';
+import useLoadingTimeout from '../hooks/useLoadingTimeout';
+import { FiActivity, FiCpu, FiFileText } from 'react-icons/fi';
 
 const Log = () => {
-  useTitle("Log");
+  const { stats, vehicleLogs, sensorLogs, rawLogs, loading } = useLogData();
+  const [activeTab, setActiveTab] = useState('vehicle');
+
+  // Use loading timeout to prevent infinite skeleton loading
+  const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
+  const shouldShowSkeleton = timeoutLoading && loading && vehicleLogs.length === 0;
+
+  const widgets = [
+    {
+      title: 'Vehicle Logs',
+      value: stats.vehicle_logs.today,
+      icon: <FiActivity className="text-blue-600 dark:text-blue-400" size={24} />,
+      trendIcon: stats.vehicle_logs.percentage_change >= 0 ? (
+        <span className="text-green-600 dark:text-green-400">↑</span>
+      ) : (
+        <span className="text-red-600 dark:text-red-400">↓</span>
+      ),
+      trendText: `${Math.abs(stats.vehicle_logs.percentage_change).toFixed(1)}% vs yesterday`,
+      iconBgColor: 'bg-blue-100 dark:bg-blue-900/30',
+    },
+    {
+      title: 'Sensor Logs',
+      value: stats.sensor_logs.today,
+      icon: <FiCpu className="text-green-600 dark:text-green-400" size={24} />,
+      trendIcon: stats.sensor_logs.percentage_change >= 0 ? (
+        <span className="text-green-600 dark:text-green-400">↑</span>
+      ) : (
+        <span className="text-red-600 dark:text-red-400">↓</span>
+      ),
+      trendText: `${Math.abs(stats.sensor_logs.percentage_change).toFixed(1)}% vs yesterday`,
+      iconBgColor: 'bg-green-100 dark:bg-green-900/30',
+    },
+    {
+      title: 'Raw Logs',
+      value: stats.raw_logs.today,
+      icon: <FiFileText className="text-purple-600 dark:text-purple-400" size={24} />,
+      trendIcon: stats.raw_logs.percentage_change >= 0 ? (
+        <span className="text-green-600 dark:text-green-400">↑</span>
+      ) : (
+        <span className="text-red-600 dark:text-red-400">↓</span>
+      ),
+      trendText: `${Math.abs(stats.raw_logs.percentage_change).toFixed(1)}% vs yesterday`,
+      iconBgColor: 'bg-purple-100 dark:bg-purple-900/30',
+    },
+  ];
+
+  const formatTimestamp = (timestamp) => {
+    return new Date(timestamp).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+  };
+
+  // Vehicle Logs Columns
+  const vehicleLogColumns = [
+    {
+      header: 'Time',
+      accessorKey: 'timestamp',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm text-gray-900 dark:text-gray-300">
+          {formatTimestamp(row.created_at)}
+        </span>
+      ),
+    },
+    {
+      header: 'Vehicle',
+      accessorKey: 'vehicle_code',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+          {row.vehicle?.code || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Battery',
+      accessorKey: 'battery_voltage',
+      sortable: true,
+      cell: (row) => (
+        <div className="text-sm text-gray-900 dark:text-gray-300">
+          <div>{row.battery_voltage ? `${row.battery_voltage}V` : '-'}</div>
+          {row.battery_current && <div className="text-xs text-gray-500 dark:text-gray-400">{row.battery_current}A</div>}
+        </div>
+      ),
+    },
+    {
+      header: 'Mode',
+      accessorKey: 'mode',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
+          {row.mode || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Location',
+      accessorKey: 'location',
+      sortable: false,
+      cell: (row) => (
+        <div className="text-sm text-gray-900 dark:text-gray-300">
+          {row.latitude && row.longitude ? (
+            <>
+              <div>Lat: {row.latitude.toFixed(4)}°</div>
+              <div>Lon: {row.longitude.toFixed(4)}°</div>
+              {row.altitude && <div className="text-xs text-gray-500 dark:text-gray-400">Alt: {row.altitude}m</div>}
+            </>
+          ) : 'N/A'}
+        </div>
+      ),
+    },
+    {
+      header: 'Speed / Heading',
+      accessorKey: 'speed',
+      sortable: true,
+      cell: (row) => (
+        <div className="text-sm text-gray-900 dark:text-gray-300">
+          {row.speed !== null && <div>{row.speed} m/s</div>}
+          {row.heading !== null && <div className="text-xs text-gray-500 dark:text-gray-400">Hdg: {row.heading}°</div>}
+        </div>
+      ),
+    },
+    {
+      header: 'Orientation',
+      accessorKey: 'roll',
+      sortable: false,
+      cell: (row) => (
+        <div className="text-xs text-gray-900 dark:text-gray-300">
+          {row.roll !== null && <div>R: {row.roll}°</div>}
+          {row.pitch !== null && <div>P: {row.pitch}°</div>}
+          {row.yaw !== null && <div>Y: {row.yaw}°</div>}
+        </div>
+      ),
+    },
+    {
+      header: 'RSSI',
+      accessorKey: 'rssi',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm text-gray-900 dark:text-gray-300">
+          {row.rssi ? `${row.rssi} dBm` : 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Flags',
+      accessorKey: 'armed',
+      sortable: false,
+      cell: (row) => (
+        <div className="text-xs">
+          {row.armed !== null && (
+            <div className={row.armed ? 'text-red-500' : 'text-green-500'}>
+              {row.armed ? '⚠ Armed' : '✓ Safe'}
+            </div>
+          )}
+          {row.gps_ok !== null && (
+            <div className={row.gps_ok ? 'text-green-500' : 'text-red-500'}>
+              {row.gps_ok ? '✓ GPS' : '✗ GPS'}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Temp',
+      accessorKey: 'temperature_system',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm text-gray-900 dark:text-gray-300">
+          {row.temperature_system || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'system_status',
+      sortable: true,
+      cell: (row) => (
+        <span
+          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+            row.system_status === 'OK'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+              : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+          }`}
+        >
+          {row.system_status || 'Unknown'}
+        </span>
+      ),
+    },
+  ];
+
+  // Sensor Logs Columns
+  const sensorLogColumns = [
+    {
+      header: 'Time',
+      accessorKey: 'timestamp',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm text-gray-900 dark:text-gray-300">
+          {formatTimestamp(row.created_at)}
+        </span>
+      ),
+    },
+    {
+      header: 'Vehicle',
+      accessorKey: 'vehicle_code',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+          {row.vehicle?.code || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Sensor',
+      accessorKey: 'sensor_code',
+      sortable: true,
+      cell: (row) => (
+        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+          {row.sensor?.code || 'N/A'}
+        </span>
+      ),
+    },
+    {
+      header: 'Data',
+      accessorKey: 'data',
+      sortable: false,
+      cell: (row) => (
+        <div className="text-xs text-gray-700 dark:text-gray-400 font-mono max-w-md overflow-x-auto">
+          {row.data}
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4">
-        <Title
-          title="System Logs"
-          subtitle="View system activities and operation logs"
-        />
+    <div className="p-4">
+      <Title title="Logs" subtitle="Real-time log monitoring" />
+
+      {/* Widget Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+        {shouldShowSkeleton
+          ? Array.from({ length: 3 }).map((_, idx) => <WidgetCardSkeleton key={idx} />)
+          : widgets.map((widget, idx) => <WidgetCard key={idx} {...widget} />)}
       </div>
-      <div className="px-4">
-        <p className="text-gray-500 dark:text-gray-400">
-          System logs will be displayed here.
-        </p>
+
+      {/* Tabs */}
+      <div className="bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl my-4">
+        <div className="border-b border-gray-200 dark:border-slate-600">
+          <nav className="flex space-x-8 px-6" aria-label="Tabs">
+            {['vehicle', 'sensor', 'raw'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)} Logs
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Vehicle Logs */}
+        {activeTab === 'vehicle' && (
+          <div className="p-6">
+            <DataTable
+              columns={vehicleLogColumns}
+              data={vehicleLogs}
+              searchPlaceholder="Search vehicle logs..."
+              searchKeys={['vehicle_code', 'system_status']}
+              pageSize={10}
+              emptyMessage="No vehicle logs yet. Waiting for data..."
+            />
+          </div>
+        )}
+
+        {/* Sensor Logs */}
+        {activeTab === 'sensor' && (
+          <div className="p-6">
+            <DataTable
+              columns={sensorLogColumns}
+              data={sensorLogs}
+              searchPlaceholder="Search sensor logs..."
+              searchKeys={['vehicle_code', 'sensor_code']}
+              pageSize={10}
+              emptyMessage="No sensor logs yet. Waiting for data..."
+            />
+          </div>
+        )}
+
+        {/* Raw Logs */}
+        {activeTab === 'raw' && (
+          <div className="p-6">
+            <div className="space-y-3">
+              {rawLogs.length === 0 ? (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  No raw logs yet. Waiting for data...
+                </p>
+              ) : (
+                rawLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                        {formatTimestamp(log.created_at)}
+                      </span>
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                        {log.vehicle?.code || 'N/A'}
+                      </span>
+                    </div>
+                    <pre className="text-sm text-gray-900 dark:text-gray-300 whitespace-pre-wrap font-mono break-words">
+                      {log.logs}
+                    </pre>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

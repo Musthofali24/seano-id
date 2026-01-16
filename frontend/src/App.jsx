@@ -49,23 +49,24 @@ function App() {
   const { vehicles } = useVehicleData();
   const initializedRef = useRef(false);
 
-  // Set default vehicle ID to user's first vehicle (reset on vehicles change)
   useEffect(() => {
-    // Reset initialization when vehicles change (e.g., after logout/login)
     if (vehicles && vehicles.length > 0) {
-      if (
-        !initializedRef.current ||
+      if (!initializedRef.current) {
+        setSelectedVehicleId(vehicles[0].id);
+        initializedRef.current = true;
+      } else if (
+        selectedVehicleId &&
         !vehicles.find((v) => v.id === selectedVehicleId)
       ) {
-        setSelectedVehicleId(vehicles[0].id); // Store vehicle ID
-        initializedRef.current = true;
+        setSelectedVehicleId(vehicles[0].id);
       }
     } else if (vehicles && vehicles.length === 0) {
       // Reset when no vehicles (logout)
       setSelectedVehicleId(null);
       initializedRef.current = false;
     }
-  }, [vehicles, selectedVehicleId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicles]); // Only depend on vehicles, not selectedVehicleId
 
   // Get selected vehicle object from ID (always synced with vehicles array)
   const selectedVehicle = selectedVehicleId
@@ -241,7 +242,15 @@ function App() {
         <Main
           isSidebarOpen={isSidebarOpen}
           selectedVehicle={selectedVehicle}
-          setSelectedVehicle={(vehicle) => setSelectedVehicleId(vehicle.id)} // Set vehicle ID
+          setSelectedVehicle={(vehicle) => {
+            console.log("🚗 App.jsx - Setting selected vehicle:", vehicle);
+            if (vehicle && vehicle.id) {
+              setSelectedVehicleId(vehicle.id);
+            } else if (vehicle) {
+              // Handle case where vehicle might be just an ID
+              setSelectedVehicleId(vehicle);
+            }
+          }}
           darkMode={darkMode}
         >
           <Content>

@@ -339,7 +339,7 @@ const Profile = () => {
               </div>
 
               {/* Password Section */}
-              <div>
+    <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FaShieldAlt size={14} />
                   Password

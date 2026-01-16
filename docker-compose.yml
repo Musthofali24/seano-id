@@ -48,6 +48,7 @@ services:
       - seano_net
     environment:
       - VITE_API_URL=https://api.seano.cloud
+      - VITE_WS_URL=wss://api.seano.cloud
 
 networks:
   seano_net:

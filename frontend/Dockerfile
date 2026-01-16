@@ -9,6 +9,9 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+# Copy custom ship SVG to replace airplane
+RUN cp /app/public/flight-indicators/img/heading_mechanics.svg /app/node_modules/react-flight-indicators/dist/heading_mechanics~LnEXqkNn.svg || true
+
 RUN bun run build
 
 # --- Stage 2: Production ---

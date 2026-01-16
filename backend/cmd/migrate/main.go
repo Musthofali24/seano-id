@@ -16,32 +16,49 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Drop tabel yang sudah ada
+	// Drop tabel yang sudah ada (in reverse order to avoid FK issues)
 	log.Println("Dropping existing tables...")
-	if err := db.Migrator().DropTable(
-		&model.User{},
-		&model.Role{},
-		&model.Permission{},
-		&model.SensorType{},
+	dropOrder := []interface{}{
+		&model.RawLog{},
+		&model.VehicleLog{},
+		&model.SensorLog{},
+		&model.VehicleSensor{},
+		&model.VehicleBattery{},
 		&model.Sensor{},
 		&model.Vehicle{},
-		&model.VehicleSensor{},
-		&model.SensorLog{},
-	); err != nil {
-		log.Println("Warning: Failed to drop tables (might not exist):", err)
+		&model.SensorType{},
+		&model.User{},
+		// Drop junction table separately
+		"role_permissions",
+		&model.Permission{},
+		&model.Role{},
 	}
-
-	// Membuat ulang tabel berdasarkan model
+	
+	for _, table := range dropOrder {
+		if err := db.Migrator().DropTable(table); err != nil {
+			log.Printf("Warning: Failed to drop table %v: %v", table, err)
+		}
+	}
+	
+	// Membuat ulang tabel berdasarkan model (in correct order)
 	log.Println("Creating tables...")
+	
+	// Step 1: Create base tables first
+	if err := db.AutoMigrate(&model.Role{}, &model.Permission{}); err != nil {
+		log.Fatal("Failed to create roles/permissions:", err)
+	}
+	
+	// Step 2: Create rest of tables (junction tables will be auto-created)
 	if err := config.MigrateDB(db,
-		&model.Role{},
-		&model.Permission{},
 		&model.User{},
 		&model.SensorType{},
 		&model.Sensor{},
 		&model.Vehicle{},
+		&model.VehicleBattery{},
 		&model.VehicleSensor{},
 		&model.SensorLog{},
+		&model.VehicleLog{},
+		&model.RawLog{},
 	); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}

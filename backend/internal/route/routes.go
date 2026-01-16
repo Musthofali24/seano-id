@@ -26,6 +26,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicleRepo := repository.NewVehicleRepository(db)
 	vehicleSensorRepo := repository.NewVehicleSensorRepository(db)
 	sensorLogRepo := repository.NewSensorLogRepository(db)
+	vehicleLogRepo := repository.NewVehicleLogRepository(db)
+	rawLogRepo := repository.NewRawLogRepository(db)
 
 	// Initialize handlers
 	userHandler := &handler.UserHandler{DB: db}
@@ -41,6 +43,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicleHandler := handler.NewVehicleHandler(vehicleRepo, db)
 	vehicleSensorHandler := handler.NewVehicleSensorHandler(vehicleSensorRepo, vehicleRepo, sensorRepo, db)
 	sensorLogHandler := handler.NewSensorLogHandler(sensorLogRepo)
+	vehicleLogHandler := handler.NewVehicleLogHandler(vehicleLogRepo)
+	rawLogHandler := handler.NewRawLogHandler(rawLogRepo)
+	logStatsHandler := handler.NewLogStatsHandler(vehicleLogRepo, sensorLogRepo, rawLogRepo)
 	wsHandler := wsocket.NewWebSocketHandler(wsHub)
 
 	// Swagger route
@@ -123,11 +128,34 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 
 	// Sensor Logs routes (protected)
 	sensorLogs := app.Group("/sensor-logs", middleware.AuthRequired())
-	sensorLogs.Get("/", sensorLogHandler.GetSensorLogs) // Query by vehicle_code, sensor_code, time range
-	sensorLogs.Get("/:vehicle_code/:sensor_code/latest", sensorLogHandler.GetLatestSensorLog)
-	sensorLogs.Delete("/cleanup", middleware.CheckPermission(db, "sensor_logs.manage"), sensorLogHandler.DeleteOldLogs)
+	sensorLogs.Get("/", sensorLogHandler.GetSensorLogs) // Query by vehicle_id, sensor_id, time range
+	sensorLogs.Get("/:id", sensorLogHandler.GetSensorLogByID)
+	sensorLogs.Post("/", sensorLogHandler.CreateSensorLog)
+	sensorLogs.Delete("/:id", sensorLogHandler.DeleteSensorLog)
+
+	// Vehicle Logs routes (protected)
+	vehicleLogs := app.Group("/vehicle-logs", middleware.AuthRequired())
+	vehicleLogs.Get("/", vehicleLogHandler.GetVehicleLogs) // Query by vehicle_id, time range
+	vehicleLogs.Get("/:id", vehicleLogHandler.GetVehicleLogByID)
+	vehicleLogs.Get("/latest/:vehicle_id", vehicleLogHandler.GetLatestVehicleLog)
+	vehicleLogs.Post("/", vehicleLogHandler.CreateVehicleLog)
+	vehicleLogs.Delete("/:id", vehicleLogHandler.DeleteVehicleLog)
+
+	// Raw Logs routes (protected)
+	rawLogs := app.Group("/raw-logs", middleware.AuthRequired())
+	rawLogs.Get("/", rawLogHandler.GetRawLogs) // Query by search, time range
+	rawLogs.Get("/stats", rawLogHandler.GetRawLogStats)
+	rawLogs.Get("/:id", rawLogHandler.GetRawLogByID)
+	rawLogs.Post("/", rawLogHandler.CreateRawLog)
+	rawLogs.Delete("/:id", rawLogHandler.DeleteRawLog)
+
+	// Log Stats routes (protected)
+	logs := app.Group("/logs", middleware.AuthRequired())
+	logs.Get("/stats", logStatsHandler.GetLogStats)
+	logs.Get("/chart", logStatsHandler.GetLogChartData)
 
 	// WebSocket routes (no middleware, auth checked inside WebSocket handler via query param)
 	app.Get("/ws/stats", middleware.AuthRequired(), wsHandler.GetStats)
 	app.Get("/ws/sensor-data", websocket.New(wsHandler.HandleWebSocket))
+	app.Get("/ws/logs", websocket.New(wsHandler.HandleWebSocket)) // Reuse existing handler
 }
