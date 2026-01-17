@@ -2,8 +2,6 @@ module go-fiber-pgsql
 
 go 1.24.0
 
-toolchain go1.24.11
-
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/gofiber/contrib/websocket v1.3.4

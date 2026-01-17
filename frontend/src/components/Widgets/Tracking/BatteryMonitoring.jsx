@@ -10,72 +10,71 @@ import {
   FaExclamationTriangle,
   FaCheckCircle,
 } from "react-icons/fa";
-import useVehicleData from "../../../hooks/useVehicleData";
-import useVehicleBattery from "../../../hooks/useVehicleBattery";
+import { useLogData } from "../../../hooks/useLogData";
 
 const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
-  const { vehicles, loading } = useVehicleData();
-  const { batteryData, loading: batteryLoading } = useVehicleBattery(
-    selectedVehicle?.id, // Pass vehicle ID to hook
-    30000
-  );
+  const { batteryData, ws } = useLogData();
   const [showTimeout, setShowTimeout] = useState(false);
 
   // Set timeout to show default values after 5 seconds
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (batteryLoading) {
-        setShowTimeout(true);
-      }
-    }, 5000);
+      setShowTimeout(true);
+    }, 2000);
 
     return () => clearTimeout(timeout);
-  }, [batteryLoading]);
+  }, []);
 
-  // Find current vehicle for fallback data
-  const currentVehicle =
-    vehicles.find((v) => v.id === selectedVehicle?.id) || {};
+  console.log("BatteryMonitoring - selectedVehicle:", selectedVehicle);
+  console.log("BatteryMonitoring - batteryData:", batteryData);
+  console.log("BatteryMonitoring - selectedVehicle.id:", selectedVehicle?.id);
 
-  // Battery data with fallbacks - support for 2 batteries
-  const batteries =
-    batteryData.length > 0
-      ? batteryData
-      : [
-          {
-            id: 1,
-            percentage: currentVehicle.battery_level || null,
-            voltage: null,
-            current: null,
-            temperature: null,
-            charge: null,
-            capacity: null,
-            design_capacity: null,
-            power_supply_status: null,
-            power_supply_health: null,
-            power_supply_technology: null,
-            present: null,
-          },
-          {
-            id: 2,
-            percentage: null,
-            voltage: null,
-            current: null,
-            temperature: null,
-            charge: null,
-            capacity: null,
-            design_capacity: null,
-            power_supply_status: null,
-            power_supply_health: null,
-            power_supply_technology: null,
-            present: null,
-          },
-        ];
+  // Get battery data for selected vehicle
+  const vehicleBatteries = batteryData[selectedVehicle?.id] || {
+    1: null,
+    2: null,
+  };
+  console.log("BatteryMonitoring - vehicleBatteries:", vehicleBatteries);
 
   // Ensure we always have exactly 2 batteries for display
   const displayBatteries = [
-    batteries[0] || { id: 1, percentage: null },
-    batteries[1] || { id: 2, percentage: null },
+    vehicleBatteries[1] || {
+      battery_id: 1,
+      percentage: null,
+      voltage: null,
+      current: null,
+      temperature: null,
+      status: null,
+    },
+    vehicleBatteries[2] || {
+      battery_id: 2,
+      percentage: null,
+      voltage: null,
+      current: null,
+      temperature: null,
+      status: null,
+    },
   ];
+
+  // Calculate summary
+  const validBatteries = displayBatteries.filter((b) => b.percentage !== null);
+  const summary = {
+    totalCapacity: 0, // Would come from battery specs if available
+    averagePercentage:
+      validBatteries.length > 0
+        ? validBatteries.reduce((sum, b) => sum + b.percentage, 0) /
+          validBatteries.length
+        : 0,
+  };
+
+  // Get most recent battery timestamp for "Last Sync"
+  const lastSyncTime =
+    validBatteries.length > 0
+      ? validBatteries
+          .map((b) => b.timestamp)
+          .filter((t) => t)
+          .sort((a, b) => new Date(b) - new Date(a))[0]
+      : null;
 
   const getBatteryIcon = (percentage) => {
     if (percentage === null || percentage === undefined) return FaBatteryEmpty;
@@ -102,67 +101,38 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
     return "bg-red-500";
   };
 
-  const getHealthStatus = (health) => {
-    if (health === null || health === undefined)
+  const getHealthStatus = (battery) => {
+    // Show good status if we have battery data (percentage exists)
+    if (battery.percentage === null || battery.percentage === undefined) {
       return {
         text: "N/A",
         color: "text-gray-500",
         icon: FaExclamationTriangle,
       };
-
-    switch (health) {
-      case 1:
-      case "Good":
-        return { text: "Good", color: "text-green-500", icon: FaCheckCircle };
-      case 2:
-      case "Overheat":
-        return {
-          text: "Overheat",
-          color: "text-red-500",
-          icon: FaThermometerHalf,
-        };
-      case 3:
-      case "Dead":
-        return {
-          text: "Dead",
-          color: "text-red-600",
-          icon: FaExclamationTriangle,
-        };
-      default:
-        return {
-          text: "Unknown",
-          color: "text-gray-500",
-          icon: FaExclamationTriangle,
-        };
     }
+    // If battery percentage is available, consider it healthy
+    return { text: "Good", color: "text-green-500", icon: FaCheckCircle };
   };
 
   const getStatusText = (status) => {
     if (status === null || status === undefined) return "N/A";
 
-    switch (status) {
-      case 1:
-      case "Charging":
-        return "Charging";
-      case 2:
-      case "Discharging":
-        return "Discharging";
-      case 3:
-      case "Not charging":
-        return "Not Charging";
-      case 4:
-      case "Full":
-        return "Full";
-      default:
-        return "Unknown";
-    }
+    // Capitalize first letter
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  if ((loading || batteryLoading) && !showTimeout) {
+  const isConnected = ws && ws.readyState === WebSocket.OPEN;
+
+  // Check if we have recent battery data (within last 30 seconds)
+  const hasRecentData =
+    lastSyncTime && Date.now() - new Date(lastSyncTime).getTime() < 30000;
+  const showConnected = isConnected || hasRecentData;
+
+  if (!showTimeout && !isConnected) {
     return (
       <div className="h-full p-6 flex items-center justify-center">
         <div className="animate-pulse text-gray-500 dark:text-gray-400">
-          Loading battery data...
+          Connecting to battery monitoring...
         </div>
       </div>
     );
@@ -171,7 +141,7 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
   // Helper function to render a single battery
   const renderBattery = (battery, index) => {
     const BatteryIcon = getBatteryIcon(battery.percentage);
-    const healthStatus = getHealthStatus(battery.power_supply_health);
+    const healthStatus = getHealthStatus(battery);
     const HealthIcon = healthStatus.icon;
     const batteryPercentage =
       battery.percentage !== null ? battery.percentage : 0;
@@ -222,7 +192,7 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
             <HealthIcon className={`text-xs ${healthStatus.color}`} />
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400">
-            {getStatusText(battery.power_supply_status)}
+            {getStatusText(battery.status)}
           </div>
         </div>
       </div>
@@ -240,7 +210,9 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
           </h3>
         </div>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {selectedVehicle?.name || selectedVehicle?.code || "All Vehicles"}
+          {selectedVehicle?.registration_code ||
+            selectedVehicle?.name ||
+            "USV 001"}
         </span>
       </div>
 
@@ -271,15 +243,15 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
                     <span className="text-gray-600 dark:text-gray-400">
                       Status:
                     </span>
-                    <span className="font-mono text-gray-900 dark:text-white">
-                      {getStatusText(battery.power_supply_status) || "N/A"}
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {getStatusText(battery.status) || "N/A"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
                       Current:
                     </span>
-                    <span className="font-mono text-gray-900 dark:text-white">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {battery.current !== null && battery.current !== undefined
                         ? `${battery.current.toFixed(1)}A`
                         : "N/A"}
@@ -289,7 +261,7 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
                     <span className="text-gray-600 dark:text-gray-400">
                       Voltage:
                     </span>
-                    <span className="font-mono text-gray-900 dark:text-white">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {battery.voltage !== null && battery.voltage !== undefined
                         ? `${battery.voltage.toFixed(1)}V`
                         : "N/A"}
@@ -299,7 +271,7 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
                     <span className="text-gray-600 dark:text-gray-400">
                       Temp:
                     </span>
-                    <span className="font-mono text-gray-900 dark:text-white">
+                    <span className="font-medium text-gray-900 dark:text-white">
                       {battery.temperature !== null &&
                       battery.temperature !== undefined
                         ? `${battery.temperature.toFixed(1)}°C`
@@ -321,25 +293,16 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
                 <span className="text-blue-600 dark:text-blue-400">
                   Total Capacity:
                 </span>
-                <span className="font-mono text-blue-700 dark:text-blue-300">
-                  {displayBatteries
-                    .reduce((sum, bat) => sum + (bat.capacity || 0), 0)
-                    .toFixed(1)}
-                  Ah
+                <span className="font-medium text-blue-700 dark:text-blue-300">
+                  {summary.totalCapacity.toFixed(1)}Ah
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-blue-600 dark:text-blue-400">
                   Average Percentage:
                 </span>
-                <span className="font-mono text-blue-700 dark:text-blue-300">
-                  {Math.round(
-                    displayBatteries.reduce(
-                      (sum, bat) => sum + (bat.percentage || 0),
-                      0
-                    ) / displayBatteries.length
-                  )}
-                  %
+                <span className="font-medium text-blue-700 dark:text-blue-300">
+                  {Math.round(summary.averagePercentage)}%
                 </span>
               </div>
             </div>
@@ -349,24 +312,24 @@ const BatteryMonitoring = React.memo(({ selectedVehicle = null }) => {
           <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    showConnected ? "bg-green-500 animate-pulse" : "bg-gray-400"
+                  }`}
+                ></div>
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   Last Sync
                 </span>
               </div>
-              <div className="text-xs font-mono text-gray-600 dark:text-gray-400">
-                {new Date().toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                })}{" "}
-                (
-                {new Date().toLocaleDateString("en-US", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "2-digit",
-                })}
-                )
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                {lastSyncTime
+                  ? new Date(lastSyncTime).toLocaleString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: true,
+                    })
+                  : "Waiting for data..."}
               </div>
             </div>
           </div>

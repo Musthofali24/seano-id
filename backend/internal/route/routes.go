@@ -119,6 +119,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicles.Get("/:vehicle_id/battery", vehicleHandler.GetVehicleBatteryStatus)  // Get latest battery status
 	vehicles.Get("/:vehicle_id/alerts", vehicleHandler.GetVehicleByID)  // Placeholder for alerts
 	
+	// Battery routes
+	app.Get("/vehicle-batteries/latest", middleware.AuthRequired(), vehicleHandler.GetAllLatestBatteryStatus)
+	
 	// Vehicle-Sensor assignment routes (users can assign sensors to their vehicles)
 	vehicles.Post("/:vehicle_id/sensors", vehicleSensorHandler.AssignSensorToVehicle)
 	vehicles.Get("/:vehicle_id/sensors", vehicleSensorHandler.GetVehicleSensors)

@@ -65,6 +65,21 @@ func (r *VehicleRepository) GetLatestBatteryStatus(vehicleID uint) (*model.Vehic
 	return &battery, nil
 }
 
+func (r *VehicleRepository) GetAllLatestBatteryStatus() ([]model.VehicleBattery, error) {
+	var batteries []model.VehicleBattery
+	// Get latest battery for each combination of vehicle_id and battery_id
+	// DISTINCT ON returns the first row of each group (when ordered by created_at DESC = latest)
+	err := r.db.Raw(`
+		SELECT DISTINCT ON (vehicle_id, battery_id) *
+		FROM vehicle_batteries
+		ORDER BY vehicle_id, battery_id, created_at DESC
+	`).Scan(&batteries).Error
+	if err != nil {
+		return nil, err
+	}
+	return batteries, nil
+}
+
 func (r *VehicleRepository) CreateBatteryStatus(battery *model.VehicleBattery) error {
 	return r.db.Create(battery).Error
 }

@@ -33,19 +33,30 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   // Find latest vehicle log for selected vehicle from useLogData
   const vehicleLog = useMemo(() => {
     if (!selectedVehicle?.id || vehicleLogs.length === 0) return null;
-    
+
     // Filter by vehicle ID and get the latest (first in array, newest first)
     const filtered = vehicleLogs.filter(
       (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
     );
-    
+
     return filtered.length > 0 ? filtered[0] : null;
   }, [vehicleLogs, selectedVehicle]);
+
+  // Check if data is recent (less than 30 seconds old)
+  const isDataRecent = (timestamp) => {
+    if (!timestamp) return false;
+    const now = new Date();
+    const logTime = new Date(timestamp);
+    const diffMs = now - logTime;
+    return diffMs < 30000; // 30 seconds
+  };
 
   // Check WebSocket connection status
   useEffect(() => {
     const wsConnected = ws && ws.readyState === WebSocket.OPEN;
-    setIsConnected(wsConnected && vehicleLog !== null);
+    const hasRecentData =
+      vehicleLog && isDataRecent(vehicleLog.timestamp || vehicleLog.created_at);
+    setIsConnected(wsConnected && hasRecentData);
   }, [ws, vehicleLog]);
 
   // Monitor connection status with 15-second timeout
@@ -84,9 +95,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   const vehicleStates = {
     connected:
       isConnected ||
-      (vehicleLog &&
-        vehicleLog.rssi !== undefined &&
-        vehicleLog.rssi !== null)
+      (vehicleLog && vehicleLog.rssi !== undefined && vehicleLog.rssi !== null)
         ? true
         : false,
     armed: mergedData.armed !== undefined ? mergedData.armed : null,
@@ -94,7 +103,12 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     manual_input:
       mergedData.manual_input !== undefined ? mergedData.manual_input : null,
     mode: mergedData.mode || null,
-    gps_fix: mergedData.gps_ok !== undefined ? mergedData.gps_ok : (mergedData.gps_fix !== undefined ? mergedData.gps_fix : null),
+    gps_fix:
+      mergedData.gps_ok !== undefined
+        ? mergedData.gps_ok
+        : mergedData.gps_fix !== undefined
+        ? mergedData.gps_fix
+        : null,
     system_status:
       mergedData.system_status !== undefined ? mergedData.system_status : null,
   };
@@ -237,20 +251,12 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
       {/* Connection Status */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div
-          className={`p-3 rounded-lg border ${
-            vehicleStates.connected === null
-              ? "bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800"
-              : vehicleStates.connected
-              ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
-              : "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
-          }`}
-        >
+        <div className="p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaWifi
               className={
                 vehicleStates.connected === null
-                  ? "text-gray-600"
+                  ? "text-gray-400"
                   : vehicleStates.connected
                   ? "text-green-600"
                   : "text-red-600"
@@ -260,15 +266,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
               Connection
             </span>
           </div>
-          <p
-            className={`text-sm font-semibold ${
-              vehicleStates.connected === null
-                ? "text-gray-700 dark:text-gray-400"
-                : vehicleStates.connected
-                ? "text-green-700 dark:text-green-400"
-                : "text-red-700 dark:text-red-400"
-            }`}
-          >
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             {vehicleStates.connected === null
               ? "N/A"
               : vehicleStates.connected
@@ -277,15 +275,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </p>
         </div>
 
-        <div
-          className={`p-3 rounded-lg border ${
-            vehicleStates.armed === null
-              ? "bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800"
-              : vehicleStates.armed
-              ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800"
-              : "bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-800"
-          }`}
-        >
+        <div className="p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaShieldAlt
               className={
@@ -298,15 +288,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
               Armed
             </span>
           </div>
-          <p
-            className={`text-sm font-semibold ${
-              vehicleStates.armed === null
-                ? "text-gray-700 dark:text-gray-400"
-                : vehicleStates.armed
-                ? "text-orange-700 dark:text-orange-400"
-                : "text-gray-600 dark:text-gray-400"
-            }`}
-          >
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             {vehicleStates.armed === null
               ? "N/A"
               : vehicleStates.armed
@@ -383,47 +365,47 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* System Status */}
-      <div className="mb-6 p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+      <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-2">
           <FaExclamationTriangle className={systemStatus.color} size={16} />
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             System Status
           </span>
         </div>
-        <p className={`text-lg font-bold ${systemStatus.color}`}>
+        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
           {systemStatus.text}
         </p>
         {mergedData.system_status && (
           <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-            Status Code: {mergedData.system_status}
+            Status Code: OK
           </p>
         )}
       </div>
 
       {/* Position Data */}
-      <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-3">
           <FaArrowUp className="text-purple-600" />
-          <span className="text-xs font-semibold text-purple-700 dark:text-purple-300">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Position
           </span>
         </div>
-        <div className="space-y-1 text-xs">
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Latitude:</span>
-            <span className="font-mono text-purple-700 dark:text-purple-300">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
               {formatCoordinate(mergedData.latitude)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Longitude:</span>
-            <span className="font-mono text-purple-700 dark:text-purple-300">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
               {formatCoordinate(mergedData.longitude)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Altitude:</span>
-            <span className="font-mono text-purple-700 dark:text-purple-300">
+            <span className="font-medium text-gray-900 dark:text-gray-100">
               {formatValue(mergedData.altitude, " m")}
             </span>
           </div>
@@ -432,7 +414,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
       {/* Signal & Temperature */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <FaWifi className={getRSSIColor(mergedData.rssi)} />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -452,7 +434,9 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
                 />
               ))}
             </div>
-            <span className={`text-xs font-mono ${getRSSIColor(mergedData.rssi)}`}>
+            <span
+              className={`text-xs font-medium ${getRSSIColor(mergedData.rssi)}`}
+            >
               {mergedData.rssi !== null && mergedData.rssi !== undefined
                 ? `${mergedData.rssi} dBm`
                 : "N/A"}
@@ -460,15 +444,17 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </div>
         </div>
 
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+        <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <FaThermometerHalf className="text-orange-500" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
               Temp
             </span>
           </div>
-          <p className="text-sm font-mono font-semibold text-orange-600 dark:text-orange-400">
-            {formatTemperature(mergedData.temperature_system || mergedData.temperature)}
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {formatTemperature(
+              mergedData.temperature_system || mergedData.temperature
+            )}
           </p>
         </div>
       </div>

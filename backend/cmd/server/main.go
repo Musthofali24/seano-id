@@ -132,6 +132,12 @@ func main() {
 				if err := rawLogListener.Start(); err != nil {
 					log.Printf("Warning: Failed to start raw log listener: %v", err)
 				}
+				
+				// Battery Listener
+				batteryListener := mqttservice.NewBatteryListener(mqttClient, vehicleRepo, wsHub)
+				if err := batteryListener.Start(); err != nil {
+					log.Printf("Warning: Failed to start battery listener: %v", err)
+				}
 			}
 		}
 	} else {

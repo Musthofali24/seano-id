@@ -312,3 +312,23 @@ func (h *VehicleHandler) GetVehicleBatteryStatus(c *fiber.Ctx) error {
 
 	return c.JSON(battery)
 }
+
+// GetAllLatestBatteryStatus godoc
+// @Summary Get latest battery status for all vehicles
+// @Description Get the most recent battery status for all vehicles
+// @Tags Vehicles
+// @Produce json
+// @Success 200 {array} model.VehicleBattery
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /vehicle-batteries/latest [get]
+func (h *VehicleHandler) GetAllLatestBatteryStatus(c *fiber.Ctx) error {
+	batteries, err := h.vehicleRepo.GetAllLatestBatteryStatus()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch battery data",
+		})
+	}
+
+	return c.JSON(batteries)
+}

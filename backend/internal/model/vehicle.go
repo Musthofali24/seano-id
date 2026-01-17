@@ -18,8 +18,10 @@ type VehicleBattery struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
 	VehicleID   uint      `json:"vehicle_id" gorm:"not null;index"`
 	Vehicle     *Vehicle  `json:"vehicle,omitempty" gorm:"foreignKey:VehicleID"`
+	BatteryID   int       `json:"battery_id" gorm:"type:int;default:1;index"` // 1 or 2 for dual battery systems
 	Percentage  float64   `json:"percentage" gorm:"type:decimal(5,2)"` // 0.00 - 100.00
 	Voltage     float64   `json:"voltage" gorm:"type:decimal(5,2)"`    // Voltage in V
+	Current     float64   `json:"current" gorm:"type:decimal(5,2)"`    // Current in A (Ampere)
 	Status      string    `json:"status" gorm:"type:varchar(20)"`      // charging, discharging, full, low
 	Temperature float64   `json:"temperature" gorm:"type:decimal(5,2)"` // Battery temperature in Celsius
 	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`

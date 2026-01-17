@@ -34,13 +34,13 @@ const Tracking = memo(
         </div>
         <div className="col-span-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-4">
           {/* Sensor Log Chart (multiple sensor type) */}
-          <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
+          {/* <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
             <SensorDataChart selectedVehicle={selectedVehicle} />
-          </div>
+          </div> */}
           {/* Vehicle Log Chart (battery, volt, speed, etc)*/}
-          <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
+          {/* <div className="h-[700px] col-span-3 xl:col-span-2 bg-white border-1 border-gray-200 dark:bg-transparent dark:border-1 dark:border-gray-700 rounded-2xl">
             <VehicleLogChart selectedVehicle={selectedVehicle} />
-          </div>
+          </div> */}
         </div>
         <div className="col-span-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6">
           {/* Battery Monitoring */}

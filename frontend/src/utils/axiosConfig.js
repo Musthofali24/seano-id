@@ -4,13 +4,96 @@ import { API_ENDPOINTS } from '../config'
 // Create axios instance
 const axiosInstance = axios.create()
 
-// Request interceptor - add token to all requests
-axiosInstance.interceptors.request.use(
-  config => {
-    const token = localStorage.getItem('access_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+// Decode JWT to get expiration time
+function getTokenExpiration (token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 // Convert to milliseconds
+  } catch {
+    return null
+  }
+}
+
+// Check if token will expire soon (within 5 minutes)
+function shouldRefreshToken (token) {
+  const expiration = getTokenExpiration(token)
+  if (!expiration) return false
+
+  const now = Date.now()
+  const fiveMinutes = 5 * 60 * 1000
+  return expiration - now < fiveMinutes
+}
+
+// Refresh token function
+let refreshPromise = null
+async function refreshAccessToken () {
+  // Prevent multiple simultaneous refresh calls
+  if (refreshPromise) {
+    return refreshPromise
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const refreshToken = localStorage.getItem('refresh_token')
+      if (!refreshToken) {
+        throw new Error('No refresh token available')
+      }
+
+      console.log('🔄 Refreshing access token...')
+      const response = await axios.post(
+        API_ENDPOINTS.AUTH.REFRESH,
+        { refresh_token: refreshToken },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      )
+
+      const { access_token, refresh_token: newRefreshToken } = response.data
+      localStorage.setItem('access_token', access_token)
+
+      if (newRefreshToken) {
+        localStorage.setItem('refresh_token', newRefreshToken)
+      }
+
+      console.log('✅ Token refreshed successfully')
+      return access_token
+    } catch (error) {
+      console.error('❌ Token refresh failed:', error)
+      // Clear tokens and redirect to login
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+      window.location.href = '/auth/login'
+      throw error
+    } finally {
+      refreshPromise = null
     }
+  })()
+
+  return refreshPromise
+}
+
+// Request interceptor - add token and check if refresh needed
+axiosInstance.interceptors.request.use(
+  async config => {
+    const token = localStorage.getItem('access_token')
+
+    if (token) {
+      // Check if token needs refresh before making request
+      if (shouldRefreshToken(token)) {
+        try {
+          const newToken = await refreshAccessToken()
+          config.headers.Authorization = `Bearer ${newToken}`
+        } catch {
+          // If refresh fails, continue with old token and let response interceptor handle it
+          config.headers.Authorization = `Bearer ${token}`
+        }
+      } else {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+    }
+
     return config
   },
   error => {
@@ -30,24 +113,13 @@ axiosInstance.interceptors.response.use(
 
       try {
         // Try to refresh token
-        const refreshToken = localStorage.getItem('refresh_token')
-        if (refreshToken) {
-          const response = await axios.post(API_ENDPOINTS.AUTH.REFRESH, {
-            refresh_token: refreshToken
-          })
+        const newToken = await refreshAccessToken()
 
-          const { access_token } = response.data
-          localStorage.setItem('access_token', access_token)
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${access_token}`
-          return axiosInstance(originalRequest)
-        }
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newToken}`
+        return axiosInstance(originalRequest)
       } catch (refreshError) {
-        // Refresh failed, logout user
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
+        // Refresh already handled logout in refreshAccessToken function
         return Promise.reject(refreshError)
       }
     }

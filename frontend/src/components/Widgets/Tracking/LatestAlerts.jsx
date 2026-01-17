@@ -1,5 +1,5 @@
-import React from "react";
-import useVehicleAlerts from "../../../hooks/useVehicleAlerts";
+import React, { useState, useEffect, useRef } from "react";
+import { LogSkeleton } from "../../Skeleton";
 import useLoadingTimeout from "../../../hooks/useLoadingTimeout";
 import {
   FaExclamationTriangle,
@@ -7,38 +7,39 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaBell,
-  FaClock,
 } from "react-icons/fa";
 
+/**
+ * LatestAlerts - Panel Alert Terbaru
+ *
+ * SUMBER DATA:
+ * - Mock data untuk sementara (backend endpoint belum ada)
+ *
+ * CARA KERJA:
+ * - Tampilkan alert berdasarkan vehicle terpilih
+ * - Format mirip RawDataLog dan SensorDataLog
+ * - No auto-refresh, static display
+ *
+ * @param {object} selectedVehicle - Objek kendaraan dari parent
+ */
 const LatestAlerts = ({ selectedVehicle }) => {
-  const { alerts, error } = useVehicleAlerts(selectedVehicle?.id, 10, 30000);
+  const [alerts, setAlerts] = useState([]);
   const { loading } = useLoadingTimeout(true, 2000);
 
+  // Mock alerts data (karena backend belum ada)
+  useEffect(() => {
+    // Set empty alerts for now
+    setAlerts([]);
+  }, [selectedVehicle]);
+
   const formatTime = (timestamp) => {
+    if (!timestamp) return "--:--:--";
     return new Date(timestamp).toLocaleTimeString("en-US", {
       hour12: false,
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
     });
-  };
-
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return "Today";
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
-    } else {
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    }
   };
 
   const getAlertIcon = (severity) => {
@@ -100,30 +101,13 @@ const LatestAlerts = ({ selectedVehicle }) => {
 
   if (loading && alerts.length === 0) {
     return (
-      <div className="h-full p-4 flex flex-col">
+      <div className="p-4 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-5 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          </div>
+          <div className="h-6 w-36 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
           <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
         </div>
         <div className="flex-1 overflow-hidden">
-          <div className="space-y-2">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div
-                key={i}
-                className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"
-              >
-                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1 flex-shrink-0"></div>
-                <div className="flex-1 space-y-2 min-w-0">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
-                </div>
-                <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse flex-shrink-0"></div>
-              </div>
-            ))}
-          </div>
+          <LogSkeleton lines={5} />
         </div>
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -136,72 +120,27 @@ const LatestAlerts = ({ selectedVehicle }) => {
   }
 
   return (
-    <div className="h-full p-4 flex flex-col">
+    <div className="p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <FaBell className="text-lg text-orange-500" />
+          <FaBell className="text-orange-500" />
           <h3 className="text-base font-semibold text-gray-900 dark:text-white">
             Latest Alerts
           </h3>
         </div>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {selectedVehicle?.name || selectedVehicle?.code || "All Vehicles"}
+          {selectedVehicle?.registration_code ||
+            selectedVehicle?.name ||
+            "USV 001"}
         </span>
       </div>
 
-      {error && (
-        <div className="mb-3 p-2 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
-          {error}
-        </div>
-      )}
-
       {/* Alerts List */}
-      <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
-        {alerts.map((alert, index) => {
-          const AlertIcon = getAlertIcon(alert.severity);
-          const colors = getAlertColor(alert.severity);
-
-          return (
-            <div
-              key={alert.id || index}
-              className={`flex items-start space-x-3 p-3 rounded-lg border transition-colors hover:bg-opacity-80 ${colors.bg} ${colors.border}`}
-            >
-              <AlertIcon className={`text-sm mt-1 ${colors.icon}`} />
-              <div className="flex-1 min-w-0">
-                <div className={`text-sm font-medium ${colors.text} mb-1`}>
-                  {alert.title ||
-                    alert.message ||
-                    alert.description ||
-                    "Unknown Alert"}
-                </div>
-                {alert.description && alert.title && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                    {alert.description}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                  <FaClock className="text-xs" />
-                  <span>
-                    {formatDate(alert.created_at || alert.timestamp)} at{" "}
-                    {formatTime(alert.created_at || alert.timestamp)}
-                  </span>
-                  {alert.severity && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-xs font-medium ${colors.text} ${colors.bg}`}
-                    >
-                      {alert.severity.toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-
-        {alerts.length === 0 && !loading && (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-            <FaCheckCircle className="text-3xl mb-2 text-green-500" />
+      <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
+        {alerts.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+            <FaCheckCircle className="text-4xl mb-3 text-green-500" />
             <div className="text-sm font-medium">No alerts found</div>
             <div className="text-xs">Vehicle is operating normally</div>
           </div>
@@ -211,10 +150,8 @@ const LatestAlerts = ({ selectedVehicle }) => {
       {/* Footer */}
       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>
-            {alerts.length} alert{alerts.length !== 1 ? "s" : ""}
-          </span>
-          <span>Last updated: {formatTime(new Date().toISOString())}</span>
+          <span>0 alerts</span>
+          <span>Last updated: {formatTime(new Date())}</span>
         </div>
       </div>
     </div>

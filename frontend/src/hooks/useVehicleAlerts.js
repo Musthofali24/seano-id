@@ -35,7 +35,10 @@ const useVehicleAlerts = (
         }
 
         const data = await response.json()
-        setAlerts(data.slice(0, limit))
+
+        // Ensure data is an array before slicing
+        const alertsArray = Array.isArray(data) ? data : data.data || []
+        setAlerts(alertsArray.slice(0, limit))
       } catch (err) {
         console.error('Error fetching alerts:', err)
         setError(err.message)

@@ -68,6 +68,20 @@ type RawLogData struct {
 	CreatedAt string       `json:"created_at"`
 }
 
+// BatteryMessage represents battery data message
+type BatteryMessage struct {
+	Type        string   `json:"type"` // "battery"
+	VehicleID   uint     `json:"vehicle_id"`
+	VehicleCode string   `json:"vehicle_code"`
+	BatteryID   int      `json:"battery_id"`   // 1 or 2
+	Percentage  float64  `json:"percentage"`   // 0-100
+	Voltage     *float64 `json:"voltage,omitempty"`
+	Current     *float64 `json:"current,omitempty"`
+	Temperature *float64 `json:"temperature,omitempty"`
+	Status      string   `json:"status"` // charging, discharging, full, low, normal
+	Timestamp   string   `json:"timestamp,omitempty"`
+}
+
 // BroadcastVehicleLog broadcasts vehicle log to all connected clients
 func (h *Hub) BroadcastVehicleLog(data VehicleLogData, timestamp string) error {
 	msg := LogMessage{
@@ -125,3 +139,15 @@ func (h *Hub) BroadcastRawLog(data RawLogData, timestamp string) error {
 	return nil
 }
 
+// BroadcastToVehicle broadcasts message to all clients watching a specific vehicle
+func (h *Hub) BroadcastToVehicle(vehicleID uint, data interface{}) error {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Failed to marshal data: %v", err)
+		return err
+	}
+
+	h.broadcast <- jsonData
+	log.Printf("Broadcasted to vehicle %d: %d clients", vehicleID, h.GetClientCount())
+	return nil
+}

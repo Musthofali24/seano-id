@@ -198,10 +198,21 @@ func (h *AuthHandler) SetCredentials(c *fiber.Ctx) error {
 
 	repository.UpdateRefreshToken(h.DB, user.ID, refreshToken)
 
+	// Set refresh token as HTTP-only cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		MaxAge:   7 * 24 * 60 * 60, // 7 days in seconds
+		HTTPOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: "Lax",
+	})
+
 	return c.Status(201).JSON(model.LoginResponse{
-		User:        model.ToUserResponse(user),
-		AccessToken: accessToken,
-		TokenType:   "bearer",
+		User:         model.ToUserResponse(user),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken, // Also return in body for localStorage
+		TokenType:    "bearer",
 	})
 }
 
@@ -311,10 +322,21 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
 	repository.UpdateRefreshToken(h.DB, user.ID, refreshToken)
 
+	// Set refresh token as HTTP-only cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		MaxAge:   7 * 24 * 60 * 60, // 7 days in seconds
+		HTTPOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: "Lax",
+	})
+
 	return c.JSON(model.LoginResponse{
-		User:        model.ToUserResponse(user),
-		AccessToken: accessToken,
-		TokenType:   "bearer",
+		User:         model.ToUserResponse(user),
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken, // Also return in body for localStorage
+		TokenType:    "bearer",
 	})
 }
 
@@ -350,7 +372,19 @@ func (h *AuthHandler) GetMe(c *fiber.Ctx) error {
 // @Failure 500 {object} map[string]string
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
+	// Try to get refresh token from cookie first, then from body
 	refreshToken := c.Cookies("refresh_token")
+	
+	if refreshToken == "" {
+		// Try to get from request body
+		var req struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+		if err := c.BodyParser(&req); err == nil && req.RefreshToken != "" {
+			refreshToken = req.RefreshToken
+		}
+	}
+	
 	if refreshToken == "" {
 		return c.Status(401).JSON(fiber.Map{"error": "Refresh token not found"})
 	}

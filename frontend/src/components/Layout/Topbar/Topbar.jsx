@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import useVehicleData from "../../../hooks/useVehicleData";
 import useMissionData from "../../../hooks/useMissionData";
+import { useLogData } from "../../../hooks/useLogData";
 import { VehicleDropdown } from "../../Widgets";
 import {
   FaBatteryEmpty,
@@ -16,10 +17,45 @@ import { FaLocationDot, FaLocationPin, FaMapLocation } from "react-icons/fa6";
 
 const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
   const [batteryLevel, setBatteryLevel] = useState(1);
-  const [rssiLevel, setRssiLevel] = useState(-45);
+  const [location, setLocation] = useState("Waiting for GPS...");
   const { vehicles, loading } = useVehicleData();
   const { getActiveMissions } = useMissionData();
-  const usvStatus = "online";
+  const { vehicleLogs, ws } = useLogData();
+
+  // Get latest vehicle log for selected vehicle
+  const vehicleLog = useMemo(() => {
+    if (!selectedVehicle?.id || vehicleLogs.length === 0) return null;
+    const filtered = vehicleLogs.filter(
+      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
+    );
+    return filtered.length > 0 ? filtered[0] : null;
+  }, [vehicleLogs, selectedVehicle]);
+
+  // Check if data is recent (less than 30 seconds old)
+  const isDataRecent = useMemo(() => {
+    if (!vehicleLog?.timestamp) return false;
+    const logTime = new Date(vehicleLog.timestamp).getTime();
+    const now = Date.now();
+    const diffSeconds = (now - logTime) / 1000;
+    return diffSeconds < 30; // Data is fresh if less than 30 seconds old
+  }, [vehicleLog]);
+
+  // Determine connection status
+  const usvStatus = useMemo(() => {
+    if (!selectedVehicle) return "offline";
+    if (!vehicleLog) return "offline";
+    if (!isDataRecent) return "offline";
+    if (ws && ws.readyState === WebSocket.OPEN) return "online";
+    return "offline";
+  }, [selectedVehicle, vehicleLog, isDataRecent, ws]);
+
+  // Get real RSSI from vehicle log
+  const rssiLevel = useMemo(() => {
+    if (vehicleLog?.rssi !== undefined && vehicleLog?.rssi !== null) {
+      return vehicleLog.rssi;
+    }
+    return null;
+  }, [vehicleLog]);
 
   // Get current active mission for selected vehicle
   const getCurrentMission = () => {
@@ -28,9 +64,9 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
     const activeMissions = getActiveMissions();
     return activeMissions.find(
       (mission) =>
-        mission.vehicle === selectedVehicle.name ||
-        mission.vehicle === selectedVehicle.id ||
-        mission.vehicle === selectedVehicle.vehicle_name
+        mission.vehicle === selectedVehicle.registration_code ||
+        mission.vehicle === selectedVehicle.vehicle_name ||
+        mission.vehicle === selectedVehicle.name
     );
   };
 
@@ -60,6 +96,11 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
   };
 
   const renderRssiIcon = () => {
+    if (rssiLevel === null) {
+      return (
+        <FaWifi size={20} className="text-gray-400" title="No Signal Data" />
+      );
+    }
     if (rssiLevel >= -50)
       return (
         <FaWifi size={20} className="text-green-500" title="Excellent Signal" />
@@ -81,12 +122,47 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
     );
   };
 
-  // RSSI data should come from selected vehicle API data
+  // Reverse geocoding untuk mendapatkan lokasi dari koordinat
   useEffect(() => {
-    if (selectedVehicle && selectedVehicle.rssi) {
-      setRssiLevel(selectedVehicle.rssi);
+    if (vehicleLog?.latitude && vehicleLog?.longitude) {
+      const lat = vehicleLog.latitude;
+      const lon = vehicleLog.longitude;
+
+      // Use Nominatim reverse geocoding
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.address) {
+            const city =
+              data.address.city ||
+              data.address.town ||
+              data.address.village ||
+              data.address.county;
+            const state = data.address.state;
+            const country = data.address.country;
+
+            if (city && country) {
+              setLocation(`${city}, ${country}`);
+            } else if (state && country) {
+              setLocation(`${state}, ${country}`);
+            } else if (country) {
+              setLocation(country);
+            } else {
+              setLocation(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+            }
+          } else {
+            setLocation(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+          }
+        })
+        .catch(() => {
+          setLocation(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+        });
+    } else {
+      setLocation("Waiting for GPS...");
     }
-  }, [selectedVehicle]);
+  }, [vehicleLog]);
 
   return (
     <div
@@ -156,48 +232,39 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
 
       {/* Indikator */}
       <div className="flex items-center gap-4 dark:text-white text-sm">
-        {/* Waypoint Progress - show always when vehicle is selected */}
-        {selectedVehicle && (
-          <div
-            className={`flex items-center gap-3 px-2 py-1 bg-transparent`}
-            title={
+        <div className="flex items-center gap-2">
+          <FaRoute
+            size={20}
+            className={currentMission ? "text-blue-500" : "text-gray-400"}
+          />
+          <span
+            className={`font-mono font-medium ${
               currentMission
-                ? `Mission: ${currentMission.title || "Active Mission"}`
-                : "No active mission"
-            }
+                ? "text-blue-700 dark:text-blue-300"
+                : "text-gray-500 dark:text-gray-400"
+            }`}
           >
-            <FaMapLocation
-              size={20}
-              className={currentMission ? "text-blue-500" : "text-gray-400"}
-            />
-            <span
-              className={`font-mono font-medium ${
-                currentMission
-                  ? "text-blue-700 dark:text-blue-300"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
-            >
-              {currentMission
-                ? `WP ${currentMission.current_waypoint || 0}/${
-                    currentMission.waypoints || 0
-                  }`
-                : "WP -- / --"}
-            </span>
-            {/* Progress indicator */}
-          </div>
-        )}
+            {currentMission
+              ? `WP ${currentMission.current_waypoint || 0}/${
+                  currentMission.waypoints || 0
+                }`
+              : "WP -- / --"}
+          </span>
+        </div>
 
         <div className="flex items-center gap-2">
           {renderRssiIcon()}
-          <span>{rssiLevel} dBm</span>
+          <span>{rssiLevel !== null ? `${rssiLevel} dBm` : "-- dBm"}</span>
         </div>
+
         <div className="flex items-center gap-2">
           {renderBatteryIcon()}
           <span>{Math.round(batteryLevel * 100)}%</span>
         </div>
+
         <div className="flex items-center gap-2">
           <FaMapMarkerAlt className="text-red-400" />
-          <span>Jakarta, Indonesia</span>
+          <span>{location}</span>
         </div>
       </div>
     </div>
