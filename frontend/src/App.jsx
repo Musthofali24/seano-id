@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PermissionProvider } from "./contexts/PermissionProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -51,14 +57,14 @@ function App() {
 
   useEffect(() => {
     if (vehicles && vehicles.length > 0) {
-      if (!initializedRef.current) {
-        setSelectedVehicleId(vehicles[0].id);
-        initializedRef.current = true;
-      } else if (
+      // Don't auto-select first vehicle anymore, let user choose
+      // Only validate if selected vehicle still exists
+      if (
         selectedVehicleId &&
         !vehicles.find((v) => v.id === selectedVehicleId)
       ) {
-        setSelectedVehicleId(vehicles[0].id);
+        // If selected vehicle no longer exists, reset to null
+        setSelectedVehicleId(null);
       }
     } else if (vehicles && vehicles.length === 0) {
       // Reset when no vehicles (logout)
@@ -144,8 +150,17 @@ function App() {
 
   const isPublicRoute = publicRoutes.includes(location.pathname);
   const isProtectedRoute = protectedRoutes.some((route) =>
-    location.pathname.startsWith(route)
+    location.pathname.startsWith(route),
   );
+
+  // Handle 404 page separately without any layout
+  if (location.pathname === "/404") {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-black">
+        <ErrorPage code={404} />
+      </div>
+    );
+  }
 
   // Render public routes without layout
   if (isPublicRoute) {
@@ -211,6 +226,8 @@ function App() {
               </PublicRoute>
             }
           />
+          {/* Catch-all route - redirect to /404 */}
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </div>
     );
@@ -393,6 +410,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Catch-all route - redirect to /404 */}
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </Content>
         </Main>

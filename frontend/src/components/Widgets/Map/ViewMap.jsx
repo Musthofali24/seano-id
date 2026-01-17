@@ -30,7 +30,7 @@ const VehicleMarker = memo(
     const heading = vehicleLog?.heading || vehicleLog?.yaw || 0;
     const icon = useMemo(
       () => createBoatIcon(vehicle.id, heading, isSelected),
-      [vehicle.id, heading, isSelected, createBoatIcon]
+      [vehicle.id, heading, isSelected, createBoatIcon],
     );
 
     return (
@@ -69,7 +69,7 @@ const VehicleMarker = memo(
       prevLog?.yaw === nextLog?.yaw &&
       prevLog?.speed === nextLog?.speed
     );
-  }
+  },
 );
 
 VehicleMarker.displayName = "VehicleMarker";
@@ -239,7 +239,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
 
       return null;
     },
-    [vehicles, vehicleLogsMap]
+    [vehicles, vehicleLogsMap],
   );
 
   const handleMapReady = (map) => {
@@ -320,7 +320,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedVehicle]
+    [selectedVehicle],
   );
 
   const focusToVehicle = (e) => {
@@ -509,7 +509,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
 
             // Only update state if it actually changed to prevent unnecessary re-renders
             setShowFocusButton((prev) =>
-              prev !== shouldShow ? shouldShow : prev
+              prev !== shouldShow ? shouldShow : prev,
             );
           } catch (error) {
             setShowFocusButton(false);
@@ -622,10 +622,11 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
         />
 
         <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={
             darkMode
               ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           }
           noWrap={true}
           updateWhenIdle

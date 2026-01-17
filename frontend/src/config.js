@@ -119,9 +119,14 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/api/notifications`
   },
 
-  // Missions endpoints (if exists)
+  // Missions endpoints
   MISSIONS: {
-    LIST: `${API_BASE_URL}/api/missions`
+    LIST: `${API_BASE_URL}/missions`,
+    CREATE: `${API_BASE_URL}/missions`,
+    BY_ID: id => `${API_BASE_URL}/missions/${id}`,
+    UPDATE: id => `${API_BASE_URL}/missions/${id}`,
+    DELETE: id => `${API_BASE_URL}/missions/${id}`,
+    STATS: `${API_BASE_URL}/missions/stats`
   }
 }
 

@@ -30,8 +30,10 @@ const MissionSidebar = ({
   setEditingWaypoint,
   featureGroupRef,
   missionParams,
+  missionStats,
   handleNewMission,
   handleLoadMission,
+  handleSaveMission,
   getActualWaypointCount,
   isPointInPolygon,
 }) => {
@@ -42,7 +44,7 @@ const MissionSidebar = ({
 
     if (waypointToDelete && waypointToDelete.type === "zone") {
       setGeneratedPaths((prev) =>
-        prev.filter((path) => path.id !== waypointId)
+        prev.filter((path) => path.id !== waypointId),
       );
     }
 
@@ -65,7 +67,7 @@ const MissionSidebar = ({
       const pathCoordinates = pathWaypoints.map((wp) => [wp.lat, wp.lng]);
       setGeneratedPaths((prev) => {
         const otherPaths = prev.filter(
-          (path) => path.zoneName !== "Generated Coverage"
+          (path) => path.zoneName !== "Generated Coverage",
         );
         return [
           ...otherPaths,
@@ -79,7 +81,7 @@ const MissionSidebar = ({
       });
     } else {
       setGeneratedPaths((prev) =>
-        prev.filter((path) => path.zoneName !== "Generated Coverage")
+        prev.filter((path) => path.zoneName !== "Generated Coverage"),
       );
     }
   };
@@ -134,7 +136,7 @@ const MissionSidebar = ({
         const spacing = Math.min(0.001, Math.max(0.0002, zoneHeight / 6));
         const waypointSpacing = Math.min(
           0.0008,
-          Math.max(0.0001, zoneWidth / 10)
+          Math.max(0.0001, zoneWidth / 10),
         );
 
         let lineCount = 0;
@@ -269,7 +271,7 @@ const MissionSidebar = ({
           const lastAdded = filteredWaypoints[filteredWaypoints.length - 1];
           const distance = Math.sqrt(
             Math.pow(waypoint.lat - lastAdded.lat, 2) +
-              Math.pow(waypoint.lng - lastAdded.lng, 2)
+              Math.pow(waypoint.lng - lastAdded.lng, 2),
           );
 
           if (distance >= minDistance) {
@@ -412,16 +414,16 @@ const MissionSidebar = ({
                     Total Distance
                   </span>
                   <span className="text-sm font-medium text-gray-800 dark:text-white">
-                    {activeMission ? "1.2 km" : "-- km"}
+                    {missionStats.distanceFormatted || "-- km"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                     <FaPlay size={10} className="text-[#018190]" />
-                    Est. Flight Time
+                    Est. Time
                   </span>
                   <span className="text-sm font-medium text-gray-800 dark:text-white">
-                    {activeMission ? "8 min" : "-- min"}
+                    {missionStats.timeFormatted || "-- min"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -430,7 +432,7 @@ const MissionSidebar = ({
                     Battery Usage
                   </span>
                   <span className="text-sm font-medium text-gray-800 dark:text-white">
-                    {activeMission ? "45%" : "--%"}
+                    {missionStats.battery}%
                   </span>
                 </div>
               </div>
@@ -535,18 +537,18 @@ const MissionSidebar = ({
                 {!homeLocation
                   ? "(No Home)"
                   : hasGeneratedWaypoints ||
-                    waypoints.some((wp) => wp.type === "path")
-                  ? ""
-                  : ""}
+                      waypoints.some((wp) => wp.type === "path")
+                    ? ""
+                    : ""}
               </option>
               <option value="zone">
                 Zone Planning{" "}
                 {!homeLocation
                   ? "(No Home)"
                   : hasGeneratedWaypoints ||
-                    waypoints.some((wp) => wp.type === "path")
-                  ? ""
-                  : ""}
+                      waypoints.some((wp) => wp.type === "path")
+                    ? ""
+                    : ""}
               </option>
             </select>
           )}
@@ -604,15 +606,15 @@ const MissionSidebar = ({
                   {!activeMission
                     ? "Create or load a mission first"
                     : !homeLocation
-                    ? "Set home location first before planning"
-                    : hasGeneratedWaypoints ||
-                      waypoints.some((wp) => wp.type === "path")
-                    ? "Waypoints generated. Drawing tools disabled. Use 'Clear All Waypoints' to restart planning."
-                    : `Draw ${
-                        planningMode === "path"
-                          ? "polyline for route"
-                          : "polygon/rectangle for area"
-                      } on map`}
+                      ? "Set home location first before planning"
+                      : hasGeneratedWaypoints ||
+                          waypoints.some((wp) => wp.type === "path")
+                        ? "Waypoints generated. Drawing tools disabled. Use 'Clear All Waypoints' to restart planning."
+                        : `Draw ${
+                            planningMode === "path"
+                              ? "polyline for route"
+                              : "polygon/rectangle for area"
+                          } on map`}
                 </p>
               </div>
             </div>
@@ -642,9 +644,9 @@ const MissionSidebar = ({
             {!homeLocation
               ? "Set Home Location First"
               : hasGeneratedWaypoints ||
-                waypoints.some((wp) => wp.type === "path")
-              ? "Waypoints Generated"
-              : "Generate Waypoints"}
+                  waypoints.some((wp) => wp.type === "path")
+                ? "Waypoints Generated"
+                : "Generate Waypoints"}
           </button>
         )}
 
@@ -671,7 +673,7 @@ const MissionSidebar = ({
               onClick={() => {
                 if (
                   window.confirm(
-                    "Are you sure you want to clear all waypoints? This will allow you to start planning again."
+                    "Are you sure you want to clear all waypoints? This will allow you to start planning again.",
                   )
                 ) {
                   handleClearWaypoints();
@@ -686,6 +688,7 @@ const MissionSidebar = ({
 
         <button
           disabled={!activeMission}
+          onClick={handleSaveMission}
           className={`w-full px-3 py-2 text-sm rounded-xl transition-colors flex items-center justify-center gap-2 ${
             activeMission
               ? "bg-green-600 hover:bg-green-700 text-white"

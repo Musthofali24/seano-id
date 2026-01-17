@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { API_BASE_URL } from '../config'
+import { API_ENDPOINTS } from '../config'
+import axios from '../utils/axiosConfig'
 
 const useMissionData = () => {
   const [missionData, setMissionData] = useState([])
@@ -12,25 +13,9 @@ const useMissionData = () => {
       setLoading(true)
       setError(null)
 
-      // Get token from localStorage
-      const token = localStorage.getItem('access_token')
-
-      // API endpoint untuk missions
-      const response = await fetch(`${API_BASE_URL}/api/missions`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` })
-        },
-        // Add timeout
-        signal: AbortSignal.timeout(10000) // 10 second timeout
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      // Use axios with config
+      const response = await axios.get(API_ENDPOINTS.MISSIONS.LIST)
+      const data = response.data
 
       // Pastikan data adalah array
       const missionsArray = Array.isArray(data) ? data : data.data || []
@@ -38,6 +23,7 @@ const useMissionData = () => {
       // Transform data jika perlu
       const transformedData = missionsArray.map(mission => ({
         id: mission.id || Math.random(),
+        name: mission.name || mission.title || 'Unnamed Mission',
         title: mission.name || mission.title || 'Unnamed Mission',
         vehicle: mission.vehicle_name || mission.vehicle || 'Unknown Vehicle',
         progress: Math.min(100, Math.max(0, mission.progress || 0)),
@@ -45,8 +31,14 @@ const useMissionData = () => {
         statusColor: getStatusColor(mission.status),
         startTime:
           mission.start_time || mission.created_at || new Date().toISOString(),
+        start_time: mission.start_time,
+        created_at: mission.created_at,
         endTime: mission.end_time,
-        waypoints: mission.waypoints || mission.total_waypoints || 0,
+        waypoints: mission.waypoints || [],
+        home_location: mission.home_location || null,
+        total_waypoints: Array.isArray(mission.waypoints)
+          ? mission.waypoints.length
+          : 0,
         current_waypoint:
           mission.current_waypoint || mission.completed_waypoints || 0,
         distance: mission.distance || 0,
@@ -99,6 +91,51 @@ const useMissionData = () => {
   // Function untuk manual refresh
   const refreshData = () => {
     fetchMissionData()
+  }
+
+  // Function untuk create mission
+  const createMission = async missionData => {
+    try {
+      const response = await axios.post(
+        API_ENDPOINTS.MISSIONS.CREATE,
+        missionData
+      )
+      await fetchMissionData() // Refresh data
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // Function untuk update mission
+  const updateMission = async (id, missionData) => {
+    try {
+      console.log('🚀 updateMission called:', { id, missionData })
+      console.log('📍 API URL:', API_ENDPOINTS.MISSIONS.UPDATE(id))
+
+      const response = await axios.put(
+        API_ENDPOINTS.MISSIONS.UPDATE(id),
+        missionData
+      )
+
+      console.log('✅ Update success:', response.data)
+      await fetchMissionData() // Refresh data
+      return response.data
+    } catch (error) {
+      console.error('❌ Update failed:', error)
+      console.error('Error details:', error.response?.data)
+      throw error
+    }
+  }
+
+  // Function untuk delete mission
+  const deleteMission = async id => {
+    try {
+      await axios.delete(API_ENDPOINTS.MISSIONS.DELETE(id))
+      await fetchMissionData() // Refresh data
+    } catch (error) {
+      throw error
+    }
   }
 
   // Function untuk mendapatkan recent missions (limit 5)
@@ -196,7 +233,11 @@ const useMissionData = () => {
     loading,
     error,
     lastUpdated,
+    fetchMissionData,
     refreshData,
+    createMission,
+    updateMission,
+    deleteMission,
     getRecentMissions,
     getActiveMissions,
     getCompletedMissions,

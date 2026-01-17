@@ -1,3 +1,6 @@
+import { useEffect } from "react";
+import useMissionData from "../../../hooks/useMissionData";
+
 const MissionModals = ({
   showNewMissionModal,
   setShowNewMissionModal,
@@ -6,6 +9,15 @@ const MissionModals = ({
   handleCreateMission,
   handleSelectMission,
 }) => {
+  const { missionData, loading, fetchMissionData } = useMissionData();
+
+  // Fetch mission data when Load Mission modal opens
+  useEffect(() => {
+    if (showLoadMissionModal) {
+      fetchMissionData();
+    }
+  }, [showLoadMissionModal]);
+
   return (
     <>
       {/* New Mission Modal */}
@@ -63,7 +75,7 @@ const MissionModals = ({
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-[#018190] text-white rounded-xl hover:bg-[#016b78] transition-colors"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   Create Mission
                 </button>
@@ -83,54 +95,47 @@ const MissionModals = ({
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
               Load Mission
             </h3>
-            <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
-              {[
-                {
-                  id: 1,
-                  name: "Mission Jatigede 1",
-                  status: "Draft",
-                  waypoints: 3,
-                  lastModified: "2025-10-11",
-                },
-                {
-                  id: 2,
-                  name: "Mission Cirata Survey",
-                  status: "Draft",
-                  waypoints: 5,
-                  lastModified: "2025-10-10",
-                },
-                {
-                  id: 3,
-                  name: "Mission Patrol Route A",
-                  status: "Draft",
-                  waypoints: 8,
-                  lastModified: "2025-10-09",
-                },
-              ].map((mission) => (
-                <div
-                  key={mission.id}
-                  onClick={() => handleSelectMission(mission)}
-                  className="p-3 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-medium text-gray-800 dark:text-white">
-                      {mission.name}
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {mission.waypoints} pts
-                    </span>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : missionData.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                No missions found. Create a new mission to get started.
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
+                {missionData.map((mission) => (
+                  <div
+                    key={mission.id}
+                    onClick={() => handleSelectMission(mission)}
+                    className="p-3 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="text-sm font-medium text-gray-800 dark:text-white">
+                        {mission.title || mission.name}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {Array.isArray(mission.waypoints)
+                          ? mission.waypoints.length
+                          : 0}{" "}
+                        pts
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {mission.created_at
+                          ? new Date(mission.created_at).toLocaleDateString()
+                          : "N/A"}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                        {mission.status || "Draft"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {mission.lastModified}
-                    </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                      {mission.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowLoadMissionModal(false)}

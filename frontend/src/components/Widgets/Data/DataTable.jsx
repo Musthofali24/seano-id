@@ -9,6 +9,7 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
   const [rawLogs, setRawLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [error, setError] = useState(null);
 
   // Fetch raw logs
   useEffect(() => {
@@ -18,10 +19,15 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
   const fetchRawLogs = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await axios.get(API_ENDPOINTS.RAW_LOGS.LIST);
-      setRawLogs(response.data || []);
+
+      // Ensure response.data is an array
+      const logsData = Array.isArray(response.data) ? response.data : [];
+      setRawLogs(logsData);
     } catch (error) {
       console.error("Error fetching raw logs:", error);
+      setError(error.message || "Failed to fetch raw logs");
       setRawLogs([]);
     } finally {
       setLoading(false);
@@ -40,7 +46,7 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
   // Handle individual checkbox
   const handleSelectOne = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -49,14 +55,16 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
     if (selectedIds.length === 0) return;
 
     const confirmBulk = window.confirm(
-      `Are you sure you want to delete ${selectedIds.length} log(s)? This action cannot be undone.`
+      `Are you sure you want to delete ${selectedIds.length} log(s)? This action cannot be undone.`,
     );
 
     if (!confirmBulk) return;
 
     try {
       await Promise.all(
-        selectedIds.map((id) => axios.delete(API_ENDPOINTS.RAW_LOGS.DELETE(id)))
+        selectedIds.map((id) =>
+          axios.delete(API_ENDPOINTS.RAW_LOGS.DELETE(id)),
+        ),
       );
 
       toast.success(`${selectedIds.length} log(s) deleted successfully!`);
@@ -241,6 +249,34 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="text-red-500 dark:text-red-400 mb-4">
+            <svg
+              className="w-16 h-16 mx-auto"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            Failed to Load Data
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={fetchRawLogs}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       ) : (
         <BaseDataTable

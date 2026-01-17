@@ -20,6 +20,31 @@ definitions:
         example: 1
         type: integer
     type: object
+  model.CreateMissionRequest:
+    properties:
+      description:
+        example: Survey mission in sector A
+        type: string
+      end_time:
+        type: string
+      home_location:
+        $ref: '#/definitions/model.Waypoint'
+      name:
+        example: Mission Alpha
+        type: string
+      start_time:
+        type: string
+      status:
+        example: Draft
+        type: string
+      vehicle_id:
+        example: 1
+        type: integer
+      waypoints:
+        items:
+          $ref: '#/definitions/model.Waypoint'
+        type: array
+    type: object
   model.CreatePermissionRequest:
     properties:
       description:
@@ -27,6 +52,12 @@ definitions:
         type: string
       name:
         example: users.create
+        type: string
+    type: object
+  model.CreateRawLogRequest:
+    properties:
+      logs:
+        example: System started successfully
         type: string
     type: object
   model.CreateRoleRequest:
@@ -37,6 +68,18 @@ definitions:
       name:
         example: admin
         type: string
+    type: object
+  model.CreateSensorLogRequest:
+    properties:
+      data:
+        example: '{"temperature":25.5,"pressure":1013}'
+        type: string
+      sensor_id:
+        example: 1
+        type: integer
+      vehicle_id:
+        example: 1
+        type: integer
     type: object
   model.CreateSensorRequest:
     properties:
@@ -73,10 +116,64 @@ definitions:
     properties:
       email:
         type: string
-      full_name:
-        type: string
       password:
         type: string
+      username:
+        type: string
+    type: object
+  model.CreateVehicleLogRequest:
+    properties:
+      altitude:
+        example: 10.5
+        type: number
+      armed:
+        example: true
+        type: boolean
+      battery_current:
+        example: 2.3
+        type: number
+      battery_voltage:
+        example: 12.5
+        type: number
+      gps_ok:
+        example: true
+        type: boolean
+      heading:
+        example: 90.5
+        type: number
+      latitude:
+        example: -6.2088
+        type: number
+      longitude:
+        example: 106.8456
+        type: number
+      mode:
+        example: AUTO
+        type: string
+      pitch:
+        example: 1.2
+        type: number
+      roll:
+        example: 0.5
+        type: number
+      rssi:
+        example: -65
+        type: integer
+      speed:
+        example: 5.2
+        type: number
+      system_status:
+        example: OK
+        type: string
+      temperature_system:
+        example: Normal
+        type: string
+      vehicle_id:
+        example: 1
+        type: integer
+      yaw:
+        example: 90.5
+        type: number
     type: object
   model.CreateVehicleRequest:
     properties:
@@ -106,10 +203,57 @@ definitions:
     properties:
       access_token:
         type: string
+      refresh_token:
+        type: string
       token_type:
         type: string
       user:
         $ref: '#/definitions/model.UserResponse'
+    type: object
+  model.Mission:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      creator:
+        $ref: '#/definitions/model.User'
+      description:
+        type: string
+      end_time:
+        type: string
+      home_location:
+        $ref: '#/definitions/model.Waypoint'
+      id:
+        type: integer
+      name:
+        type: string
+      start_time:
+        type: string
+      status:
+        description: Draft, Active, Completed, Cancelled
+        type: string
+      updated_at:
+        type: string
+      vehicle:
+        $ref: '#/definitions/model.Vehicle'
+      vehicle_id:
+        type: integer
+      waypoints:
+        items:
+          $ref: '#/definitions/model.Waypoint'
+        type: array
+    type: object
+  model.MissionStats:
+    properties:
+      active_missions:
+        type: integer
+      completed_missions:
+        type: integer
+      draft_missions:
+        type: integer
+      total_missions:
+        type: integer
     type: object
   model.Permission:
     properties:
@@ -123,6 +267,21 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  model.RawLog:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      logs:
+        description: Raw log text (changed to text for longer logs)
+        type: string
+      vehicle:
+        $ref: '#/definitions/model.Vehicle'
+      vehicle_id:
+        description: Optional vehicle association
+        type: integer
     type: object
   model.RefreshResponse:
     properties:
@@ -198,12 +357,14 @@ definitions:
         type: string
       id:
         type: integer
-      sensor_code:
-        type: string
-      timestamp:
-        type: string
-      vehicle_code:
-        type: string
+      sensor:
+        $ref: '#/definitions/model.Sensor'
+      sensor_id:
+        type: integer
+      vehicle:
+        $ref: '#/definitions/model.Vehicle'
+      vehicle_id:
+        type: integer
     type: object
   model.SensorType:
     properties:
@@ -220,15 +381,36 @@ definitions:
     type: object
   model.SetCredentialsRequest:
     properties:
-      full_name:
-        example: John Doe
-        type: string
       password:
         example: secret123
         type: string
       token:
         example: verification-token-here
         type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  model.UpdateMissionRequest:
+    properties:
+      description:
+        type: string
+      end_time:
+        type: string
+      home_location:
+        $ref: '#/definitions/model.Waypoint'
+      name:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+      vehicle_id:
+        type: integer
+      waypoints:
+        items:
+          $ref: '#/definitions/model.Waypoint'
+        type: array
     type: object
   model.UpdatePermissionRequest:
     properties:
@@ -270,14 +452,14 @@ definitions:
     properties:
       email:
         type: string
-      full_name:
-        type: string
       is_verified:
         type: boolean
       password:
         type: string
       role_id:
         type: integer
+      username:
+        type: string
     type: object
   model.UpdateVehicleRequest:
     properties:
@@ -308,13 +490,13 @@ definitions:
         type: string
       email:
         type: string
-      full_name:
-        type: string
       id:
         type: integer
       is_verified:
         type: boolean
       updated_at:
+        type: string
+      username:
         type: string
     type: object
   model.UserResponse:
@@ -322,8 +504,6 @@ definitions:
       created_at:
         type: string
       email:
-        type: string
-      full_name:
         type: string
       id:
         type: integer
@@ -333,6 +513,8 @@ definitions:
         description: Role as string, not object
         type: string
       updated_at:
+        type: string
+      username:
         type: string
     type: object
   model.Vehicle:
@@ -360,8 +542,14 @@ definitions:
     type: object
   model.VehicleBattery:
     properties:
+      battery_id:
+        description: 1 or 2 for dual battery systems
+        type: integer
       created_at:
         type: string
+      current:
+        description: Current in A (Ampere)
+        type: number
       id:
         type: integer
       percentage:
@@ -379,6 +567,50 @@ definitions:
         type: integer
       voltage:
         description: Voltage in V
+        type: number
+    type: object
+  model.VehicleLog:
+    properties:
+      altitude:
+        type: number
+      armed:
+        type: boolean
+      battery_current:
+        type: number
+      battery_voltage:
+        type: number
+      created_at:
+        type: string
+      gps_ok:
+        type: boolean
+      heading:
+        type: number
+      id:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      mode:
+        type: string
+      pitch:
+        type: number
+      roll:
+        type: number
+      rssi:
+        type: integer
+      speed:
+        type: number
+      system_status:
+        type: string
+      temperature_system:
+        description: Type field from schema
+        type: string
+      vehicle:
+        $ref: '#/definitions/model.Vehicle'
+      vehicle_id:
+        type: integer
+      yaw:
         type: number
     type: object
   model.VehicleSensor:
@@ -411,6 +643,13 @@ definitions:
       token:
         example: verification-token-here
         type: string
+    type: object
+  model.Waypoint:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
     type: object
 host: api.seano.cloud
 info:
@@ -617,7 +856,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Set full name and password after email verification
+      description: Set username and password after email verification
       parameters:
       - description: Credentials
         in: body
@@ -683,6 +922,265 @@ paths:
       summary: Verify email with token
       tags:
       - Authentication
+  /logs/chart:
+    get:
+      consumes:
+      - application/json
+      description: Get time-series data for log charts (last 24 hours by hour)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get log chart data
+      tags:
+      - Log Stats
+  /logs/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get statistics for all log types (vehicle, sensor, raw)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get log statistics
+      tags:
+      - Log Stats
+  /missions:
+    get:
+      description: Get all missions (own missions for regular users, all missions
+        for admins)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Mission'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all missions
+      tags:
+      - Missions
+    post:
+      consumes:
+      - application/json
+      description: Create a new mission with waypoints
+      parameters:
+      - description: Mission data
+        in: body
+        name: mission
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateMissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Mission'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new mission
+      tags:
+      - Missions
+  /missions/{mission_id}:
+    delete:
+      description: Delete a mission by its ID (ownership check applied)
+      parameters:
+      - description: Mission ID
+        in: path
+        name: mission_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a mission
+      tags:
+      - Missions
+    get:
+      description: Get a mission by its ID (ownership check applied)
+      parameters:
+      - description: Mission ID
+        in: path
+        name: mission_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Mission'
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get mission by ID
+      tags:
+      - Missions
+    put:
+      consumes:
+      - application/json
+      description: Update a mission by its ID (ownership check applied)
+      parameters:
+      - description: Mission ID
+        in: path
+        name: mission_id
+        required: true
+        type: integer
+      - description: Mission update data
+        in: body
+        name: mission
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateMissionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Mission'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a mission
+      tags:
+      - Missions
+  /missions/stats:
+    get:
+      description: Get statistics about missions (total, active, completed, draft)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MissionStats'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get mission statistics
+      tags:
+      - Missions
   /permissions:
     get:
       description: Get all permissions
@@ -932,6 +1430,190 @@ paths:
       summary: Remove a permission from a role
       tags:
       - Permissions
+  /raw-logs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve raw logs with optional filters (search, time range)
+      parameters:
+      - description: Search in logs
+        in: query
+        name: search
+        type: string
+      - description: Start Time (ISO 8601)
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (ISO 8601)
+        in: query
+        name: end_time
+        type: string
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.RawLog'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get raw logs with filters
+      tags:
+      - Raw Logs
+    post:
+      consumes:
+      - application/json
+      description: Create a new raw log entry
+      parameters:
+      - description: Raw Log Data
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateRawLogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.RawLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new raw log
+      tags:
+      - Raw Logs
+  /raw-logs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a raw log by ID
+      parameters:
+      - description: Raw Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a raw log
+      tags:
+      - Raw Logs
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific raw log by ID
+      parameters:
+      - description: Raw Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RawLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get raw log by ID
+      tags:
+      - Raw Logs
+  /raw-logs/stats:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve statistics for raw logs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get raw log statistics
+      tags:
+      - Raw Logs
   /roles:
     get:
       description: Get all roles with their permissions
@@ -1107,17 +1789,17 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve sensor logs with optional filters (vehicle_code, sensor_code,
+      description: Retrieve sensor logs with optional filters (vehicle_id, sensor_id,
         time range)
       parameters:
-      - description: Vehicle Code
+      - description: Vehicle ID
         in: query
-        name: vehicle_code
-        type: string
-      - description: Sensor Code
+        name: vehicle_id
+        type: integer
+      - description: Sensor ID
         in: query
-        name: sensor_code
-        type: string
+        name: sensor_id
+        type: integer
       - description: Start Time (ISO 8601)
         in: query
         name: start_time
@@ -1161,31 +1843,26 @@ paths:
       summary: Get sensor logs with filters
       tags:
       - Sensor Logs
-  /sensor-logs/{vehicle_code}/{sensor_code}/latest:
-    get:
+    post:
       consumes:
       - application/json
-      description: Retrieve the most recent log for a specific vehicle and sensor
+      description: Create a new sensor log entry
       parameters:
-      - description: Vehicle Code
-        in: path
-        name: vehicle_code
+      - description: Sensor Log Data
+        in: body
+        name: log
         required: true
-        type: string
-      - description: Sensor Code
-        in: path
-        name: sensor_code
-        required: true
-        type: string
+        schema:
+          $ref: '#/definitions/model.CreateSensorLogRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/model.SensorLog'
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
             additionalProperties:
               type: string
@@ -1198,27 +1875,28 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Get latest sensor log
+      summary: Create a new sensor log
       tags:
       - Sensor Logs
-  /sensor-logs/cleanup:
+  /sensor-logs/{id}:
     delete:
       consumes:
       - application/json
-      description: Delete sensor logs older than specified date
+      description: Delete a sensor log by ID
       parameters:
-      - description: Before Date (ISO 8601)
-        in: query
-        name: before_date
+      - description: Sensor Log ID
+        in: path
+        name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
         "400":
           description: Bad Request
@@ -1234,7 +1912,41 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Delete old sensor logs (admin only)
+      summary: Delete a sensor log
+      tags:
+      - Sensor Logs
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific sensor log by ID
+      parameters:
+      - description: Sensor Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.SensorLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get sensor log by ID
       tags:
       - Sensor Logs
   /sensor-types:
@@ -1844,6 +2556,223 @@ paths:
       summary: Update user
       tags:
       - User
+  /vehicle-batteries/latest:
+    get:
+      description: Get the most recent battery status for all vehicles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.VehicleBattery'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get latest battery status for all vehicles
+      tags:
+      - Vehicles
+  /vehicle-logs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve vehicle logs with optional filters (vehicle_id, time range)
+      parameters:
+      - description: Vehicle ID
+        in: query
+        name: vehicle_id
+        type: integer
+      - description: Start Time (ISO 8601)
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (ISO 8601)
+        in: query
+        name: end_time
+        type: string
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get vehicle logs with filters
+      tags:
+      - Vehicle Logs
+    post:
+      consumes:
+      - application/json
+      description: Create a new vehicle log entry
+      parameters:
+      - description: Vehicle Log Data
+        in: body
+        name: log
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateVehicleLogRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.VehicleLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new vehicle log
+      tags:
+      - Vehicle Logs
+  /vehicle-logs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a vehicle log by ID
+      parameters:
+      - description: Vehicle Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a vehicle log
+      tags:
+      - Vehicle Logs
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific vehicle log by ID
+      parameters:
+      - description: Vehicle Log ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VehicleLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get vehicle log by ID
+      tags:
+      - Vehicle Logs
+  /vehicle-logs/latest/{vehicle_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the latest log for a specific vehicle
+      parameters:
+      - description: Vehicle ID
+        in: path
+        name: vehicle_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VehicleLog'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get latest vehicle log
+      tags:
+      - Vehicle Logs
   /vehicles:
     get:
       description: Get all vehicles (own vehicles for regular users, all vehicles

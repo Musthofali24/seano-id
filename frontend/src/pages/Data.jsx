@@ -10,6 +10,7 @@ import {
   DataTable,
   DataFilters,
 } from "../components/Widgets/Data";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 const Data = () => {
   useTitle("Data");
@@ -44,7 +45,7 @@ const Data = () => {
   // Use loading timeout to prevent infinite skeleton loading
   const { loading: timeoutLoading } = useLoadingTimeout(
     loading || rawLogsLoading,
-    5000
+    5000,
   );
 
   // Show skeleton only if still loading and within timeout
@@ -91,7 +92,7 @@ const Data = () => {
 
   // Check if any filter is active
   const hasActiveFilters = Object.values(filters).some(
-    (value) => value && value !== "all" && value !== ""
+    (value) => value && value !== "all" && value !== "",
   );
 
   // Get data management cards with real raw logs data
@@ -102,44 +103,69 @@ const Data = () => {
     console.warn("Failed to load raw logs data:", rawLogsError);
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header Section with Title and Action Buttons */}
-      <DataHeader
-        onRefreshData={handleRefreshData}
-        isRefreshing={isRefreshing}
-        lastRefresh={lastRefresh}
-      />
+  // Safe render to prevent crashes
+  try {
+    return (
+      <ErrorBoundary>
+        <div className="space-y-6">
+          {/* Header Section with Title and Action Buttons */}
+          <DataHeader
+            onRefreshData={handleRefreshData}
+            isRefreshing={isRefreshing}
+            lastRefresh={lastRefresh}
+          />
 
-      {/* Data Statistics Cards */}
-      <DataStats
-        cards={dataWidgetCards}
-        loading={shouldShowSkeleton}
-        isRefreshing={isRefreshing}
-      />
+          {/* Data Statistics Cards */}
+          <DataStats
+            cards={dataWidgetCards || []}
+            loading={shouldShowSkeleton}
+            isRefreshing={isRefreshing}
+          />
 
-      {/* Advanced Filters Section */}
-      <div className="px-4">
-        <DataFilters
-          vehicles={vehicles}
-          missions={missions}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onResetFilters={handleResetFilters}
-          hasActiveFilters={hasActiveFilters}
-          totalRecords={0}
-        />
+          {/* Advanced Filters Section */}
+          <div className="px-4">
+            <DataFilters
+              vehicles={vehicles || []}
+              missions={missions || []}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onResetFilters={handleResetFilters}
+              hasActiveFilters={hasActiveFilters}
+              totalRecords={0}
+            />
+          </div>
+
+          {/* Data Table/Records Section */}
+          <div className="px-4">
+            <DataTable
+              hasActiveFilters={hasActiveFilters}
+              handleResetFilters={handleResetFilters}
+            />
+          </div>
+        </div>
+      </ErrorBoundary>
+    );
+  } catch (error) {
+    console.error("Error rendering Data page:", error);
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">
+            Error Loading Page
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {error.message || "An unexpected error occurred"}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
       </div>
-
-      {/* Data Table/Records Section */}
-      <div className="px-4">
-        <DataTable
-          hasActiveFilters={hasActiveFilters}
-          handleResetFilters={handleResetFilters}
-        />
-      </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default Data;

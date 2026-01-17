@@ -1,5 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import useTitle from "../../../hooks/useTitle";
+import useMissionData from "../../../hooks/useMissionData";
+import toast from "react-hot-toast";
+import {
+  calculateTotalDistance,
+  calculateEstimatedTime,
+  calculateBatteryUsage,
+  formatDistance,
+  formatTime,
+} from "../../../utils/missionCalculations";
 import MissionSidebar from "./MissionSidebar";
 import MissionMap from "./MissionMap";
 import MissionModals from "./MissionModals";
@@ -7,6 +16,7 @@ import MissionParameters from "./MissionParameters";
 
 const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   useTitle("Missions");
+  const { createMission, updateMission, missionData } = useMissionData();
 
   // Main mission state
   const [homeLocation, setHomeLocation] = useState(null);
@@ -36,6 +46,24 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     radius: 2,
     action: "waypoint",
   });
+
+  // Calculate mission statistics in real-time
+  const missionStats = useMemo(() => {
+    const distanceMeters = calculateTotalDistance(waypoints, homeLocation);
+    const timeMinutes = calculateEstimatedTime(
+      distanceMeters,
+      missionParams.speed,
+    );
+    const batteryPercent = calculateBatteryUsage(timeMinutes);
+
+    return {
+      distance: distanceMeters,
+      distanceFormatted: formatDistance(distanceMeters),
+      time: timeMinutes,
+      timeFormatted: formatTime(timeMinutes),
+      battery: Math.round(batteryPercent),
+    };
+  }, [waypoints, homeLocation, missionParams.speed]);
 
   // Helper functions
   const getActualWaypointCount = (waypointsList) => {
@@ -69,21 +97,134 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     setShowLoadMissionModal(true);
   };
 
-  const handleCreateMission = (missionData) => {
-    setActiveMission({
-      name: missionData.name,
-      status: "Draft",
-      waypoints: 0,
-      description: missionData.description,
-    });
-    setShowNewMissionModal(false);
-    resetMissionState();
+  const handleCreateMission = async (missionData) => {
+    try {
+      const newMission = await createMission({
+        name: missionData.name,
+        description: missionData.description,
+        status: "Draft",
+        vehicle_id: null, // Will be assigned later
+        waypoints: [],
+        created_by: localStorage.getItem("user_id") || null,
+      });
+
+      setActiveMission({
+        id: newMission.id,
+        name: newMission.name,
+        status: newMission.status,
+        waypoints: 0,
+        description: newMission.description,
+      });
+
+      setShowNewMissionModal(false);
+      resetMissionState();
+      toast.success("Mission created successfully!");
+    } catch (error) {
+      console.error("Error creating mission:", error);
+      toast.error(error.response?.data?.detail || "Failed to create mission");
+    }
   };
 
   const handleSelectMission = (mission) => {
-    setActiveMission(mission);
+    console.log("Loading mission:", mission);
+    console.log("Home location from DB:", mission.home_location);
+
+    // Convert waypoints from database format to application format
+    const loadedWaypoints = Array.isArray(mission.waypoints)
+      ? mission.waypoints.map((wp, index) => ({
+          id: Date.now() + index,
+          name: `WP${index + 1}`,
+          type: "path",
+          lat: wp.lat,
+          lng: wp.lng,
+          altitude: 0,
+          speed: missionParams.speed,
+          delay: missionParams.delay,
+          loiter: missionParams.loiter,
+          radius: missionParams.radius,
+          action: missionParams.action,
+        }))
+      : [];
+
+    // Restore home location if exists
+    if (mission.home_location) {
+      console.log("Setting home location:", mission.home_location);
+      setHomeLocation({
+        lat: mission.home_location.lat,
+        lng: mission.home_location.lng,
+      });
+    } else {
+      console.log("No home location in mission data");
+    }
+
+    setWaypoints(loadedWaypoints);
+    setHasGeneratedWaypoints(loadedWaypoints.length > 0);
+    setActiveMission({
+      ...mission,
+      waypoints: loadedWaypoints.length,
+    });
     setShowLoadMissionModal(false);
-    resetMissionState();
+
+    toast.success(
+      `Loaded ${loadedWaypoints.length} waypoints from "${mission.name}"`,
+    );
+  };
+
+  const handleSaveMission = async () => {
+    if (!activeMission || !activeMission.id) {
+      toast.error("No active mission to save");
+      return;
+    }
+
+    try {
+      console.log("Saving mission:", activeMission.id);
+      console.log("Waypoints to save:", waypoints);
+      console.log("Home location:", homeLocation);
+
+      // Filter out zone type waypoints AND home location
+      // Only save actual mission waypoints, not home
+      const waypointData = waypoints
+        .filter((wp) => {
+          // Exclude zones
+          if (wp.type === "zone") return false;
+          // Exclude home location (if coordinates match)
+          if (
+            homeLocation &&
+            Math.abs(wp.lat - homeLocation.lat) < 0.000001 &&
+            Math.abs(wp.lng - homeLocation.lng) < 0.000001
+          ) {
+            return false;
+          }
+          return true;
+        })
+        .map((wp) => ({
+          lat: wp.lat,
+          lng: wp.lng,
+        }));
+
+      console.log("Converted waypoint data:", waypointData);
+
+      const updateData = {
+        waypoints: waypointData,
+        status: activeMission.status || "Draft",
+      };
+
+      // Include home location if set
+      if (homeLocation) {
+        updateData.home_location = {
+          lat: homeLocation.lat,
+          lng: homeLocation.lng,
+        };
+      }
+
+      await updateMission(activeMission.id, updateData);
+
+      toast.success("Mission saved successfully!");
+    } catch (error) {
+      console.error("Error saving mission:", error);
+      console.error("Error response:", error.response);
+      toast.error(error.response?.data?.error || "Failed to save mission");
+    }
   };
 
   const resetMissionState = () => {
@@ -122,6 +263,9 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     missionParams,
     setMissionParams,
 
+    // Mission statistics
+    missionStats,
+
     // Modals
     showNewMissionModal,
     setShowNewMissionModal,
@@ -133,6 +277,7 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     handleLoadMission,
     handleCreateMission,
     handleSelectMission,
+    handleSaveMission,
 
     // Helper functions
     getActualWaypointCount,

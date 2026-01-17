@@ -294,7 +294,7 @@ const MissionMap = ({
             const idMatch = zoneWaypoints.find(
               (zone) =>
                 zone.leafletLayerId === layerLeafletId ||
-                zone.id === layerWaypointId
+                zone.id === layerWaypointId,
             );
             if (idMatch) {
               matchingZone = idMatch;
@@ -324,7 +324,7 @@ const MissionMap = ({
 
             // Update zone data AND remove generated waypoints in one operation
             let updated = prev.map((wp) =>
-              wp.id === matchingZone.id ? updatedZone : wp
+              wp.id === matchingZone.id ? updatedZone : wp,
             );
 
             // Remove generated path waypoints if they exist
@@ -334,7 +334,7 @@ const MissionMap = ({
               // Show user notification
               setTimeout(() => {
                 alert(
-                  "Zone has been modified! Generated waypoints have been cleared. Please click 'Generate Waypoints' again to create new waypoints for the updated zone."
+                  "Zone has been modified! Generated waypoints have been cleared. Please click 'Generate Waypoints' again to create new waypoints for the updated zone.",
                 );
               }, 100);
             }
@@ -358,12 +358,12 @@ const MissionMap = ({
       const updatedWaypoints = prev.map((wp) =>
         wp.id === waypointId
           ? { ...wp, lat: newPosition.lat, lng: newPosition.lng }
-          : wp
+          : wp,
       );
 
       // Update generated paths if this waypoint belongs to a path
       const updatedWaypoint = updatedWaypoints.find(
-        (wp) => wp.id === waypointId
+        (wp) => wp.id === waypointId,
       );
       if (updatedWaypoint && updatedWaypoint.type === "path") {
         regeneratePathsFromWaypoints(updatedWaypoints);
@@ -382,7 +382,7 @@ const MissionMap = ({
       setGeneratedPaths((prev) => {
         // Remove existing generated coverage paths and add new one
         const otherPaths = prev.filter(
-          (path) => path.zoneName !== "Generated Coverage"
+          (path) => path.zoneName !== "Generated Coverage",
         );
         return [
           ...otherPaths,
@@ -397,7 +397,7 @@ const MissionMap = ({
     } else {
       // Remove generated coverage paths if less than 2 waypoints
       setGeneratedPaths((prev) =>
-        prev.filter((path) => path.zoneName !== "Generated Coverage")
+        prev.filter((path) => path.zoneName !== "Generated Coverage"),
       );
     }
   };
@@ -607,6 +607,94 @@ const MissionMap = ({
           </Polyline>
         ))}
 
+        {/* Home to First Waypoint Line */}
+        {homeLocation &&
+          waypoints.filter((wp) => wp.type === "path").length > 0 && (
+            <Polyline
+              positions={[
+                [homeLocation.lat, homeLocation.lng],
+                [
+                  waypoints.filter((wp) => wp.type === "path")[0].lat,
+                  waypoints.filter((wp) => wp.type === "path")[0].lng,
+                ],
+              ]}
+              pathOptions={{
+                color: "#ff6b35",
+                weight: 2,
+                opacity: 0.7,
+                dashArray: "5, 10",
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <strong>Launch Path</strong>
+                  <br />
+                  <small>Home → WP1</small>
+                </div>
+              </Popup>
+            </Polyline>
+          )}
+
+        {/* Waypoint Connection Lines */}
+        {waypoints.filter((wp) => wp.type === "path").length > 1 && (
+          <Polyline
+            positions={waypoints
+              .filter((wp) => wp.type === "path")
+              .map((wp) => [wp.lat, wp.lng])}
+            pathOptions={{
+              color: "#018190",
+              weight: 2,
+              opacity: 0.7,
+            }}
+          >
+            <Popup>
+              <div className="text-center">
+                <strong>Mission Path</strong>
+                <br />
+                <small>
+                  Waypoints:{" "}
+                  {waypoints.filter((wp) => wp.type === "path").length}
+                </small>
+              </div>
+            </Popup>
+          </Polyline>
+        )}
+
+        {/* Return to Home Line (RTL) */}
+        {homeLocation &&
+          waypoints.filter((wp) => wp.type === "path").length > 0 && (
+            <Polyline
+              positions={[
+                [
+                  waypoints.filter((wp) => wp.type === "path")[
+                    waypoints.filter((wp) => wp.type === "path").length - 1
+                  ].lat,
+                  waypoints.filter((wp) => wp.type === "path")[
+                    waypoints.filter((wp) => wp.type === "path").length - 1
+                  ].lng,
+                ],
+                [homeLocation.lat, homeLocation.lng],
+              ]}
+              pathOptions={{
+                color: "#ff6b35",
+                weight: 2,
+                opacity: 0.7,
+                dashArray: "5, 10",
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <strong>Return to Home (RTL)</strong>
+                  <br />
+                  <small>
+                    WP{waypoints.filter((wp) => wp.type === "path").length} →
+                    Home
+                  </small>
+                </div>
+              </Popup>
+            </Polyline>
+          )}
+
         {/* Waypoint Markers with Numbers */}
         {waypoints
           .filter((wp) => wp.type === "path") // Only show path waypoints (not zones)
@@ -675,8 +763,8 @@ const MissionMap = ({
                               prev.map((wp) =>
                                 wp.id === waypoint.id
                                   ? { ...wp, altitude: newAltitude }
-                                  : wp
-                              )
+                                  : wp,
+                              ),
                             );
                           }}
                           className="w-full mt-1 px-2 py-1 text-xs border rounded"
@@ -696,8 +784,8 @@ const MissionMap = ({
                               prev.map((wp) =>
                                 wp.id === waypoint.id
                                   ? { ...wp, speed: newSpeed }
-                                  : wp
-                              )
+                                  : wp,
+                              ),
                             );
                           }}
                           className="w-full mt-1 px-2 py-1 text-xs border rounded"

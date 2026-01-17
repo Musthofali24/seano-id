@@ -314,7 +314,7 @@ const docTemplate = `{
         },
         "/auth/set-credentials": {
             "post": {
-                "description": "Set full name and password after email verification",
+                "description": "Set username and password after email verification",
                 "consumes": [
                     "application/json"
                 ],
@@ -400,6 +400,411 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/chart": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get time-series data for log charts (last 24 hours by hour)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Log Stats"
+                ],
+                "summary": "Get log chart data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/logs/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get statistics for all log types (vehicle, sensor, raw)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Log Stats"
+                ],
+                "summary": "Get log statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/missions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all missions (own missions for regular users, all missions for admins)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Get all missions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Mission"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new mission with waypoints",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Create a new mission",
+                "parameters": [
+                    {
+                        "description": "Mission data",
+                        "name": "mission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateMissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.Mission"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/missions/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get statistics about missions (total, active, completed, draft)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Get mission statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.MissionStats"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/missions/{mission_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a mission by its ID (ownership check applied)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Get mission by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mission ID",
+                        "name": "mission_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Mission"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a mission by its ID (ownership check applied)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Update a mission",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mission ID",
+                        "name": "mission_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Mission update data",
+                        "name": "mission",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateMissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Mission"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a mission by its ID (ownership check applied)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Delete a mission",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mission ID",
+                        "name": "mission_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -809,6 +1214,293 @@ const docTemplate = `{
                 }
             }
         },
+        "/raw-logs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve raw logs with optional filters (search, time range)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Raw Logs"
+                ],
+                "summary": "Get raw logs with filters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search in logs",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start Time (ISO 8601)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Time (ISO 8601)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.RawLog"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new raw log entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Raw Logs"
+                ],
+                "summary": "Create a new raw log",
+                "parameters": [
+                    {
+                        "description": "Raw Log Data",
+                        "name": "log",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateRawLogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.RawLog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/raw-logs/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve statistics for raw logs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Raw Logs"
+                ],
+                "summary": "Get raw log statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/raw-logs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific raw log by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Raw Logs"
+                ],
+                "summary": "Get raw log by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Raw Log ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.RawLog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a raw log by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Raw Logs"
+                ],
+                "summary": "Delete a raw log",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Raw Log ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/roles": {
             "get": {
                 "security": [
@@ -1084,7 +1776,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve sensor logs with optional filters (vehicle_code, sensor_code, time range)",
+                "description": "Retrieve sensor logs with optional filters (vehicle_id, sensor_id, time range)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1097,15 +1789,15 @@ const docTemplate = `{
                 "summary": "Get sensor logs with filters",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Vehicle Code",
-                        "name": "vehicle_code",
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "vehicle_id",
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "description": "Sensor Code",
-                        "name": "sensor_code",
+                        "type": "integer",
+                        "description": "Sensor ID",
+                        "name": "sensor_id",
                         "in": "query"
                     },
                     {
@@ -1162,16 +1854,14 @@ const docTemplate = `{
                         }
                     }
                 }
-            }
-        },
-        "/sensor-logs/cleanup": {
-            "delete": {
+            },
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Delete sensor logs older than specified date",
+                "description": "Create a new sensor log entry",
                 "consumes": [
                     "application/json"
                 ],
@@ -1181,22 +1871,23 @@ const docTemplate = `{
                 "tags": [
                     "Sensor Logs"
                 ],
-                "summary": "Delete old sensor logs (admin only)",
+                "summary": "Create a new sensor log",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Before Date (ISO 8601)",
-                        "name": "before_date",
-                        "in": "query",
-                        "required": true
+                        "description": "Sensor Log Data",
+                        "name": "log",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateSensorLogRequest"
+                        }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/model.SensorLog"
                         }
                     },
                     "400": {
@@ -1220,14 +1911,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/sensor-logs/{vehicle_code}/{sensor_code}/latest": {
+        "/sensor-logs/{id}": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve the most recent log for a specific vehicle and sensor",
+                "description": "Retrieve a specific sensor log by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -1237,19 +1928,12 @@ const docTemplate = `{
                 "tags": [
                     "Sensor Logs"
                 ],
-                "summary": "Get latest sensor log",
+                "summary": "Get sensor log by ID",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Vehicle Code",
-                        "name": "vehicle_code",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sensor Code",
-                        "name": "sensor_code",
+                        "type": "integer",
+                        "description": "Sensor Log ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -1261,8 +1945,64 @@ const docTemplate = `{
                             "$ref": "#/definitions/model.SensorLog"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a sensor log by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sensor Logs"
+                ],
+                "summary": "Delete a sensor log",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Sensor Log ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2220,6 +2960,345 @@ const docTemplate = `{
                 }
             }
         },
+        "/vehicle-batteries/latest": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the most recent battery status for all vehicles",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicles"
+                ],
+                "summary": "Get latest battery status for all vehicles",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.VehicleBattery"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicle-logs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve vehicle logs with optional filters (vehicle_id, time range)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Logs"
+                ],
+                "summary": "Get vehicle logs with filters",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "vehicle_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start Time (ISO 8601)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Time (ISO 8601)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new vehicle log entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Logs"
+                ],
+                "summary": "Create a new vehicle log",
+                "parameters": [
+                    {
+                        "description": "Vehicle Log Data",
+                        "name": "log",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateVehicleLogRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.VehicleLog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicle-logs/latest/{vehicle_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the latest log for a specific vehicle",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Logs"
+                ],
+                "summary": "Get latest vehicle log",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "vehicle_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VehicleLog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vehicle-logs/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific vehicle log by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Logs"
+                ],
+                "summary": "Get vehicle log by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle Log ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VehicleLog"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete a vehicle log by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Vehicle Logs"
+                ],
+                "summary": "Delete a vehicle log",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle Log ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/vehicles": {
             "get": {
                 "security": [
@@ -2996,6 +4075,42 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CreateMissionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Survey mission in sector A"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "home_location": {
+                    "$ref": "#/definitions/model.Waypoint"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Mission Alpha"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Draft"
+                },
+                "vehicle_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "waypoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Waypoint"
+                    }
+                }
+            }
+        },
         "model.CreatePermissionRequest": {
             "type": "object",
             "properties": {
@@ -3009,6 +4124,15 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CreateRawLogRequest": {
+            "type": "object",
+            "properties": {
+                "logs": {
+                    "type": "string",
+                    "example": "System started successfully"
+                }
+            }
+        },
         "model.CreateRoleRequest": {
             "type": "object",
             "properties": {
@@ -3019,6 +4143,23 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "admin"
+                }
+            }
+        },
+        "model.CreateSensorLogRequest": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "string",
+                    "example": "{\"temperature\":25.5,\"pressure\":1013}"
+                },
+                "sensor_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "vehicle_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -3070,11 +4211,84 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
-                    "type": "string"
-                },
                 "password": {
                     "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateVehicleLogRequest": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "number",
+                    "example": 10.5
+                },
+                "armed": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "battery_current": {
+                    "type": "number",
+                    "example": 2.3
+                },
+                "battery_voltage": {
+                    "type": "number",
+                    "example": 12.5
+                },
+                "gps_ok": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "heading": {
+                    "type": "number",
+                    "example": 90.5
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": -6.2088
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": 106.8456
+                },
+                "mode": {
+                    "type": "string",
+                    "example": "AUTO"
+                },
+                "pitch": {
+                    "type": "number",
+                    "example": 1.2
+                },
+                "roll": {
+                    "type": "number",
+                    "example": 0.5
+                },
+                "rssi": {
+                    "type": "integer",
+                    "example": -65
+                },
+                "speed": {
+                    "type": "number",
+                    "example": 5.2
+                },
+                "system_status": {
+                    "type": "string",
+                    "example": "OK"
+                },
+                "temperature_system": {
+                    "type": "string",
+                    "example": "Normal"
+                },
+                "vehicle_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "yaw": {
+                    "type": "number",
+                    "example": 90.5
                 }
             }
         },
@@ -3118,11 +4332,82 @@ const docTemplate = `{
                 "access_token": {
                     "type": "string"
                 },
+                "refresh_token": {
+                    "type": "string"
+                },
                 "token_type": {
                     "type": "string"
                 },
                 "user": {
                     "$ref": "#/definitions/model.UserResponse"
+                }
+            }
+        },
+        "model.Mission": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "integer"
+                },
+                "creator": {
+                    "$ref": "#/definitions/model.User"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "home_location": {
+                    "$ref": "#/definitions/model.Waypoint"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Draft, Active, Completed, Cancelled",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "vehicle": {
+                    "$ref": "#/definitions/model.Vehicle"
+                },
+                "vehicle_id": {
+                    "type": "integer"
+                },
+                "waypoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Waypoint"
+                    }
+                }
+            }
+        },
+        "model.MissionStats": {
+            "type": "object",
+            "properties": {
+                "active_missions": {
+                    "type": "integer"
+                },
+                "completed_missions": {
+                    "type": "integer"
+                },
+                "draft_missions": {
+                    "type": "integer"
+                },
+                "total_missions": {
+                    "type": "integer"
                 }
             }
         },
@@ -3143,6 +4428,28 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "model.RawLog": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "logs": {
+                    "description": "Raw log text (changed to text for longer logs)",
+                    "type": "string"
+                },
+                "vehicle": {
+                    "$ref": "#/definitions/model.Vehicle"
+                },
+                "vehicle_id": {
+                    "description": "Optional vehicle association",
+                    "type": "integer"
                 }
             }
         },
@@ -3256,14 +4563,17 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "sensor_code": {
-                    "type": "string"
+                "sensor": {
+                    "$ref": "#/definitions/model.Sensor"
                 },
-                "timestamp": {
-                    "type": "string"
+                "sensor_id": {
+                    "type": "integer"
                 },
-                "vehicle_code": {
-                    "type": "string"
+                "vehicle": {
+                    "$ref": "#/definitions/model.Vehicle"
+                },
+                "vehicle_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -3290,10 +4600,6 @@ const docTemplate = `{
         "model.SetCredentialsRequest": {
             "type": "object",
             "properties": {
-                "full_name": {
-                    "type": "string",
-                    "example": "John Doe"
-                },
                 "password": {
                     "type": "string",
                     "example": "secret123"
@@ -3301,6 +4607,42 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "verification-token-here"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "model.UpdateMissionRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "home_location": {
+                    "$ref": "#/definitions/model.Waypoint"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "vehicle_id": {
+                    "type": "integer"
+                },
+                "waypoints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Waypoint"
+                    }
                 }
             }
         },
@@ -3366,9 +4708,6 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
-                    "type": "string"
-                },
                 "is_verified": {
                     "type": "boolean"
                 },
@@ -3377,6 +4716,9 @@ const docTemplate = `{
                 },
                 "role_id": {
                     "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -3423,9 +4765,6 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -3433,6 +4772,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -3446,9 +4788,6 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
-                "full_name": {
-                    "type": "string"
-                },
                 "id": {
                     "type": "integer"
                 },
@@ -3460,6 +4799,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -3501,8 +4843,16 @@ const docTemplate = `{
         "model.VehicleBattery": {
             "type": "object",
             "properties": {
+                "battery_id": {
+                    "description": "1 or 2 for dual battery systems",
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
+                },
+                "current": {
+                    "description": "Current in A (Ampere)",
+                    "type": "number"
                 },
                 "id": {
                     "type": "integer"
@@ -3527,6 +4877,72 @@ const docTemplate = `{
                 },
                 "voltage": {
                     "description": "Voltage in V",
+                    "type": "number"
+                }
+            }
+        },
+        "model.VehicleLog": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "number"
+                },
+                "armed": {
+                    "type": "boolean"
+                },
+                "battery_current": {
+                    "type": "number"
+                },
+                "battery_voltage": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "gps_ok": {
+                    "type": "boolean"
+                },
+                "heading": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "mode": {
+                    "type": "string"
+                },
+                "pitch": {
+                    "type": "number"
+                },
+                "roll": {
+                    "type": "number"
+                },
+                "rssi": {
+                    "type": "integer"
+                },
+                "speed": {
+                    "type": "number"
+                },
+                "system_status": {
+                    "type": "string"
+                },
+                "temperature_system": {
+                    "description": "Type field from schema",
+                    "type": "string"
+                },
+                "vehicle": {
+                    "$ref": "#/definitions/model.Vehicle"
+                },
+                "vehicle_id": {
+                    "type": "integer"
+                },
+                "yaw": {
                     "type": "number"
                 }
             }
@@ -3574,6 +4990,17 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "verification-token-here"
+                }
+            }
+        },
+        "model.Waypoint": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
                 }
             }
         }

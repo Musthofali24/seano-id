@@ -28,8 +28,20 @@ const useRawLogData = () => {
         setLoading(true)
         setError(null)
 
+        // Get token from localStorage
+        const token = localStorage.getItem('access_token')
+
         // Fetch raw logs statistics
-        const response = await fetch(`${API_BASE_URL}/raw-logs/stats`)
+        const response = await fetch(`${API_BASE_URL}/raw-logs/stats`, {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            : {
+                'Content-Type': 'application/json'
+              }
+        })
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)

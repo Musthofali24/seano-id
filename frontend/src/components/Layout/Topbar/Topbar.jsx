@@ -26,7 +26,7 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
   const vehicleLog = useMemo(() => {
     if (!selectedVehicle?.id || vehicleLogs.length === 0) return null;
     const filtered = vehicleLogs.filter(
-      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
+      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id,
     );
     return filtered.length > 0 ? filtered[0] : null;
   }, [vehicleLogs, selectedVehicle]);
@@ -66,7 +66,7 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
       (mission) =>
         mission.vehicle === selectedVehicle.registration_code ||
         mission.vehicle === selectedVehicle.vehicle_name ||
-        mission.vehicle === selectedVehicle.name
+        mission.vehicle === selectedVehicle.name,
     );
   };
 
@@ -77,7 +77,7 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
       navigator.getBattery().then((battery) => {
         setBatteryLevel(battery.level);
         battery.addEventListener("levelchange", () =>
-          setBatteryLevel(battery.level)
+          setBatteryLevel(battery.level),
         );
       });
     }
@@ -130,7 +130,7 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
 
       // Use Nominatim reverse geocoding
       fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`,
       )
         .then((res) => res.json())
         .then((data) => {
@@ -179,8 +179,8 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
               usvStatus === "online"
                 ? "bg-green-100 text-green-600"
                 : usvStatus === "offline"
-                ? "bg-gray-200 text-gray-600"
-                : "bg-red-100 text-red-600"
+                  ? "bg-gray-200 text-gray-600"
+                  : "bg-red-100 text-red-600"
             }`}
           >
             {/* Bullet with pulse */}
@@ -190,8 +190,8 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
                   usvStatus === "online"
                     ? "bg-green-400"
                     : usvStatus === "offline"
-                    ? "bg-gray-400"
-                    : "bg-red-400"
+                      ? "bg-gray-400"
+                      : "bg-red-400"
                 }`}
               ></span>
               <span
@@ -199,8 +199,8 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
                   usvStatus === "online"
                     ? "bg-green-500"
                     : usvStatus === "offline"
-                    ? "bg-gray-500"
-                    : "bg-red-500"
+                      ? "bg-gray-500"
+                      : "bg-red-500"
                 }`}
               ></span>
             </span>
@@ -218,14 +218,9 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
               console.log("Vehicle selected in dropdown:", vehicle);
               setSelectedVehicle(vehicle);
             }}
-            placeholder={
-              loading
-                ? "Loading vehicles..."
-                : selectedVehicle
-                ? selectedVehicle.name
-                : "Select Vehicle"
-            }
+            placeholder={loading ? "Loading vehicles..." : "Select Vehicle"}
             className="text-sm"
+            showPlaceholder={true}
           />
         </div>
       </div>

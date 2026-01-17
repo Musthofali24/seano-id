@@ -1,6 +1,7 @@
 import { useState } from "react";
 import useTitle from "../hooks/useTitle";
 import useSensorsData from "../hooks/useSensorsData";
+import { usePermission } from "../hooks/usePermission";
 import Title from "../ui/Title";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import { WidgetCard, SensorTable, SensorModal } from "../components/Widgets";
@@ -13,6 +14,7 @@ import { API_ENDPOINTS } from "../config";
 
 const Sensor = () => {
   useTitle("Sensor");
+  const { hasPermission } = usePermission();
   const [showAddSensorModal, setShowAddSensorModal] = useState(false);
   const [showEditSensorModal, setShowEditSensorModal] = useState(false);
   const [editData, setEditData] = useState(null);
@@ -43,7 +45,7 @@ const Sensor = () => {
     try {
       await axios.put(
         `${API_ENDPOINTS.SENSOR.UPDATE(editData.id)}`,
-        sensorData
+        sensorData,
       );
       toast.success("Sensor updated successfully!");
       fetchSensors();
@@ -73,12 +75,12 @@ const Sensor = () => {
   const handleBulkDelete = async (sensorIds) => {
     if (
       window.confirm(
-        `Are you sure you want to delete ${sensorIds.length} sensor(s)?`
+        `Are you sure you want to delete ${sensorIds.length} sensor(s)?`,
       )
     ) {
       try {
         await Promise.all(
-          sensorIds.map((id) => axios.delete(API_ENDPOINTS.SENSOR.DELETE(id)))
+          sensorIds.map((id) => axios.delete(API_ENDPOINTS.SENSOR.DELETE(id))),
         );
         toast.success(`${sensorIds.length} sensor(s) deleted successfully!`);
         fetchSensors();
@@ -103,13 +105,15 @@ const Sensor = () => {
           title="Sensor Management"
           subtitle="Manage and monitor all sensor devices"
         />
-        <button
-          onClick={() => setShowAddSensorModal(true)}
-          className="font-semibold flex items-center gap-4 px-3 py-2 rounded-lg text-white hover:bg-blue-700 transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-fourth/50 bg-fourth dark:hover:bg-blue-700"
-        >
-          <TbPhotoSensor size={20} />
-          Add Sensor
-        </button>
+        {hasPermission("sensor:create") && (
+          <button
+            onClick={() => setShowAddSensorModal(true)}
+            className="font-semibold flex items-center gap-4 px-3 py-2 rounded-lg text-white hover:bg-blue-700 transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-fourth/50 bg-fourth dark:hover:bg-blue-700"
+          >
+            <TbPhotoSensor size={20} />
+            Add Sensor
+          </button>
+        )}
       </div>
       {/* Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 px-4 pb-4">

@@ -6,7 +6,23 @@ const VehicleDropdown = ({
   onVehicleChange,
   placeholder = "Select a vessel to view details",
   className = "",
+  showPlaceholder = true,
 }) => {
+  // Add placeholder item as first option
+  const placeholderItem = {
+    id: null,
+    name: "Select Vehicle",
+    code: "---",
+    status: "offline",
+    isPlaceholder: true,
+  };
+
+  // Only show placeholder in the list if no vehicle is selected
+  const vehiclesWithPlaceholder =
+    showPlaceholder && !selectedVehicle
+      ? [placeholderItem, ...vehicles]
+      : vehicles;
+
   // Get status indicator color
   const getStatusColor = (status) => {
     switch (status) {
@@ -26,10 +42,14 @@ const VehicleDropdown = ({
   // Custom render function for selected item
   const renderSelectedItem = (vehicle) => (
     <>
-      <div
-        className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.status)}`}
-      />
-      <span className="font-medium text-gray-900 dark:text-white">
+      {!vehicle.isPlaceholder && (
+        <div
+          className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.status)}`}
+        />
+      )}
+      <span
+        className={`font-medium ${vehicle.isPlaceholder ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}
+      >
         {vehicle.name}
       </span>
     </>
@@ -38,16 +58,22 @@ const VehicleDropdown = ({
   // Custom render function for dropdown items
   const renderItem = (vehicle, isSelected) => (
     <>
-      <div
-        className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.status)}`}
-      />
+      {!vehicle.isPlaceholder && (
+        <div
+          className={`w-3 h-3 rounded-full ${getStatusColor(vehicle.status)}`}
+        />
+      )}
       <div className="flex-1">
-        <div className="text-gray-900 dark:text-white font-medium">
+        <div
+          className={`font-medium ${vehicle.isPlaceholder ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}
+        >
           {vehicle.name}
         </div>
-        <div className="text-gray-600 dark:text-gray-300 text-sm">
-          {vehicle.code}
-        </div>
+        {!vehicle.isPlaceholder && (
+          <div className="text-gray-600 dark:text-gray-300 text-sm">
+            {vehicle.code}
+          </div>
+        )}
       </div>
       {isSelected && (
         <div className="text-blue-600 dark:text-white">
@@ -65,13 +91,18 @@ const VehicleDropdown = ({
 
   return (
     <Dropdown
-      items={vehicles}
-      selectedItem={selectedVehicle}
-      onItemChange={onVehicleChange}
+      items={vehiclesWithPlaceholder}
+      selectedItem={selectedVehicle || placeholderItem}
+      onItemChange={(vehicle) => {
+        // If placeholder is selected, pass null to parent
+        onVehicleChange(vehicle.isPlaceholder ? null : vehicle);
+      }}
       placeholder={placeholder}
       renderItem={renderItem}
       renderSelectedItem={renderSelectedItem}
-      getItemKey={(vehicle) => vehicle.id}
+      getItemKey={(vehicle) =>
+        vehicle.id === null ? "placeholder" : vehicle.id
+      }
       className={className}
     />
   );

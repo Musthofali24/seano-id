@@ -32,7 +32,7 @@ const VehicleQuickView = ({
         coordinates:
           selectedVehicle.latitude && selectedVehicle.longitude
             ? `${selectedVehicle.latitude.toFixed(
-                4
+                4,
               )}, ${selectedVehicle.longitude.toFixed(4)}`
             : "N/A",
       }
@@ -103,10 +103,14 @@ const VehicleQuickView = ({
       </div>
       <VehicleDropdown
         vehicles={vehicles}
-        selectedVehicle={selectedVehicleId}
-        onVehicleChange={setSelectedVehicleId}
+        selectedVehicle={selectedVehicle}
+        onVehicleChange={(vehicle) => {
+          // Handle both null (placeholder) and vehicle object
+          setSelectedVehicleId(vehicle?.id || null);
+        }}
         placeholder="Select a vessel to view details"
-      />{" "}
+        showPlaceholder={true}
+      />
       <div className="mt-4 flex items-center justify-between">
         <h1 className="text-gray-900 dark:text-white font-semibold">Status</h1>
         <div className="flex items-center gap-2 px-2 rounded-3xl">

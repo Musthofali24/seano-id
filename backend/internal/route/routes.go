@@ -28,6 +28,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	sensorLogRepo := repository.NewSensorLogRepository(db)
 	vehicleLogRepo := repository.NewVehicleLogRepository(db)
 	rawLogRepo := repository.NewRawLogRepository(db)
+	missionRepo := repository.NewMissionRepository(db)
 
 	// Initialize handlers
 	userHandler := &handler.UserHandler{DB: db}
@@ -46,6 +47,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicleLogHandler := handler.NewVehicleLogHandler(vehicleLogRepo)
 	rawLogHandler := handler.NewRawLogHandler(rawLogRepo)
 	logStatsHandler := handler.NewLogStatsHandler(vehicleLogRepo, sensorLogRepo, rawLogRepo)
+	missionHandler := handler.NewMissionHandler(missionRepo, db)
 	wsHandler := wsocket.NewWebSocketHandler(wsHub)
 
 	// Swagger route
@@ -156,6 +158,15 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	logs := app.Group("/logs", middleware.AuthRequired())
 	logs.Get("/stats", logStatsHandler.GetLogStats)
 	logs.Get("/chart", logStatsHandler.GetLogChartData)
+
+	// Mission management routes (protected, ownership-based)
+	missions := app.Group("/missions", middleware.AuthRequired())
+	missions.Post("/", missionHandler.CreateMission)
+	missions.Get("/", missionHandler.GetAllMissions)                  // Returns own missions for regular users
+	missions.Get("/stats", missionHandler.GetMissionStats)
+	missions.Get("/:mission_id", missionHandler.GetMissionByID)       // Ownership check in handler
+	missions.Put("/:mission_id", missionHandler.UpdateMission)        // Ownership check in handler
+	missions.Delete("/:mission_id", missionHandler.DeleteMission)     // Ownership check in handler
 
 	// WebSocket routes (no middleware, auth checked inside WebSocket handler via query param)
 	app.Get("/ws/stats", middleware.AuthRequired(), wsHandler.GetStats)
