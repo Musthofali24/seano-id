@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { API_ENDPOINTS } from '../config'
+import axios from '../utils/axiosConfig'
 
 const useSensorTypesData = () => {
   const [sensorTypes, setSensorTypes] = useState([])
@@ -11,31 +13,24 @@ const useSensorTypesData = () => {
     oseanografiTypes: 0
   })
 
-  useEffect(() => {
-    // Fetch sensor types from API
-    const fetchSensorTypes = async () => {
-      setLoading(true)
+  const fetchSensorTypes = async () => {
+    setLoading(true)
 
-      try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/sensor-types');
-        // const data = await response.json();
-        // setSensorTypes(data);
-
-        // For now, set empty array (no dummy data)
-        setSensorTypes([])
-
-        // Calculate stats from real data
-        calculateStats([])
-      } catch (error) {
-        console.error('Error fetching sensor types:', error)
-        setSensorTypes([])
-        calculateStats([])
-      } finally {
-        setLoading(false)
-      }
+    try {
+      const response = await axios.get(API_ENDPOINTS.SENSOR_TYPES.LIST)
+      const data = Array.isArray(response.data) ? response.data : []
+      setSensorTypes(data)
+      calculateStats(data)
+    } catch (error) {
+      console.error('Error fetching sensor types:', error)
+      setSensorTypes([])
+      calculateStats([])
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchSensorTypes()
   }, [])
 
@@ -59,26 +54,11 @@ const useSensorTypesData = () => {
     })
   }
 
-  const addSensorType = newSensorType => {
-    const sensorType = {
-      ...newSensorType,
-      id: sensorTypes.length + 1,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-
-    const updatedSensorTypes = [...sensorTypes, sensorType]
-    setSensorTypes(updatedSensorTypes)
-
-    // Recalculate stats with new sensor type
-    calculateStats(updatedSensorTypes)
-  }
-
   return {
     sensorTypes,
     loading,
     stats,
-    addSensorType
+    fetchSensorTypes
   }
 }
 

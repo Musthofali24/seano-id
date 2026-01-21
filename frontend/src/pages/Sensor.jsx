@@ -8,25 +8,34 @@ import { WidgetCard, SensorTable, SensorModal } from "../components/Widgets";
 import { getSensorWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { TbPhotoSensor } from "react-icons/tb";
-import toast from "react-hot-toast";
+import toast from "../components/ui/toast";
 import axios from "../utils/axiosConfig";
 import { API_ENDPOINTS } from "../config";
+import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 
 const Sensor = () => {
   useTitle("Sensor");
   const { hasPermission } = usePermission();
   const [showAddSensorModal, setShowAddSensorModal] = useState(false);
   const [showEditSensorModal, setShowEditSensorModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [editData, setEditData] = useState(null);
-  const { sensors, loading, stats, addSensor, fetchSensors } = useSensorsData();
+  const { sensors, loading, stats, fetchSensors } = useSensorsData();
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && sensors.length === 0;
   const widgetData = getSensorWidgetData(stats, sensors);
 
-  const handleCreateSensor = (sensorData) => {
-    console.log("Creating sensor:", sensorData);
-    addSensor(sensorData);
-    setShowAddSensorModal(false);
+  const handleCreateSensor = async (sensorData) => {
+    try {
+      await axios.post(API_ENDPOINTS.SENSORS.CREATE, sensorData);
+      toast.success("Sensor created successfully!");
+      setShowAddSensorModal(false);
+      fetchSensors();
+    } catch (error) {
+      console.error("Error creating sensor:", error);
+      toast.error(error.response?.data?.detail || "Failed to create sensor");
+    }
   };
 
   const handleEditSensor = (sensor) => {
@@ -44,7 +53,7 @@ const Sensor = () => {
   const handleUpdateSensor = async (sensorData) => {
     try {
       await axios.put(
-        `${API_ENDPOINTS.SENSOR.UPDATE(editData.id)}`,
+        API_ENDPOINTS.SENSORS.UPDATE(editData.id),
         sensorData,
       );
       toast.success("Sensor updated successfully!");
@@ -57,37 +66,45 @@ const Sensor = () => {
     }
   };
 
-  const handleDeleteSensor = async (sensorId, sensorName) => {
-    if (
-      window.confirm(`Are you sure you want to delete sensor "${sensorName}"?`)
-    ) {
-      try {
-        await axios.delete(API_ENDPOINTS.SENSOR.DELETE(sensorId));
-        toast.success("Sensor deleted successfully!");
-        fetchSensors();
-      } catch (error) {
-        console.error("Error deleting sensor:", error);
-        toast.error(error.response?.data?.detail || "Failed to delete sensor");
-      }
+  const handleDeleteSensor = (sensorId, sensorName) => {
+    setDeleteTarget({ id: sensorId, name: sensorName });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    
+    try {
+      await axios.delete(API_ENDPOINTS.SENSORS.DELETE(deleteTarget.id));
+      toast.success("Sensor deleted successfully!");
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      fetchSensors();
+    } catch (error) {
+      console.error("Error deleting sensor:", error);
+      toast.error(error.response?.data?.detail || "Failed to delete sensor");
     }
   };
 
-  const handleBulkDelete = async (sensorIds) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${sensorIds.length} sensor(s)?`,
-      )
-    ) {
-      try {
-        await Promise.all(
-          sensorIds.map((id) => axios.delete(API_ENDPOINTS.SENSOR.DELETE(id))),
-        );
-        toast.success(`${sensorIds.length} sensor(s) deleted successfully!`);
-        fetchSensors();
-      } catch (error) {
-        console.error("Error deleting sensors:", error);
-        toast.error("Failed to delete some sensors");
-      }
+  const handleBulkDelete = (sensorIds) => {
+    setDeleteTarget({ ids: sensorIds, isBulk: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!deleteTarget || !deleteTarget.ids) return;
+    
+    try {
+      await Promise.all(
+        deleteTarget.ids.map((id) => axios.delete(API_ENDPOINTS.SENSORS.DELETE(id))),
+      );
+      toast.success(`${deleteTarget.ids.length} sensor(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      fetchSensors();
+    } catch (error) {
+      console.error("Error deleting sensors:", error);
+      toast.error("Failed to delete some sensors");
     }
   };
 
@@ -105,7 +122,7 @@ const Sensor = () => {
           title="Sensor Management"
           subtitle="Manage and monitor all sensor devices"
         />
-        {hasPermission("sensor:create") && (
+        {hasPermission("sensors.manage") && (
           <button
             onClick={() => setShowAddSensorModal(true)}
             className="font-semibold flex items-center gap-4 px-3 py-2 rounded-lg text-white hover:bg-blue-700 transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-fourth/50 bg-fourth dark:hover:bg-blue-700"
@@ -150,6 +167,19 @@ const Sensor = () => {
         }}
         onSubmit={handleUpdateSensor}
         editData={editData}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={deleteTarget?.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+        title="Delete Sensor"
+        itemName={deleteTarget?.isBulk ? `${deleteTarget.ids.length} sensor(s)` : deleteTarget?.name}
+        itemType="sensor"
       />
     </div>
   );

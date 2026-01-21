@@ -11,6 +11,7 @@ import { getUserWidgetData } from "../constant";
 import { Title } from "../ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
+import toast from "../components/ui/toast";
 
 const User = () => {
   useTitle("User");
@@ -35,7 +36,10 @@ const User = () => {
   const handleAddUser = async (formData) => {
     const result = await actions.addUser(formData);
     if (result.success) {
+      toast.success("User created successfully!");
       setShowAddModal(false);
+    } else {
+      toast.error(result.error || "Failed to create user");
     }
     return result;
   };
@@ -53,8 +57,11 @@ const User = () => {
     });
 
     if (result.success) {
+      toast.success("User updated successfully!");
       setShowEditModal(false);
       setSelectedUser(null);
+    } else {
+      toast.error(result.error || "Failed to update user");
     }
     return result;
   };
@@ -65,14 +72,15 @@ const User = () => {
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser || selectedUser.isBulk) return;
 
     const result = await actions.deleteUser(selectedUser.id);
     if (result.success) {
+      toast.success("User deleted successfully!");
       setShowDeleteModal(false);
       setSelectedUser(null);
     } else {
-      alert(`Failed to delete user: ${result.error}`);
+      toast.error(result.error || "Failed to delete user");
     }
   };
 
@@ -81,12 +89,24 @@ const User = () => {
     setShowViewModal(true);
   };
 
-  const handleBulkDeleteUsers = async (ids) => {
-    if (window.confirm(`Are you sure you want to delete ${ids.length} user(s)?`)) {
-      for (const id of ids) {
+  const handleBulkDeleteUsers = (ids) => {
+    setSelectedUser({ ids, isBulk: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!selectedUser || !selectedUser.ids) return;
+    
+    try {
+      for (const id of selectedUser.ids) {
         await actions.deleteUser(id);
       }
+      toast.success(`${selectedUser.ids.length} user(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setSelectedUser(null);
       actions.refreshData();
+    } catch (error) {
+      toast.error("Failed to delete some users");
     }
   };
 
@@ -168,9 +188,9 @@ const User = () => {
             setShowDeleteModal(false);
             setSelectedUser(null);
           }}
-          onConfirm={handleConfirmDelete}
+          onConfirm={selectedUser.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
           title="Delete User"
-          itemName={selectedUser.name}
+          itemName={selectedUser.isBulk ? `${selectedUser.ids.length} user(s)` : selectedUser.name}
           itemType="user"
         />
       )}

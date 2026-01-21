@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaDownload } from "react-icons/fa";
 import { DataTable as BaseDataTable } from "../../UI";
 import axios from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";
-import toast from "react-hot-toast";
+import toast from "../../ui/toast";
 
 const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
   const [rawLogs, setRawLogs] = useState([]);

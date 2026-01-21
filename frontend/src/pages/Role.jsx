@@ -7,6 +7,7 @@ import useRoleData from "../hooks/useRoleData";
 import usePermissionData from "../hooks/usePermissionData";
 import { API_ENDPOINTS } from "../config";
 import { Title } from "../ui";
+import toast from "../components/ui/toast";
 
 const Role = () => {
   useTitle("Role");
@@ -60,9 +61,12 @@ const Role = () => {
     }
 
     if (result.success) {
+      toast.success("Role created successfully!");
       setShowAddModal(false);
       // Refresh role data to get updated permissions
       actions.refreshData();
+    } else {
+      toast.error(result.message || "Failed to create role");
     }
     return result;
   };
@@ -137,9 +141,12 @@ const Role = () => {
     }
 
     if (result.success) {
+      toast.success("Role updated successfully!");
       setShowEditModal(false);
       setSelectedRole(null);
       actions.refreshData();
+    } else {
+      toast.error(result.message || "Failed to update role");
     }
     return result;
   };
@@ -152,12 +159,15 @@ const Role = () => {
   const handleConfirmDelete = async () => {
     if (!selectedRole) return;
 
+    if (selectedRole.isBulk) return;
+    
     const result = await actions.deleteRole(selectedRole.id);
     if (result.success) {
+      toast.success("Role deleted successfully!");
       setShowDeleteModal(false);
       setSelectedRole(null);
     } else {
-      alert(`Failed to delete role: ${result.message}`);
+      toast.error(result.message || "Failed to delete role");
     }
   };
 
@@ -182,12 +192,24 @@ const Role = () => {
     }
   };
 
-  const handleBulkDeleteRoles = async (selectedIds) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} role(s)?`)) {
-      for (const id of selectedIds) {
+  const handleBulkDeleteRoles = (selectedIds) => {
+    setSelectedRole({ ids: selectedIds, isBulk: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!selectedRole || !selectedRole.ids) return;
+    
+    try {
+      for (const id of selectedRole.ids) {
         await actions.deleteRole(id);
       }
+      toast.success(`${selectedRole.ids.length} role(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setSelectedRole(null);
       actions.refreshData();
+    } catch (error) {
+      toast.error("Failed to delete some roles");
     }
   };
 
@@ -260,9 +282,9 @@ const Role = () => {
             setShowDeleteModal(false);
             setSelectedRole(null);
           }}
-          onConfirm={handleConfirmDelete}
+          onConfirm={selectedRole.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
           title="Delete Role"
-          itemName={selectedRole.name}
+          itemName={selectedRole.isBulk ? `${selectedRole.ids.length} role(s)` : selectedRole.name}
           itemType="role"
         />
       )}

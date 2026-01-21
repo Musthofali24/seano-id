@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { API_ENDPOINTS } from '../config'
+import axios from '../utils/axiosConfig'
 
 const useSensorsData = () => {
   const [sensors, setSensors] = useState([])
@@ -11,31 +13,24 @@ const useSensorsData = () => {
     oseanografiSensors: 0
   })
 
-  useEffect(() => {
-    // Fetch sensors from API
-    const fetchSensors = async () => {
-      setLoading(true)
+  const fetchSensors = async () => {
+    setLoading(true)
 
-      try {
-        // TODO: Replace with actual API call
-        // const response = await fetch('/api/sensors');
-        // const data = await response.json();
-        // setSensors(data);
-
-        // For now, set empty array (no dummy data)
-        setSensors([])
-
-        // Calculate stats from real data
-        calculateStats([])
-      } catch (error) {
-        console.error('Error fetching sensors:', error)
-        setSensors([])
-        calculateStats([])
-      } finally {
-        setLoading(false)
-      }
+    try {
+      const response = await axios.get(API_ENDPOINTS.SENSORS.LIST)
+      const data = Array.isArray(response.data) ? response.data : []
+      setSensors(data)
+      calculateStats(data)
+    } catch (error) {
+      console.error('Error fetching sensors:', error)
+      setSensors([])
+      calculateStats([])
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     fetchSensors()
   }, [])
 
@@ -78,7 +73,7 @@ const useSensorsData = () => {
     sensors,
     loading,
     stats,
-    addSensor
+    fetchSensors
   }
 }
 

@@ -421,8 +421,8 @@ const MissionMap = ({
 
   return (
     <div
-      className="w-full overflow-hidden z-30"
-      style={{ height: "700px", position: "relative" }}
+      className="w-full h-full overflow-hidden z-30"
+      style={{ position: "relative" }}
     >
       <style jsx global>{`
         .leaflet-draw-toolbar {
@@ -448,7 +448,7 @@ const MissionMap = ({
       `}</style>
       <MapContainer
         center={[-6.86, 108.103]}
-        zoom={15}
+        zoom={18}
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom={true}
         worldCopyJump={false}
@@ -456,16 +456,12 @@ const MissionMap = ({
           [-85, -180],
           [85, 180],
         ]}
-        maxBoundsViscosity={1.0}
-        minZoom={3}
+        maxBoundsViscosity={1.5}
+        minZoom={18}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={
-            darkMode
-              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          }
+          attribution="&copy; Esri"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
           noWrap={true}
         />
 

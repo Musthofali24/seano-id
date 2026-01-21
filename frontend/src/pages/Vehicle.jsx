@@ -9,7 +9,7 @@ import { getWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import axios from "../utils/axiosConfig";
 import { API_ENDPOINTS } from "../config";
-import toast from "react-hot-toast";
+import toast from "../components/ui/toast";
 import { FaShip } from "react-icons/fa";
 
 const Vehicle = () => {
@@ -212,26 +212,30 @@ const Vehicle = () => {
     setVehicleToDelete(null);
   };
 
-  const handleBulkDelete = async (selectedIds) => {
+  const handleBulkDelete = (selectedIds) => {
     if (!selectedIds || selectedIds.length === 0) return;
+    setVehicleToDelete({ ids: selectedIds, isBulk: true });
+    setShowDeleteModal(true);
+  };
 
-    const confirmBulk = window.confirm(
-      `Are you sure you want to delete ${selectedIds.length} vehicle(s)? This action cannot be undone.`
-    );
+  const handleConfirmBulkDelete = async () => {
+    if (!vehicleToDelete || !vehicleToDelete.ids) return;
 
-    if (!confirmBulk) return;
-
+    setIsDeleting(true);
     try {
-      // Delete all selected vehicles
       await Promise.all(
-        selectedIds.map((id) => axios.delete(API_ENDPOINTS.VEHICLES.DELETE(id)))
+        vehicleToDelete.ids.map((id) => axios.delete(API_ENDPOINTS.VEHICLES.DELETE(id)))
       );
 
-      toast.success(`${selectedIds.length} vehicle(s) deleted successfully!`);
+      toast.success(`${vehicleToDelete.ids.length} vehicle(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setVehicleToDelete(null);
       refreshVehicles();
     } catch (error) {
       console.error("Error bulk deleting vehicles:", error);
       toast.error("Failed to delete some vehicles");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -292,11 +296,16 @@ const Vehicle = () => {
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={showDeleteModal}
-        onClose={cancelDelete}
-        onConfirm={confirmDelete}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setVehicleToDelete(null);
+        }}
+        onConfirm={vehicleToDelete?.isBulk ? handleConfirmBulkDelete : confirmDelete}
         title="Delete Vehicle"
         message={
-          vehicleToDelete
+          vehicleToDelete?.isBulk
+            ? `Are you sure you want to delete ${vehicleToDelete.ids.length} vehicle(s)? This action cannot be undone.`
+            : vehicleToDelete
             ? `Are you sure you want to delete "${vehicleToDelete.name}"? This action cannot be undone.`
             : "Are you sure you want to delete this vehicle?"
         }

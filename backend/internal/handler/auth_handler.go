@@ -399,11 +399,26 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		roleName = user.Role.Name
 	}
 	accessToken, _ := util.GenerateAccessToken(user.ID, user.Email, roleName)
+	newRefreshToken, _ := util.GenerateRefreshToken(user.ID, user.Email, roleName)
+
+	// Update refresh token in database
+	repository.UpdateRefreshToken(h.DB, user.ID, newRefreshToken)
+
+	// Set new refresh token as HTTP-only cookie
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    newRefreshToken,
+		MaxAge:   7 * 24 * 60 * 60, // 7 days in seconds
+		HTTPOnly: true,
+		Secure:   false, // Set to true in production with HTTPS
+		SameSite: "Lax",
+	})
 
 	return c.JSON(model.RefreshResponse{
-		User:        model.ToUserResponse(user),
-		AccessToken: accessToken,
-		TokenType:   "bearer",
+		User:         model.ToUserResponse(user),
+		AccessToken:  accessToken,
+		RefreshToken: newRefreshToken, // Return new refresh token
+		TokenType:    "bearer",
 	})
 }
 

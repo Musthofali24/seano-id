@@ -237,8 +237,35 @@ export function PermissionProvider({ children }) {
   // Helper function: Check if user is Admin
   const isAdmin = () => {
     if (!isAuthenticated || !user) return false;
-    // Admin users have all CRUD permissions
+    // Check by role name (more reliable)
+    const roleName = user.role?.toLowerCase?.() || user.role;
+    if (roleName === "admin") return true;
+    // Fallback: Admin users have all CRUD permissions (check if they have users.read)
     return permissions.includes("users.read");
+  };
+
+  // Helper function: Check if user has a specific permission (updated to bypass for admin)
+  const hasPermissionWithAdmin = (permissionName) => {
+    if (!isAuthenticated) return false;
+    // Admin has all permissions
+    if (isAdmin()) return true;
+    return permissions.includes(permissionName);
+  };
+
+  // Helper function: Check if user has ANY of the given permissions (updated to bypass for admin)
+  const hasAnyPermissionWithAdmin = (permissionNames) => {
+    if (!isAuthenticated) return false;
+    // Admin has all permissions
+    if (isAdmin()) return true;
+    return permissionNames.some((p) => permissions.includes(p));
+  };
+
+  // Helper function: Check if user has ALL of the given permissions (updated to bypass for admin)
+  const hasAllPermissionsWithAdmin = (permissionNames) => {
+    if (!isAuthenticated) return false;
+    // Admin has all permissions
+    if (isAdmin()) return true;
+    return permissionNames.every((p) => permissions.includes(p));
   };
 
   // Context value
@@ -246,9 +273,9 @@ export function PermissionProvider({ children }) {
     permissions,
     loading,
     error,
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
+    hasPermission: hasPermissionWithAdmin,
+    hasAnyPermission: hasAnyPermissionWithAdmin,
+    hasAllPermissions: hasAllPermissionsWithAdmin,
     isAdmin,
   };
 

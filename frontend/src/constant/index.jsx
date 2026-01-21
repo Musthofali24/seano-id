@@ -1,6 +1,11 @@
 import { GoDatabase } from "react-icons/go";
 import { IoIosLogOut } from "react-icons/io";
-import { FaChartBar, FaBatteryFull, FaThermometerHalf } from "react-icons/fa";
+import {
+  FaChartBar,
+  FaBatteryFull,
+  FaThermometerHalf,
+  FaBatteryHalf,
+} from "react-icons/fa";
 import { HiOutlineBellAlert } from "react-icons/hi2";
 
 import {
@@ -42,9 +47,9 @@ import {
   FaTrash,
 } from "react-icons/fa6";
 import { HiOutlineStatusOffline, HiOutlineStatusOnline } from "react-icons/hi";
-import { RiShieldUserLine, RiUser3Line } from "react-icons/ri";
+import { RiRouteLine, RiShieldUserLine, RiUser3Line } from "react-icons/ri";
 import { LuUserCog } from "react-icons/lu";
-import { IoLocationOutline } from "react-icons/io5";
+import { IoGameController, IoLocationOutline } from "react-icons/io5";
 
 const sizeIcon = 18;
 
@@ -71,26 +76,52 @@ export const menuGroups = [
         requiredPermission: "tracking.read",
       },
       {
-        href: "/missions",
-        icon: TbGps,
-        text: "Missions",
-        size: sizeIcon,
-        requiredPermission: "missions.read",
-      },
-      {
         href: "/telemetry",
         icon: MdWifiTethering,
         text: "Telemetry",
         size: sizeIcon,
         requiredPermission: "telemetry.read",
       },
+      {
+        href: "/control",
+        icon: IoGameController,
+        text: "Control",
+        size: sizeIcon,
+        requiredPermission: "control.read",
+      },
+    ],
+  },
+  {
+    title: "Data Mission",
+    userOnly: true,
+    items: [
+      {
+        href: "/mission-planner",
+        icon: TbGps,
+        text: "Mission Planner",
+        size: sizeIcon,
+        requiredPermission: "missions.read",
+      },
+      {
+        href: "/missions",
+        icon: RiRouteLine,
+        text: "Missions",
+        size: sizeIcon,
+        requiredPermission: "missions.read",
+      },
     ],
   },
   {
     title: "Data Monitoring",
-    requiredPermission: "logs.read",
     userOnly: true,
     items: [
+      {
+        href: "/battery",
+        icon: FaBatteryHalf,
+        text: "Battery",
+        size: sizeIcon,
+        requiredPermission: "battery.read",
+      },
       {
         href: "/logs",
         icon: TbArrowsUpDown,
@@ -391,7 +422,7 @@ export const getDataManagementCards = (rawLogsStats = null) => {
             style={{
               width: `${Math.min(
                 (stats.totalSize / (100 * 1024 * 1024)) * 100,
-                100
+                100,
               )}%`,
             }}
           ></div>
@@ -399,7 +430,7 @@ export const getDataManagementCards = (rawLogsStats = null) => {
       ),
       trendText: `${Math.min(
         (stats.totalSize / (100 * 1024 * 1024)) * 100,
-        100
+        100,
       ).toFixed(1)}% of estimated capacity`,
       iconBgColor: "bg-purple-100 dark:bg-purple-900/30",
     },
@@ -464,8 +495,8 @@ export const getDataManagementCards = (rawLogsStats = null) => {
         stats.quality >= 90
           ? "Excellent"
           : stats.quality >= 70
-          ? "Good"
-          : "Poor",
+            ? "Good"
+            : "Poor",
       description:
         "Persentase kualitas data berdasarkan validasi raw_logs. Rasio data yang valid vs total data yang masuk.",
       source: "raw_logs validation analysis",
@@ -514,8 +545,8 @@ export const getDataManagementCards = (rawLogsStats = null) => {
         stats.quality >= 90
           ? "Excellent quality"
           : stats.quality >= 70
-          ? "Good quality"
-          : "Needs improvement",
+            ? "Good quality"
+            : "Needs improvement",
       iconBgColor: "bg-purple-100 dark:bg-purple-900/30",
     },
     {
@@ -552,8 +583,8 @@ export const getDataManagementCards = (rawLogsStats = null) => {
         timeDiff < 5
           ? "Real-time sync active"
           : timeDiff < 60
-          ? "Recently synced"
-          : "Sync outdated",
+            ? "Recently synced"
+            : "Sync outdated",
       iconBgColor: "bg-indigo-100 dark:bg-indigo-900/30",
     },
   ];
@@ -563,18 +594,18 @@ export const getDataManagementCards = (rawLogsStats = null) => {
 export const getOverviewCardsData = (
   vehicles = [],
   missions = [],
-  alerts = []
+  alerts = [],
 ) => {
   // Calculate vehicle stats
   const totalVehicles = vehicles.length;
   const vehiclesOnMission = vehicles.filter(
-    (v) => v.status === "on_mission"
+    (v) => v.status === "on_mission",
   ).length;
 
   // Calculate mission stats
   const totalMissions = missions.length;
   const missionsOnProgress = missions.filter(
-    (m) => m.status === "on_progress" || m.status === "Active"
+    (m) => m.status === "on_progress" || m.status === "Active",
   ).length;
 
   // Calculate alerts stats
@@ -691,10 +722,10 @@ export const getWidgetData = (stats, vehicles) => {
         vehicles.length === 0
           ? "No data available"
           : totalToday > totalYesterday
-          ? `${totalToday - totalYesterday} up from yesterday`
-          : totalToday < totalYesterday
-          ? `${totalYesterday - totalToday} down from yesterday`
-          : "No change from yesterday",
+            ? `${totalToday - totalYesterday} up from yesterday`
+            : totalToday < totalYesterday
+              ? `${totalYesterday - totalToday} down from yesterday`
+              : "No change from yesterday",
     },
     {
       title: "On Mission",
@@ -714,10 +745,10 @@ export const getWidgetData = (stats, vehicles) => {
         vehicles.length === 0
           ? "No data available"
           : onMissionToday > onMissionYesterday
-          ? `${onMissionToday - onMissionYesterday} up from yesterday`
-          : onMissionToday < onMissionYesterday
-          ? `${onMissionYesterday - onMissionToday} down from yesterday`
-          : "No change from yesterday",
+            ? `${onMissionToday - onMissionYesterday} up from yesterday`
+            : onMissionToday < onMissionYesterday
+              ? `${onMissionYesterday - onMissionToday} down from yesterday`
+              : "No change from yesterday",
     },
     {
       title: "Online",
@@ -737,10 +768,10 @@ export const getWidgetData = (stats, vehicles) => {
         vehicles.length === 0
           ? "No data available"
           : onlineToday > onlineYesterday
-          ? `${onlineToday - onlineYesterday} up from yesterday`
-          : onlineToday < onlineYesterday
-          ? `${onlineYesterday - onlineToday} down from yesterday`
-          : "No change from yesterday",
+            ? `${onlineToday - onlineYesterday} up from yesterday`
+            : onlineToday < onlineYesterday
+              ? `${onlineYesterday - onlineToday} down from yesterday`
+              : "No change from yesterday",
     },
     {
       title: "Offline",
@@ -760,10 +791,10 @@ export const getWidgetData = (stats, vehicles) => {
         vehicles.length === 0
           ? "No data available"
           : offlineToday > offlineYesterday
-          ? `${offlineToday - offlineYesterday} up from yesterday`
-          : offlineToday < offlineYesterday
-          ? `${offlineYesterday - offlineToday} down from yesterday`
-          : "No change from yesterday",
+            ? `${offlineToday - offlineYesterday} up from yesterday`
+            : offlineToday < offlineYesterday
+              ? `${offlineYesterday - offlineToday} down from yesterday`
+              : "No change from yesterday",
     },
     {
       title: "Maintenance",
@@ -783,10 +814,10 @@ export const getWidgetData = (stats, vehicles) => {
         vehicles.length === 0
           ? "No data available"
           : maintenanceToday > maintenanceYesterday
-          ? `${maintenanceToday - maintenanceYesterday} up from yesterday`
-          : maintenanceToday < maintenanceYesterday
-          ? `${maintenanceYesterday - maintenanceToday} down from yesterday`
-          : "No change from yesterday",
+            ? `${maintenanceToday - maintenanceYesterday} up from yesterday`
+            : maintenanceToday < maintenanceYesterday
+              ? `${maintenanceYesterday - maintenanceToday} down from yesterday`
+              : "No change from yesterday",
     },
   ];
 };
@@ -1098,7 +1129,7 @@ export const getTelemetryCards = (hasData = true) => [
     title: "Mission Time",
     value: hasData
       ? `${Math.floor(Math.random() * 5 + 1)}:${String(
-          Math.floor(Math.random() * 60)
+          Math.floor(Math.random() * 60),
         ).padStart(2, "0")}`
       : "N/A",
     icon: (
@@ -1160,7 +1191,7 @@ export const getUserWidgetData = (
   stats,
   users,
   roles = [],
-  permissions = []
+  permissions = [],
 ) => {
   return [
     {

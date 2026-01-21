@@ -11,6 +11,7 @@ import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import usePermissionData from "../hooks/usePermissionData";
 import { API_ENDPOINTS } from "../config";
 import { Title } from "../ui";
+import toast from "../components/ui/toast";
 
 const Permission = () => {
   useTitle("Permission");
@@ -24,7 +25,10 @@ const Permission = () => {
   const handleAddPermission = async (formData) => {
     const result = await actions.addPermission(formData);
     if (result.success) {
+      toast.success("Permission created successfully!");
       setShowAddModal(false);
+    } else {
+      toast.error(result.message || "Failed to create permission");
     }
     return result;
   };
@@ -43,8 +47,11 @@ const Permission = () => {
     });
 
     if (result.success) {
+      toast.success("Permission updated successfully!");
       setShowEditModal(false);
       setSelectedPermission(null);
+    } else {
+      toast.error(result.message || "Failed to update permission");
     }
     return result;
   };
@@ -57,12 +64,15 @@ const Permission = () => {
   const handleConfirmDelete = async () => {
     if (!selectedPermission) return;
 
+    if (selectedPermission.isBulk) return;
+    
     const result = await actions.deletePermission(selectedPermission.id);
     if (result.success) {
+      toast.success("Permission deleted successfully!");
       setShowDeleteModal(false);
       setSelectedPermission(null);
     } else {
-      alert(`Failed to delete permission: ${result.message}`);
+      toast.error(result.message || "Failed to delete permission");
     }
   };
 
@@ -92,12 +102,24 @@ const Permission = () => {
     }
   };
 
-  const handleBulkDeletePermissions = async (selectedIds) => {
-    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} permission(s)?`)) {
-      for (const id of selectedIds) {
+  const handleBulkDeletePermissions = (selectedIds) => {
+    setSelectedPermission({ ids: selectedIds, isBulk: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!selectedPermission || !selectedPermission.ids) return;
+    
+    try {
+      for (const id of selectedPermission.ids) {
         await actions.deletePermission(id);
       }
+      toast.success(`${selectedPermission.ids.length} permission(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setSelectedPermission(null);
       actions.refreshData();
+    } catch (error) {
+      toast.error("Failed to delete some permissions");
     }
   };
 
@@ -171,9 +193,9 @@ const Permission = () => {
             setShowDeleteModal(false);
             setSelectedPermission(null);
           }}
-          onConfirm={handleConfirmDelete}
+          onConfirm={selectedPermission.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
           title="Delete Permission"
-          itemName={selectedPermission.name}
+          itemName={selectedPermission.isBulk ? `${selectedPermission.ids.length} permission(s)` : selectedPermission.name}
           itemType="permission"
         />
       )}

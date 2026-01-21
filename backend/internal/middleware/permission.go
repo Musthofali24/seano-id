@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// CheckPermission checks if user has required permission
 func CheckPermission(db *gorm.DB, permission string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		userID := c.Locals("user_id")
@@ -17,7 +16,6 @@ func CheckPermission(db *gorm.DB, permission string) fiber.Handler {
 			})
 		}
 
-		// Get user with role and permissions
 		var user model.User
 		if err := db.Preload("Role.Permissions").First(&user, userID).Error; err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -25,7 +23,6 @@ func CheckPermission(db *gorm.DB, permission string) fiber.Handler {
 			})
 		}
 
-		// Check if user has role with the required permission
 		if user.Role != nil {
 			for _, perm := range user.Role.Permissions {
 				if perm.Name == permission {
@@ -40,7 +37,6 @@ func CheckPermission(db *gorm.DB, permission string) fiber.Handler {
 	}
 }
 
-// HasPermission helper function to check permission in handler
 func HasPermission(db *gorm.DB, userID uint, permission string) bool {
 	var user model.User
 	if err := db.Preload("Role.Permissions").First(&user, userID).Error; err != nil {

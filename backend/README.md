@@ -2,6 +2,166 @@
 
 Complete API with JWT authentication, email verification, CRUD operations, and **real-time sensor data integration via MQTT and WebSocket**.
 
+## Database Schema
+
+```
+users [icon: user, color: blue] {
+  id uint PK
+  username string
+  email string
+  password string
+  roleId uint FK
+  isVerified boolean
+  verificationToken string
+  verificationExpiry timestamp
+  refreshToken string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+roles [icon: shield, color: purple] {
+  id uint PK
+  name string
+  description string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+permissions [icon: key, color: orange] {
+  id uint PK
+  name string
+  description string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+role_permissions [icon: link, color: gray] {
+  roleId uint FK
+  permissionId uint FK
+}
+
+vehicles [icon: anchor, color: cyan] {
+  id uint PK
+  code string
+  name string
+  description string
+  status string
+  userId uint FK
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+vehicle_batteries [icon: battery-charging, color: green] {
+  id uint PK
+  vehicleId uint FK
+  batteryId int
+  percentage decimal
+  voltage decimal
+  current decimal
+  status string
+  temperature decimal
+  createdAt timestamp
+}
+
+sensor_types [icon: layers, color: indigo] {
+  id uint PK
+  name string
+  description string
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+sensors [icon: wifi, color: teal] {
+  id uint PK
+  brand string
+  model string
+  code string
+  sensorTypeId uint FK
+  description string
+  isActive boolean
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+vehicle_sensors [icon: link-2, color: gray] {
+  id uint PK
+  vehicleId uint FK
+  sensorId uint FK
+  status string
+  lastReading string
+  lastReadingTime timestamp
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+missions [icon: map-pin, color: red] {
+  id uint PK
+  name string
+  description string
+  status string
+  vehicleId uint FK
+  waypoints jsonb
+  homeLocation jsonb
+  startTime timestamp
+  endTime timestamp
+  createdBy uint FK
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+sensor_logs [icon: activity, color: green] {
+  id uint PK
+  vehicleId uint FK
+  sensorId uint FK
+  data jsonb
+  createdAt timestamp
+}
+
+vehicle_logs [icon: compass, color: blue] {
+  id uint PK
+  vehicleId uint FK
+  batteryVoltage decimal
+  batteryCurrent decimal
+  rssi int
+  mode string
+  latitude decimal
+  longitude decimal
+  altitude decimal
+  heading decimal
+  armed boolean
+  gpsOk boolean
+  systemStatus string
+  speed decimal
+  roll decimal
+  pitch decimal
+  yaw decimal
+  temperatureSystem string
+  createdAt timestamp
+}
+
+raw_logs [icon: file-text, color: yellow] {
+  id uint PK
+  vehicleId uint FK
+  logs text
+  createdAt timestamp
+}
+
+# Relationships
+users.roleId > roles.id
+vehicles.userId > users.id
+vehicle_batteries.vehicleId > vehicles.id
+sensors.sensorTypeId > sensor_types.id
+vehicle_sensors.vehicleId > vehicles.id
+vehicle_sensors.sensorId > sensors.id
+missions.vehicleId > vehicles.id
+missions.createdBy > users.id
+sensor_logs.vehicleId > vehicles.id
+sensor_logs.sensorId > sensors.id
+vehicle_logs.vehicleId > vehicles.id
+raw_logs.vehicleId > vehicles.id
+roles.permissions <> permissions.roles
+```
+
 ## Features
 
 - 🔐 JWT Authentication & Email Verification
@@ -149,7 +309,7 @@ Connect to WebSocket for real-time sensor updates:
 
 ```javascript
 const ws = new WebSocket(
-  "ws://localhost:3000/ws/sensor-data?token=YOUR_JWT_TOKEN"
+  "ws://localhost:3000/ws/sensor-data?token=YOUR_JWT_TOKEN",
 );
 
 // Subscribe with filters
@@ -160,7 +320,7 @@ ws.onopen = () => {
       vehicle_code: "USV-01", // Optional: specific vehicle
       sensor_code: "CTD-MIDAS-01", // Optional: specific sensor
       sensor_type: "ctd_midas3000", // Optional: specific type
-    })
+    }),
   );
 };
 

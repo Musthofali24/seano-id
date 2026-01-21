@@ -1,11 +1,9 @@
-import React from "react";
 import { FaChartLine } from "react-icons/fa6";
 import {
   MdOutlineRadar,
   MdCheckCircle,
   MdCancel,
   MdPending,
-  MdRefresh,
 } from "react-icons/md";
 import useMissionData from "../../../hooks/useMissionData";
 
@@ -45,13 +43,6 @@ const MissionAnalytics = () => {
             Mission Analytics
           </h1>
         </div>
-        <button
-          onClick={refreshData}
-          className="text-gray-500 hover:text-blue-500 transition-colors duration-200 p-1 rounded"
-          title="Refresh analytics"
-        >
-          <MdRefresh size={14} />
-        </button>
       </div>
 
       {/* Analytics Content */}
@@ -205,8 +196,8 @@ const MissionAnalytics = () => {
                         vehicle.successRate >= 80
                           ? "bg-green-500"
                           : vehicle.successRate >= 60
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
                       }`}
                       style={{ width: `${vehicle.successRate}%` }}
                     ></div>

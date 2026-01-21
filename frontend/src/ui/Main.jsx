@@ -30,8 +30,8 @@ const Main = ({
                     transition-all duration-300 dark:bg-black dark:text-gray-400
                     min-h-[calc(100vh-56px)]
                     ${isSidebarOpen ? "md:ml-64 ml-16" : "ml-16"} ${
-          showTopbar ? "pt-21" : "pt-6"
-        }`}
+                      showTopbar ? "pt-21" : "pt-6"
+                    }`}
       >
         {children}
       </div>

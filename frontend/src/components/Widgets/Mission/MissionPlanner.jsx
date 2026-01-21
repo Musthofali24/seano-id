@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import useTitle from "../../../hooks/useTitle";
 import useMissionData from "../../../hooks/useMissionData";
-import toast from "react-hot-toast";
+import toast from "../../ui/toast";
 import {
   calculateTotalDistance,
   calculateEstimatedTime,
@@ -12,7 +12,6 @@ import {
 import MissionSidebar from "./MissionSidebar";
 import MissionMap from "./MissionMap";
 import MissionModals from "./MissionModals";
-import MissionParameters from "./MissionParameters";
 
 const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   useTitle("Missions");
@@ -289,12 +288,11 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   };
 
   return (
-    <div className="-mt-4 -mr-4">
+    <div className="-mt-4 -mr-4 h-screen">
       <MissionSidebar {...sharedProps} />
 
-      <div className={`${isSidebarOpen ? "md:ml-68" : "ml-68"}`}>
+      <div className={`${isSidebarOpen ? "md:ml-68" : "ml-68"} h-full`}>
         <MissionMap {...sharedProps} />
-        <MissionParameters {...sharedProps} />
       </div>
 
       <MissionModals {...sharedProps} />

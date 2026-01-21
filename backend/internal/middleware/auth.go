@@ -24,13 +24,11 @@ func AuthRequired() fiber.Handler {
 
 		var tokenString string
 		
-		// Check if it starts with "Bearer " (user typed it manually)
 		if strings.HasPrefix(authHeader, "Bearer ") {
 			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 		} else if strings.HasPrefix(authHeader, "bearer ") {
 			tokenString = strings.TrimPrefix(authHeader, "bearer ")
 		} else {
-			// Assume it's just the token (from Swagger auto-prefix)
 			tokenString = authHeader
 		}
 
@@ -40,7 +38,6 @@ func AuthRequired() fiber.Handler {
 			secret = "your-secret-key-change-in-production"
 		}
 
-		// Parse and validate token
 		token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(secret), nil
 		})
@@ -49,7 +46,6 @@ func AuthRequired() fiber.Handler {
 			return c.Status(401).JSON(fiber.Map{"error": "Your session has expired or token is invalid. Please login again"})
 		}
 
-		// Extract claims
 		if claims, ok := token.Claims.(*JWTClaims); ok {
 			c.Locals("user_id", claims.UserID)
 			c.Locals("email", claims.Email)

@@ -1,43 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import React from "react";
 import { Modal } from "../../UI";
 import { Dropdown } from "../";
+import axios from "../../../utils/axiosConfig";
+import { API_ENDPOINTS } from "../../../config";
 
-const SensorModal = ({ isOpen, onClose, onSubmit }) => {
-  const [selectedSensorType, setSelectedSensorType] = useState("");
+const SensorModal = ({ isOpen, onClose, onSubmit, editData }) => {
+  const [selectedSensorType, setSelectedSensorType] = useState(
+    editData?.sensor_type_id || "",
+  );
+  const [sensorTypeOptions, setSensorTypeOptions] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+  const isEditMode = !!editData;
 
-  // Sensor types data
-  const sensorTypeOptions = [
-    {
-      id: "hidrografi",
-      name: "Hidrografi Sensor",
-      description: "Measures water level and flow",
-      image: "�",
-    },
-    {
-      id: "oseanografi",
-      name: "Oseanografi Sensor",
-      description: "Measures ocean parameters",
-      image: "🌀",
-    },
-    {
-      id: "pressure",
-      name: "Pressure Sensor",
-      description: "Measures atmospheric pressure",
-      image: "📊",
-    },
-    {
-      id: "ph",
-      name: "pH Sensor",
-      description: "Measures water pH levels",
-      image: "🧪",
-    },
-    {
-      id: "turbidity",
-      name: "Turbidity Sensor",
-      description: "Measures water clarity",
-      image: "💧",
-    },
-  ];
+  // Fetch sensor types from API
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchSensorTypes = async () => {
+      setLoadingTypes(true);
+      try {
+        const response = await axios.get(API_ENDPOINTS.SENSOR_TYPES.LIST);
+        const types = Array.isArray(response.data) ? response.data : [];
+        setSensorTypeOptions(types);
+      } catch (error) {
+        console.error("Error fetching sensor types:", error);
+        setSensorTypeOptions([]);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    fetchSensorTypes();
+  }, [isOpen]);
+
+  // Reset form when editData changes
+  React.useEffect(() => {
+    if (editData) {
+      setSelectedSensorType(editData.sensor_type_id || "");
+    } else {
+      setSelectedSensorType("");
+    }
+  }, [editData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,14 +51,16 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
       name: formData.get("name"),
       sensor_type_id: selectedSensorType,
       description: formData.get("description"),
-      is_active: true, // Default active status
+      is_active: editData?.is_active !== undefined ? editData.is_active : true,
     };
 
     onSubmit(sensorData);
 
-    // Reset form
-    e.target.reset();
-    setSelectedSensorType("");
+    // Reset form only if not in edit mode
+    if (!isEditMode) {
+      e.target.reset();
+      setSelectedSensorType("");
+    }
   };
 
   const handleClose = () => {
@@ -66,7 +72,7 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add New Sensor"
+      title={isEditMode ? "Edit Sensor" : "Add New Sensor"}
       size="md"
     >
       <form onSubmit={handleSubmit}>
@@ -80,6 +86,7 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
               type="text"
               name="name"
               required
+              defaultValue={editData?.name || ""}
               placeholder="Enter sensor name"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
@@ -93,27 +100,26 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
             <Dropdown
               items={sensorTypeOptions}
               selectedItem={selectedSensorType}
-              onItemChange={setSelectedSensorType}
-              placeholder="Select sensor type"
+              onItemChange={(item) => setSelectedSensorType(item.id || item)}
+              placeholder={loadingTypes ? "Loading sensor types..." : "Select sensor type"}
               className="w-full"
+              getItemKey={(item) => item.id}
               renderSelectedItem={(item) => (
-                <div className="flex items-center gap-3">
-                  <span className="text-lg">{item.image}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {item.name}
-                  </span>
-                </div>
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {item.name}
+                </span>
               )}
               renderItem={(item, isSelected) => (
                 <div className="flex items-center gap-3">
-                  <span className="text-lg">{item.image}</span>
                   <div className="flex-1">
                     <div className="text-gray-900 dark:text-white font-medium">
                       {item.name}
                     </div>
-                    <div className="text-gray-600 dark:text-gray-300 text-sm">
-                      {item.description}
-                    </div>
+                    {item.description && (
+                      <div className="text-gray-600 dark:text-gray-300 text-sm">
+                        {item.description}
+                      </div>
+                    )}
                   </div>
                   {isSelected && (
                     <div className="text-blue-600 dark:text-white">
@@ -143,6 +149,7 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
             <textarea
               name="description"
               rows="3"
+              defaultValue={editData?.description || ""}
               placeholder="Enter sensor description"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
             />
@@ -175,7 +182,7 @@ const SensorModal = ({ isOpen, onClose, onSubmit }) => {
             type="submit"
             className="flex-1 px-4 py-2 bg-fourth text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
-            Add Sensor
+            {isEditMode ? "Update Sensor" : "Add Sensor"}
           </button>
         </div>
       </form>

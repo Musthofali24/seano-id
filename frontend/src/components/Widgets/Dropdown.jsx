@@ -55,6 +55,7 @@ const Dropdown = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Dropdown Button */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center justify-between"
       >
@@ -96,6 +97,7 @@ const Dropdown = ({
 
               return (
                 <button
+                  type="button"
                   key={itemKey}
                   onClick={() => handleItemSelect(item)}
                   className={`w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center gap-3 ${

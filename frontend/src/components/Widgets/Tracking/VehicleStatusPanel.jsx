@@ -11,19 +11,6 @@ import { MdGpsFixed, MdGpsNotFixed } from "react-icons/md";
 import useVehicleData from "../../../hooks/useVehicleData";
 import { useLogData } from "../../../hooks/useLogData";
 
-/**
- * VehicleStatusPanel - Panel Status Kendaraan
- *
- * SUMBER DATA:
- * - Historis: useVehicleData() hook → /vehicles/ API endpoint
- * - Real-time: WebSocket via useMQTT hook → seano/{registration_code}/vehicle_log
- *
- * CARA KERJA:
- * - Fetch semua kendaraan dari API via useVehicleData()
- * - Subscribe WebSocket untuk real-time updates
- * - Merge data real-time dengan data historis
- * - Update otomatis ketika selectedVehicle berubah atau data baru masuk
- */
 const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   const { vehicles, loading } = useVehicleData();
   const { vehicleLogs, ws } = useLogData(); // Get vehicle logs from WebSocket
@@ -36,7 +23,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
     // Filter by vehicle ID and get the latest (first in array, newest first)
     const filtered = vehicleLogs.filter(
-      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
+      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id,
     );
 
     return filtered.length > 0 ? filtered[0] : null;
@@ -65,9 +52,6 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
     const timeout = setTimeout(() => {
       setIsConnected(false);
-      console.log(
-        "📡 VehicleStatusPanel: Connection timeout - no data received for 15 seconds"
-      );
     }, 15000);
 
     return () => clearTimeout(timeout);
@@ -84,14 +68,11 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  // Find current vehicle data and merge with vehicle log data
   const currentVehicle =
     vehicles.find((v) => v.id === selectedVehicle?.id) || {};
 
-  // Merge: currentVehicle (vehicle metadata) → vehicleLog (latest from WebSocket)
   const mergedData = { ...currentVehicle, ...vehicleLog };
 
-  // Vehicle states with proper data fallback
   const vehicleStates = {
     connected:
       isConnected ||
@@ -107,8 +88,8 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       mergedData.gps_ok !== undefined
         ? mergedData.gps_ok
         : mergedData.gps_fix !== undefined
-        ? mergedData.gps_fix
-        : null,
+          ? mergedData.gps_fix
+          : null,
     system_status:
       mergedData.system_status !== undefined ? mergedData.system_status : null,
   };
@@ -251,15 +232,15 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
       {/* Connection Status */}
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaWifi
               className={
                 vehicleStates.connected === null
                   ? "text-gray-400"
                   : vehicleStates.connected
-                  ? "text-green-600"
-                  : "text-red-600"
+                    ? "text-green-600"
+                    : "text-red-600"
               }
             />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -270,12 +251,12 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
             {vehicleStates.connected === null
               ? "N/A"
               : vehicleStates.connected
-              ? "Online"
-              : "Offline"}
+                ? "Online"
+                : "Offline"}
           </p>
         </div>
 
-        <div className="p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+        <div className="p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaShieldAlt
               className={
@@ -292,8 +273,8 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
             {vehicleStates.armed === null
               ? "N/A"
               : vehicleStates.armed
-              ? "Armed"
-              : "Disarmed"}
+                ? "Armed"
+                : "Disarmed"}
           </p>
         </div>
       </div>
@@ -306,7 +287,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </span>
           <span
             className={`px-3 py-1 text-xs font-semibold rounded-full ${getModeColor(
-              vehicleStates.mode
+              vehicleStates.mode,
             )}`}
           >
             {vehicleStates.mode || "N/A"}
@@ -337,8 +318,8 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
                 return gpsNum === null || gpsNum === 0
                   ? "text-gray-500"
                   : gpsNum >= 3
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-yellow-600 dark:text-yellow-400";
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-yellow-600 dark:text-yellow-400";
               })()}
             >
               GPS{" "}
@@ -350,14 +331,14 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
                 return gpsNum === null
                   ? "N/A"
                   : gpsNum === 0
-                  ? "No Fix"
-                  : gpsNum === 1
-                  ? "Dead Reckoning"
-                  : gpsNum === 2
-                  ? "2D Fix"
-                  : gpsNum === 3
-                  ? "3D Fix"
-                  : `${gpsNum}D Fix`;
+                    ? "No Fix"
+                    : gpsNum === 1
+                      ? "Dead Reckoning"
+                      : gpsNum === 2
+                        ? "2D Fix"
+                        : gpsNum === 3
+                          ? "3D Fix"
+                          : `${gpsNum} Fix`;
               })()}
             </span>
           </div>
@@ -365,7 +346,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* System Status */}
-      <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="mb-6 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-2">
           <FaExclamationTriangle className={systemStatus.color} size={16} />
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -383,7 +364,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* Position Data */}
-      <div className="mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="mb-4 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-2 mb-3">
           <FaArrowUp className="text-purple-600" />
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -414,7 +395,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
 
       {/* Signal & Temperature */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <FaWifi className={getRSSIColor(mergedData.rssi)} />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -444,7 +425,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </div>
         </div>
 
-        <div className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <FaThermometerHalf className="text-orange-500" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
@@ -453,7 +434,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </div>
           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
             {formatTemperature(
-              mergedData.temperature_system || mergedData.temperature
+              mergedData.temperature_system || mergedData.temperature,
             )}
           </p>
         </div>

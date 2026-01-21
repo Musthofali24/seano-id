@@ -28,6 +28,9 @@ import Settings from "./pages/Settings";
 import Vehicle from "./pages/Vehicle";
 import Alerts from "./pages/Alerts";
 import Telemetry from "./pages/Telemetry";
+import Profile from "./pages/Profile";
+import Control from "./pages/Control";
+import Battery from "./pages/Battery";
 import Sensor from "./pages/Sensor";
 import SensorType from "./pages/SensorType";
 import Notification from "./pages/Notification";
@@ -45,7 +48,9 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 // Other
 import Landing from "./pages/Landing";
 import ErrorPage from "./components/Error/ErrorPage";
-import Profile from "./pages/Profile";
+import MissionPlanner from "./pages/Missions";
+import Mission from "./pages/Missions";
+import MissionsPlanner from "./pages/MissionPlanner";
 
 function App() {
   const location = useLocation();
@@ -57,29 +62,22 @@ function App() {
 
   useEffect(() => {
     if (vehicles && vehicles.length > 0) {
-      // Don't auto-select first vehicle anymore, let user choose
-      // Only validate if selected vehicle still exists
       if (
         selectedVehicleId &&
         !vehicles.find((v) => v.id === selectedVehicleId)
       ) {
-        // If selected vehicle no longer exists, reset to null
         setSelectedVehicleId(null);
       }
     } else if (vehicles && vehicles.length === 0) {
-      // Reset when no vehicles (logout)
       setSelectedVehicleId(null);
       initializedRef.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicles]); // Only depend on vehicles, not selectedVehicleId
+  }, [vehicles]);
 
-  // Get selected vehicle object from ID (always synced with vehicles array)
   const selectedVehicle = selectedVehicleId
     ? vehicles.find((v) => v.id === selectedVehicleId)
     : null;
 
-  // Initialize sidebar state
   useEffect(() => {
     const savedSidebar = localStorage.getItem("sidebarOpen");
     if (savedSidebar !== null) {
@@ -89,7 +87,6 @@ function App() {
     }
   }, []);
 
-  // Initialize dark mode
   useEffect(() => {
     const savedMode = localStorage.getItem("darkMode");
     if (savedMode === "true") {
@@ -98,7 +95,6 @@ function App() {
     }
   }, []);
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
       const newMode = !prev;
@@ -133,7 +129,10 @@ function App() {
     "/dashboard",
     "/tracking",
     "/missions",
+    "/mission-planner",
     "/telemetry",
+    "/control",
+    "/battery",
     "/data",
     "/profile",
     "/sensor",
@@ -153,7 +152,6 @@ function App() {
     location.pathname.startsWith(route),
   );
 
-  // Handle 404 page separately without any layout
   if (location.pathname === "/404") {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black">
@@ -162,7 +160,6 @@ function App() {
     );
   }
 
-  // Render public routes without layout
   if (isPublicRoute) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black">
@@ -226,14 +223,12 @@ function App() {
               </PublicRoute>
             }
           />
-          {/* Catch-all route - redirect to /404 */}
           <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </div>
     );
   }
 
-  // Render error page without layout for unknown routes
   if (!isProtectedRoute) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-black">
@@ -246,7 +241,6 @@ function App() {
     );
   }
 
-  // Render protected routes with layout
   return (
     <div className="font-openSans flex bg-white dark:bg-black">
       <Sidebar isSidebarOpen={isSidebarOpen} />
@@ -260,11 +254,9 @@ function App() {
           isSidebarOpen={isSidebarOpen}
           selectedVehicle={selectedVehicle}
           setSelectedVehicle={(vehicle) => {
-            console.log("🚗 App.jsx - Setting selected vehicle:", vehicle);
             if (vehicle && vehicle.id) {
               setSelectedVehicleId(vehicle.id);
             } else if (vehicle) {
-              // Handle case where vehicle might be just an ID
               setSelectedVehicleId(vehicle);
             }
           }}
@@ -272,7 +264,6 @@ function App() {
         >
           <Content>
             <Routes>
-              {/* Protected Routes */}
               <Route
                 path="/dashboard"
                 element={
@@ -296,7 +287,18 @@ function App() {
                 path="/missions"
                 element={
                   <ProtectedRoute>
-                    <Missions
+                    <Mission
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mission-planner"
+                element={
+                  <ProtectedRoute>
+                    <MissionsPlanner
                       darkMode={darkMode}
                       isSidebarOpen={isSidebarOpen}
                     />
@@ -308,6 +310,28 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Telemetry
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/control"
+                element={
+                  <ProtectedRoute>
+                    <Control
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/battery"
+                element={
+                  <ProtectedRoute>
+                    <Battery
                       darkMode={darkMode}
                       isSidebarOpen={isSidebarOpen}
                     />
@@ -410,7 +434,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Catch-all route - redirect to /404 */}
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </Content>
@@ -420,7 +443,6 @@ function App() {
   );
 }
 
-// Wrap with Router and AuthProvider
 const AppWithRouter = () => (
   <BrowserRouter>
     <AuthProvider>

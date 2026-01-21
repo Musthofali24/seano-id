@@ -1,5 +1,4 @@
-import React from "react";
-import { MdOutlineRadar, MdRefresh } from "react-icons/md";
+import { MdOutlineRadar } from "react-icons/md";
 import { Link } from "react-router-dom";
 import useMissionData from "../../../hooks/useMissionData";
 import { MissionCardSkeleton } from "../../Skeleton";
@@ -21,13 +20,6 @@ const RecentMissions = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={refreshData}
-            className="text-gray-500 hover:text-blue-500 transition-colors duration-200 p-1 rounded"
-            title="Refresh data"
-          >
-            <MdRefresh size={14} />
-          </button>
           <Link
             to="/missions"
             className="text-white hover:bg-white hover:text-blue-500 dark:hover:bg-black transition-colors duration-200 text-sm font-medium bg-blue-500 px-3 py-1 rounded-2xl"
@@ -85,12 +77,12 @@ const RecentMissions = () => {
                     mission.statusColor === "green"
                       ? "bg-green-500"
                       : mission.statusColor === "blue"
-                      ? "bg-blue-500"
-                      : mission.statusColor === "yellow"
-                      ? "bg-yellow-500"
-                      : mission.statusColor === "red"
-                      ? "bg-red-500"
-                      : "bg-gray-500"
+                        ? "bg-blue-500"
+                        : mission.statusColor === "yellow"
+                          ? "bg-yellow-500"
+                          : mission.statusColor === "red"
+                            ? "bg-red-500"
+                            : "bg-gray-500"
                   }`}
                 >
                   {mission.status}
@@ -112,12 +104,12 @@ const RecentMissions = () => {
                     mission.progress === 100
                       ? "bg-green-500"
                       : mission.statusColor === "green"
-                      ? "bg-blue-500"
-                      : mission.statusColor === "yellow"
-                      ? "bg-yellow-500"
-                      : mission.statusColor === "red"
-                      ? "bg-red-500"
-                      : "bg-blue-500"
+                        ? "bg-blue-500"
+                        : mission.statusColor === "yellow"
+                          ? "bg-yellow-500"
+                          : mission.statusColor === "red"
+                            ? "bg-red-500"
+                            : "bg-blue-500"
                   }`}
                   style={{ width: `${mission.progress}%` }}
                 ></div>
@@ -138,7 +130,7 @@ const RecentMissions = () => {
 
         {/* Last updated info */}
         {lastUpdated && !loading && missions.length > 0 && (
-          <div className="text-center pt-2">
+          <div className="text-end pt-2">
             <p className="text-xs text-gray-400 dark:text-gray-500">
               Last updated: {lastUpdated.toLocaleTimeString()}
             </p>

@@ -10,6 +10,7 @@ import {
   FaTrash,
   FaCog,
 } from "react-icons/fa";
+import Dropdown from "../Dropdown";
 
 const MissionSidebar = ({
   isSidebarOpen,
@@ -516,41 +517,51 @@ const MissionSidebar = ({
             Waypoints
           </h3>
           {activeMission && (
-            <select
-              value={planningMode}
-              onChange={(e) => setPlanningMode(e.target.value)}
-              disabled={
-                !homeLocation ||
-                hasGeneratedWaypoints ||
-                waypoints.some((wp) => wp.type === "path")
-              }
-              className={`px-2 py-1 text-xs rounded-lg border transition-colors focus:outline-none focus:ring-1 focus:ring-[#018190] ${
-                !homeLocation ||
-                hasGeneratedWaypoints ||
-                waypoints.some((wp) => wp.type === "path")
-                  ? "bg-gray-200 dark:bg-black text-gray-400 dark:text-gray-600 border-gray-300 dark:border-gray-700 cursor-not-allowed"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-            >
-              <option value="path">
-                Path Planning{" "}
-                {!homeLocation
-                  ? "(No Home)"
-                  : hasGeneratedWaypoints ||
-                      waypoints.some((wp) => wp.type === "path")
-                    ? ""
-                    : ""}
-              </option>
-              <option value="zone">
-                Zone Planning{" "}
-                {!homeLocation
-                  ? "(No Home)"
-                  : hasGeneratedWaypoints ||
-                      waypoints.some((wp) => wp.type === "path")
-                    ? ""
-                    : ""}
-              </option>
-            </select>
+            <div className="w-40">
+              <Dropdown
+                items={[
+                  { id: "path", name: "Path Planning", icon: "route" },
+                  { id: "zone", name: "Zone Planning", icon: "square" },
+                ]}
+                selectedItem={planningMode}
+                onItemChange={(item) => setPlanningMode(item.id)}
+                getItemKey={(item) => item.id}
+                renderSelectedItem={(item) => (
+                  <span className="font-medium text-sm">{item.name}</span>
+                )}
+                renderItem={(item, isSelected) => (
+                  <>
+                    <div className="flex-1">
+                      <div className="text-gray-900 dark:text-white font-medium text-sm">
+                        {item.name}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="text-blue-600 dark:text-white">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </>
+                )}
+                className={`${
+                  !homeLocation ||
+                  hasGeneratedWaypoints ||
+                  waypoints.some((wp) => wp.type === "path")
+                    ? "opacity-50 pointer-events-none"
+                    : ""
+                }`}
+              />
+            </div>
           )}
         </div>
         <div className="space-y-2 max-h-50 overflow-y-auto scrollbar-hide">

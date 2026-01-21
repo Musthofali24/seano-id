@@ -1,21 +1,21 @@
 import useTitle from "../hooks/useTitle";
 import Title from "../ui/Title";
 
-const Mission = () => {
-  useTitle("Mission List");
+const Battery = () => {
+  useTitle("Battery");
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4">
-        <Title title="Mission List" subtitle="Mission List" />
+        <Title title="Battery" subtitle="System Batteries Monitoring" />
       </div>
       <div className="px-4">
         <p className="text-gray-500 dark:text-gray-400">
-          Mission Planner List content will be displayed here.
+          Battery content will be displayed here.
         </p>
       </div>
     </div>
   );
 };
 
-export default Mission;
+export default Battery;

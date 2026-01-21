@@ -1,6 +1,8 @@
 import { Modal } from "../../UI";
 
-const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
+const SensorTypeModal = ({ isOpen, onClose, onSubmit, editData }) => {
+  const isEditMode = !!editData;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -8,13 +10,14 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
     const sensorTypeData = {
       name: formData.get("name"),
       description: formData.get("description"),
-      is_active: true, // Default active status
     };
 
     onSubmit(sensorTypeData);
 
-    // Reset form
-    e.target.reset();
+    // Reset form only if not in edit mode
+    if (!isEditMode) {
+      e.target.reset();
+    }
   };
 
   const handleClose = () => {
@@ -25,7 +28,7 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add New Sensor Type"
+      title={isEditMode ? "Edit Sensor Type" : "Add New Sensor Type"}
       size="md"
     >
       <form onSubmit={handleSubmit}>
@@ -39,6 +42,7 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
               type="text"
               name="name"
               required
+              defaultValue={editData?.name || ""}
               placeholder="Enter sensor type name"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
@@ -52,6 +56,7 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
             <textarea
               name="description"
               rows="3"
+              defaultValue={editData?.description || ""}
               placeholder="Enter sensor type description"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
             />
@@ -84,7 +89,7 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit }) => {
             type="submit"
             className="flex-1 px-4 py-2 bg-fourth text-white rounded-xl hover:bg-blue-700 transition-colors"
           >
-            Add Sensor Type
+            {isEditMode ? "Update Sensor Type" : "Add Sensor Type"}
           </button>
         </div>
       </form>

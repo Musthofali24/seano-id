@@ -118,6 +118,11 @@ func (h *Hub) BroadcastSensorData(msg SensorDataMessage) error {
 	return nil
 }
 
+// Broadcast sends raw data to all connected clients
+func (h *Hub) Broadcast(data []byte) {
+	h.broadcast <- data
+}
+
 func (h *Hub) GetClientCount() int {
 	h.mu.RLock()
 	defer h.mu.RUnlock()

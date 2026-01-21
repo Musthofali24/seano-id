@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import toast from "../../ui/toast";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 import axiosInstance from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";

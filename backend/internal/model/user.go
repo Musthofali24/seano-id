@@ -48,9 +48,10 @@ type LoginResponse struct {
 }
 
 type RefreshResponse struct {
-	User        UserResponse `json:"user"`
-	AccessToken string       `json:"access_token"`
-	TokenType   string       `json:"token_type"`
+	User         UserResponse `json:"user"`
+	AccessToken  string       `json:"access_token"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+	TokenType    string       `json:"token_type"`
 }
 
 type CreateUserRequest struct {

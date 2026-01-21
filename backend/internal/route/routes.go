@@ -29,6 +29,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicleLogRepo := repository.NewVehicleLogRepository(db)
 	rawLogRepo := repository.NewRawLogRepository(db)
 	missionRepo := repository.NewMissionRepository(db)
+	alertRepo := repository.NewAlertRepository(db)
 
 	// Initialize handlers
 	userHandler := &handler.UserHandler{DB: db}
@@ -48,6 +49,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	rawLogHandler := handler.NewRawLogHandler(rawLogRepo)
 	logStatsHandler := handler.NewLogStatsHandler(vehicleLogRepo, sensorLogRepo, rawLogRepo)
 	missionHandler := handler.NewMissionHandler(missionRepo, db)
+	alertHandler := handler.NewAlertHandler(alertRepo, wsHub)
 	wsHandler := wsocket.NewWebSocketHandler(wsHub)
 
 	// Swagger route
@@ -168,8 +170,22 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	missions.Put("/:mission_id", missionHandler.UpdateMission)        // Ownership check in handler
 	missions.Delete("/:mission_id", missionHandler.DeleteMission)     // Ownership check in handler
 
+	// Alert management routes (protected)
+	alerts := app.Group("/api/alerts", middleware.AuthRequired())
+	alerts.Get("/", alertHandler.GetAlerts)
+	alerts.Get("/stats", alertHandler.GetAlertStats)
+	alerts.Get("/recent", alertHandler.GetRecentAlerts)
+	alerts.Get("/unacknowledged", alertHandler.GetUnacknowledgedAlerts)
+	alerts.Get("/:id", alertHandler.GetAlertByID)
+	alerts.Post("/", alertHandler.CreateAlert)
+	alerts.Put("/:id", alertHandler.UpdateAlert)
+	alerts.Patch("/:id/acknowledge", alertHandler.AcknowledgeAlert)
+	alerts.Delete("/:id", alertHandler.DeleteAlert)
+	alerts.Delete("/clear", alertHandler.ClearAllAlerts)
+
 	// WebSocket routes (no middleware, auth checked inside WebSocket handler via query param)
 	app.Get("/ws/stats", middleware.AuthRequired(), wsHandler.GetStats)
 	app.Get("/ws/sensor-data", websocket.New(wsHandler.HandleWebSocket))
 	app.Get("/ws/logs", websocket.New(wsHandler.HandleWebSocket)) // Reuse existing handler
+	app.Get("/ws/alerts", websocket.New(wsHandler.HandleWebSocket)) // Alerts WebSocket
 }

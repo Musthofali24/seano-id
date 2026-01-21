@@ -42,11 +42,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := config.MigrateDB(db, &model.User{}, &model.Role{}, &model.Permission{}, &model.SensorType{}, &model.Sensor{}, &model.Vehicle{}, &model.VehicleBattery{}, &model.VehicleSensor{}, &model.SensorLog{}, &model.VehicleLog{}, &model.RawLog{}); err != nil {
+	if err := config.MigrateDB(db, &model.User{}, &model.Role{}, &model.Permission{}, &model.SensorType{}, &model.Sensor{}, &model.Vehicle{}, &model.VehicleBattery{}, &model.VehicleSensor{}, &model.SensorLog{}, &model.VehicleLog{}, &model.RawLog{}, &model.Alert{}, &model.Mission{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 
-	// Setup TimescaleDB hypertables for time-series data
 	if err := config.SetupHypertables(db); err != nil {
 		log.Printf("Warning: Failed to setup hypertables: %v", err)
 	}
@@ -65,7 +64,6 @@ func main() {
 	go wsHub.Run()
 	log.Println("WebSocket Hub started")
 
-	// Initialize repositories
 	sensorLogRepo := repository.NewSensorLogRepository(db)
 	vehicleLogRepo := repository.NewVehicleLogRepository(db)
 	rawLogRepo := repository.NewRawLogRepository(db)
@@ -154,10 +152,6 @@ func main() {
 	}))
 
 	route.SetupRoutes(app, db, wsHub)
-
-	// log.Println("Server starting on :3000")
-	// log.Println("Swagger UI available at http://localhost:3000/swagger")
-
 	app.Listen(":3000")
 }
 

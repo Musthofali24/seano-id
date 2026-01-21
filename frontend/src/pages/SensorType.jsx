@@ -11,42 +11,105 @@ import {
 import { getSensorTypeWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { TbCategory } from "react-icons/tb";
+import toast from "../components/ui/toast";
+import axios from "../utils/axiosConfig";
+import { API_ENDPOINTS } from "../config";
+import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 
 const SensorType = () => {
   useTitle("Sensor Type");
   const [showAddSensorTypeModal, setShowAddSensorTypeModal] = useState(false);
-  const { sensorTypes, loading, stats, addSensorType } = useSensorTypesData();
+  const [showEditSensorTypeModal, setShowEditSensorTypeModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const { sensorTypes, loading, stats, fetchSensorTypes } = useSensorTypesData();
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton =
     timeoutLoading && loading && sensorTypes.length === 0;
   const widgetData = getSensorTypeWidgetData(stats, sensorTypes);
 
-  const handleCreateSensorType = (sensorTypeData) => {
-    // Handle sensor type creation logic here
-    console.log("Creating sensor type:", sensorTypeData);
-    addSensorType(sensorTypeData);
-    setShowAddSensorTypeModal(false);
-    // Add your API call or data handling logic here
+  const handleCreateSensorType = async (sensorTypeData) => {
+    try {
+      await axios.post(API_ENDPOINTS.SENSOR_TYPES.CREATE, sensorTypeData);
+      toast.success("Sensor type created successfully!");
+      setShowAddSensorTypeModal(false);
+      fetchSensorTypes();
+    } catch (error) {
+      console.error("Error creating sensor type:", error);
+      toast.error(error.response?.data?.detail || "Failed to create sensor type");
+    }
   };
 
   const handleEditSensorType = (sensorType) => {
-    console.log("Editing sensor type:", sensorType);
-    // TODO: Implement edit functionality
+    setEditData({
+      id: sensorType.id,
+      name: sensorType.name,
+      description: sensorType.description,
+    });
+    setShowEditSensorTypeModal(true);
+  };
+
+  const handleUpdateSensorType = async (sensorTypeData) => {
+    try {
+      await axios.put(
+        API_ENDPOINTS.SENSOR_TYPES.UPDATE(editData.id),
+        sensorTypeData,
+      );
+      toast.success("Sensor type updated successfully!");
+      setShowEditSensorTypeModal(false);
+      setEditData(null);
+      fetchSensorTypes();
+    } catch (error) {
+      console.error("Error updating sensor type:", error);
+      toast.error(error.response?.data?.detail || "Failed to update sensor type");
+    }
   };
 
   const handleDeleteSensorType = (id, name) => {
-    console.log("Deleting sensor type:", id, name);
-    // TODO: Implement delete functionality
+    setDeleteTarget({ id, name });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    
+    try {
+      await axios.delete(API_ENDPOINTS.SENSOR_TYPES.DELETE(deleteTarget.id));
+      toast.success("Sensor type deleted successfully!");
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      fetchSensorTypes();
+    } catch (error) {
+      console.error("Error deleting sensor type:", error);
+      toast.error(error.response?.data?.detail || "Failed to delete sensor type");
+    }
   };
 
   const handleViewSensorType = (sensorType) => {
-    console.log("Viewing sensor type:", sensorType);
-    // TODO: Implement view functionality
+    toast.info(`Viewing sensor type: ${sensorType.name}`);
   };
 
   const handleBulkDeleteSensorTypes = (ids) => {
-    console.log("Bulk deleting sensor types:", ids);
-    // TODO: Implement bulk delete functionality
+    setDeleteTarget({ ids, isBulk: true });
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (!deleteTarget || !deleteTarget.ids) return;
+    
+    try {
+      await Promise.all(
+        deleteTarget.ids.map((id) => axios.delete(API_ENDPOINTS.SENSOR_TYPES.DELETE(id))),
+      );
+      toast.success(`${deleteTarget.ids.length} sensor type(s) deleted successfully!`);
+      setShowDeleteModal(false);
+      setDeleteTarget(null);
+      fetchSensorTypes();
+    } catch (error) {
+      console.error("Error deleting sensor types:", error);
+      toast.error("Failed to delete some sensor types");
+    }
   };
 
   return (
@@ -84,11 +147,35 @@ const SensorType = () => {
         onBulkDelete={handleBulkDeleteSensorTypes}
       />
 
-      {/* SensorType Modal */}
+      {/* Add SensorType Modal */}
       <SensorTypeModal
         isOpen={showAddSensorTypeModal}
         onClose={() => setShowAddSensorTypeModal(false)}
         onSubmit={handleCreateSensorType}
+      />
+
+      {/* Edit SensorType Modal */}
+      <SensorTypeModal
+        isOpen={showEditSensorTypeModal}
+        onClose={() => {
+          setShowEditSensorTypeModal(false);
+          setEditData(null);
+        }}
+        onSubmit={handleUpdateSensorType}
+        editData={editData}
+      />
+
+      {/* Delete Confirm Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setDeleteTarget(null);
+        }}
+        onConfirm={deleteTarget?.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+        title="Delete Sensor Type"
+        itemName={deleteTarget?.isBulk ? `${deleteTarget.ids.length} sensor type(s)` : deleteTarget?.name}
+        itemType="sensor type"
       />
     </div>
   );
