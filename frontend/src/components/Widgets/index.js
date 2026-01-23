@@ -54,3 +54,13 @@ export { RoleModal, RoleTable } from './Role'
 
 // Permission Management Widgets
 export { PermissionModal, PermissionTable } from './Permission'
+
+// Battery Monitoring Widgets
+export {
+  BatteryDisplay,
+  DualUnitAnalytics,
+  IndividualCellVoltages,
+  SystemHealth,
+  PeakLoadTemp,
+  BatteryLog
+} from './Battery'

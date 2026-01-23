@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../config";
+import axiosInstance from "../utils/axiosConfig";
 
 // Create Context
 export const AuthContext = createContext(null);
@@ -16,6 +17,47 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
+  // Periodic token refresh to prevent expiration
+  useEffect(() => {
+    // Only set up interval if user is authenticated
+    if (!user) return;
+
+    const checkAndRefreshToken = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+
+      try {
+        // Decode JWT to check expiration
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const expiration = payload.exp * 1000; // Convert to milliseconds
+        const now = Date.now();
+        const tenMinutes = 10 * 60 * 1000; // 10 minutes
+
+        // If token expires in less than 10 minutes, trigger refresh via API call
+        if (expiration - now < tenMinutes) {
+          console.log("⏰ Token expiring soon, triggering refresh...");
+          // Make a simple API call to trigger axios interceptor refresh
+          try {
+            await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
+          } catch (error) {
+            // If refresh fails, interceptor will handle logout
+            console.error("Failed to refresh token:", error);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to decode token:", e);
+      }
+    };
+
+    // Check every 5 minutes
+    const interval = setInterval(checkAndRefreshToken, 5 * 60 * 1000);
+
+    // Also check immediately
+    checkAndRefreshToken();
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   // Function to check if user is authenticated
   const checkAuth = async () => {
     const token = localStorage.getItem("access_token");
@@ -26,14 +68,11 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const response = await fetch(API_ENDPOINTS.AUTH.ME, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Use axiosInstance instead of fetch to leverage auto-refresh interceptor
+      const response = await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
 
-      if (response.ok) {
-        const userData = await response.json();
+      if (response.status === 200) {
+        const userData = response.data;
         // Store user with permissions in localStorage for quick access
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
@@ -45,9 +84,13 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Auth check failed:", error);
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user");
+      // Only clear storage if it's a 401 error (unauthorized)
+      // Other errors (network, etc.) shouldn't clear tokens
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+      }
     } finally {
       setLoading(false);
     }
@@ -61,49 +104,15 @@ export function AuthProvider({ children }) {
         endpoint: API_ENDPOINTS.AUTH.LOGIN,
       });
 
-      // Send login request as JSON
-      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+      // Use axiosInstance for login (no token needed, so interceptor won't interfere)
+      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, {
+        email: email,
+        password: password,
       });
 
       console.log("Login response status:", response.status);
 
-      if (!response.ok) {
-        let errorMessage = "Login failed. Please check your credentials.";
-        try {
-          const error = await response.json();
-          console.error("Login error response:", error);
-
-          // Handle both Python (detail) and Go (error) response formats
-          if (error.detail && Array.isArray(error.detail)) {
-            errorMessage = error.detail
-              .map((e) => e.msg || e.message || JSON.stringify(e))
-              .join(", ");
-          } else if (error.detail) {
-            errorMessage =
-              typeof error.detail === "string"
-                ? error.detail
-                : JSON.stringify(error.detail);
-          } else if (error.error) {
-            // Go backend uses "error" field
-            errorMessage = error.error;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-        } catch (e) {
-          console.error("Could not parse error response:", e);
-        }
-        return { success: false, error: errorMessage };
-      }
-
-      const data = await response.json();
+      const data = response.data;
       console.log("Login successful, got data:", data);
 
       // Save tokens to localStorage
@@ -126,14 +135,10 @@ export function AuthProvider({ children }) {
       }
 
       // If no user in response, try to get it from /auth/me
-      const userResponse = await fetch(API_ENDPOINTS.AUTH.ME, {
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
-      });
+      const userResponse = await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
 
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
+      if (userResponse.status === 200) {
+        const userData = userResponse.data;
         console.log("Got user data from /auth/me:", userData);
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
@@ -149,8 +154,31 @@ export function AuthProvider({ children }) {
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
-      const errorMessage =
-        error.message || "Network error. Please check your connection.";
+      let errorMessage = "Login failed. Please check your credentials.";
+      
+      // Handle error response
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        // Handle both Python (detail) and Go (error) response formats
+        if (errorData.detail && Array.isArray(errorData.detail)) {
+          errorMessage = errorData.detail
+            .map((e) => e.msg || e.message || JSON.stringify(e))
+            .join(", ");
+        } else if (errorData.detail) {
+          errorMessage =
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : JSON.stringify(errorData.detail);
+        } else if (errorData.error) {
+          // Go backend uses "error" field
+          errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } else {
+        errorMessage = error.message || "Network error. Please check your connection.";
+      }
+      
       return { success: false, error: errorMessage };
     }
   };
@@ -158,19 +186,11 @@ export function AuthProvider({ children }) {
   // Logout function
   const logout = async () => {
     try {
-      const token = localStorage.getItem("access_token");
-
-      if (token) {
-        // Call logout endpoint
-        await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
+      // Use axiosInstance to leverage auto-refresh if token is expired
+      await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       console.error("Logout error:", error);
+      // Continue with logout even if API call fails
     } finally {
       // Clear storage and state
       localStorage.removeItem("access_token");

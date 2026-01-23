@@ -50,6 +50,22 @@ html {
   background: transparent;
 }
 
+/* Battery Wave Animation */
+@keyframes batteryWave {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-10px) scaleY(1.1);
+    opacity: 0.5;
+  }
+}
+
+.battery-wave {
+  animation: batteryWave 3s ease-in-out infinite;
+}
+
 /* Loading Dots Wave Animation */
 @keyframes wave {
   0%, 60%, 100% {

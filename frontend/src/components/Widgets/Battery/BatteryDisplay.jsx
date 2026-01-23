@@ -1,0 +1,95 @@
+import React from "react";
+
+const BatteryDisplay = ({ unit, battery, index }) => {
+  const percentage = battery?.percentage || 0;
+  const voltage = battery?.voltage || 0;
+  const status = battery?.status || "N/A";
+
+  // Determine status color and text
+  const getStatusColor = () => {
+    const statusLower = status.toLowerCase();
+    if (statusLower === "charging") return "text-blue-500";
+    if (statusLower === "active") return "text-orange-500";
+    if (statusLower === "discharging") return "text-green-500";
+    return "text-gray-500";
+  };
+
+  const getStatusBg = () => {
+    const statusLower = status.toLowerCase();
+    if (statusLower === "charging") return "bg-blue-500/20 border-blue-500/50";
+    if (statusLower === "active") return "bg-orange-500/20 border-orange-500/50";
+    if (statusLower === "discharging") return "bg-green-500/20 border-green-500/50";
+    return "bg-gray-500/20 border-gray-500/50";
+  };
+
+  const getBatteryColor = () => {
+    if (unit === "A") return "text-blue-400";
+    return "text-cyan-400";
+  };
+
+  const getBarColor = () => {
+    if (unit === "A") return "bg-blue-500";
+    return "bg-cyan-400";
+  };
+
+  const statusDisplay = status === "N/A" ? "N/A" : status.charAt(0).toUpperCase() + status.slice(1);
+
+  return (
+    <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+      {/* Unit Label */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold dark:text-white text-black">BATTERY {unit}</h3>
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusBg()} ${getStatusColor()}`}
+        >
+          {statusDisplay}
+        </span>
+      </div>
+
+      {/* Battery Icon */}
+      <div className="relative flex items-center justify-center mb-6">
+        <div className="relative w-36 h-56">
+          {/* Battery Container */}
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-700 flex items-center justify-center overflow-hidden">
+            {/* Battery Fill */}
+            <div
+              className={`absolute bottom-0 left-0 right-0 ${getBarColor()} rounded-b-lg transition-all duration-1000`}
+              style={{ height: `${Math.max(0, Math.min(100, percentage))}%` }}
+            />
+            {/* Percentage Text */}
+            <div className="relative z-10">
+              <span 
+                className="text-5xl font-bold text-white"
+                style={{
+                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.5)'
+                }}
+              >
+                {percentage.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+          {/* Battery Terminal */}
+          <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-8 h-3 bg-gray-300 dark:bg-gray-700 rounded-t" />
+        </div>
+      </div>
+
+      {/* SOC Bar */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm text-gray-600 dark:text-gray-400">SOC</span>
+          <span className={`text-sm font-semibold ${getBatteryColor()}`}>
+            {voltage.toFixed(1)}V
+          </span>
+        </div>
+        <div className="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div
+            className={`h-full ${getBarColor()} transition-all duration-1000`}
+            style={{ width: `${Math.max(0, Math.min(100, percentage))}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BatteryDisplay;
