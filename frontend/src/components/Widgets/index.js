@@ -61,6 +61,6 @@ export {
   DualUnitAnalytics,
   IndividualCellVoltages,
   SystemHealth,
-  PeakLoadTemp,
-  BatteryLog
+  BatteryLog,
+  BatteryStatusInfo
 } from './Battery'

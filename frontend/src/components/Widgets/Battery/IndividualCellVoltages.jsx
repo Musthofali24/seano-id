@@ -7,7 +7,7 @@ const IndividualCellVoltages = ({ selectedVehicle, batteryData = {} }) => {
   const batteryB = vehicleBatteries[2];
 
   // Generate cell voltages (in real app, this would come from API)
-  const generateCellVoltages = (baseVoltage, cellCount = 6) => {
+  const generateCellVoltages = (baseVoltage, cellCount = 9) => {
     const cells = [];
     const avgCellVoltage = baseVoltage / cellCount;
     for (let i = 0; i < cellCount; i++) {
@@ -22,11 +22,11 @@ const IndividualCellVoltages = ({ selectedVehicle, batteryData = {} }) => {
   };
 
   const cellsA = batteryA
-    ? generateCellVoltages(batteryA.voltage || 12.6, 6)
-    : Array.from({ length: 6 }, (_, i) => ({ cell: i + 1, voltage: 2.1 }));
+    ? generateCellVoltages(batteryA.voltage || 12.6, 9)
+    : Array.from({ length: 9 }, (_, i) => ({ cell: i + 1, voltage: 2.1 }));
   const cellsB = batteryB
-    ? generateCellVoltages(batteryB.voltage || 11.9, 6)
-    : Array.from({ length: 6 }, (_, i) => ({ cell: i + 1, voltage: 2.0 }));
+    ? generateCellVoltages(batteryB.voltage || 11.9, 9)
+    : Array.from({ length: 9 }, (_, i) => ({ cell: i + 1, voltage: 2.0 }));
 
   const renderCell = (cell, unit) => {
     const maxVoltage = 2.5;
@@ -61,15 +61,19 @@ const IndividualCellVoltages = ({ selectedVehicle, batteryData = {} }) => {
 
       <div className="grid grid-cols-2 gap-8 lg:gap-12">
         {/* Battery A */}
-        <div>
-          <h4 className="text-sm font-medium text-blue-400 mb-4">BATTERY A (6 CELLS)</h4>
-          <div className="space-y-1">{cellsA.map((cell) => renderCell(cell, "A"))}</div>
+        <div className="flex flex-col">
+          <h4 className="text-sm font-medium text-blue-400 mb-4">BATTERY A (9 CELLS)</h4>
+          <div className="overflow-y-auto max-h-60 custom-scrollbar space-y-1 pr-3">
+            {cellsA.map((cell) => renderCell(cell, "A"))}
+          </div>
         </div>
 
         {/* Battery B */}
-        <div>
-          <h4 className="text-sm font-medium text-cyan-400 mb-4">BATTERY B (6 CELLS)</h4>
-          <div className="space-y-1">{cellsB.map((cell) => renderCell(cell, "B"))}</div>
+        <div className="flex flex-col">
+          <h4 className="text-sm font-medium text-cyan-400 mb-4">BATTERY B (9 CELLS)</h4>
+          <div className="overflow-y-auto max-h-60 custom-scrollbar space-y-1 pr-3">
+            {cellsB.map((cell) => renderCell(cell, "B"))}
+          </div>
         </div>
       </div>
     </div>

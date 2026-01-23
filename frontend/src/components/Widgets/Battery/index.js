@@ -1,6 +1,6 @@
-export { default as BatteryDisplay } from "./BatteryDisplay";
-export { default as DualUnitAnalytics } from "./DualUnitAnalytics";
-export { default as IndividualCellVoltages } from "./IndividualCellVoltages";
-export { default as SystemHealth } from "./SystemHealth";
-export { default as PeakLoadTemp } from "./PeakLoadTemp";
-export { default as BatteryLog } from "./BatteryLog";
+export { default as BatteryDisplay } from './BatteryDisplay'
+export { default as DualUnitAnalytics } from './DualUnitAnalytics'
+export { default as IndividualCellVoltages } from './IndividualCellVoltages'
+export { default as SystemHealth } from './SystemHealth'
+export { default as BatteryLog } from './BatteryLog'
+export { default as BatteryStatusInfo } from './BatteryStatusInfo'

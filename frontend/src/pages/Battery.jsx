@@ -3,13 +3,13 @@ import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
 import useBatteryData from "../hooks/useBatteryData";
 import Title from "../ui/Title";
+import { VehicleDropdown } from "../components/Widgets";
 import {
   BatteryDisplay,
   DualUnitAnalytics,
   IndividualCellVoltages,
-  SystemHealth,
-  PeakLoadTemp,
   BatteryLog,
+  BatteryStatusInfo,
 } from "../components/Widgets/Battery";
 
 const Battery = () => {
@@ -25,6 +25,15 @@ const Battery = () => {
     }
     return vehicles.find((v) => v.id === parseInt(selectedVehicleId)) || vehicles[0] || null;
   }, [selectedVehicleId, vehicles]);
+
+  // Handle vehicle change
+  const handleVehicleChange = (vehicle) => {
+    if (vehicle && vehicle.id) {
+      setSelectedVehicleId(vehicle.id.toString());
+    } else {
+      setSelectedVehicleId("");
+    }
+  };
 
   // Get battery data for selected vehicle
   const vehicleBatteries = batteryData[selectedVehicle?.id] || { 1: null, 2: null };
@@ -48,6 +57,22 @@ const Battery = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <Title title="Battery Monitoring" subtitle="System Batteries Monitoring" />
+        <div className="min-w-[200px]">
+          <VehicleDropdown
+            vehicles={vehicles || []}
+            selectedVehicle={selectedVehicle}
+            onVehicleChange={handleVehicleChange}
+            placeholder={
+              vehicleLoading
+                ? "Loading vehicles..."
+                : !vehicles || vehicles.length === 0
+                ? "No vehicles available"
+                : "Select USV"
+            }
+            className="text-sm"
+            disabled={vehicleLoading}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="grid grid-cols-1 gap-6">
@@ -56,14 +81,16 @@ const Battery = () => {
             <BatteryDisplay unit="B" battery={batteryB} index={1} />
           </div>
           <div className="">
-            <IndividualCellVoltages
+            <BatteryStatusInfo
               selectedVehicle={selectedVehicle}
               batteryData={batteryData}
             />
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <SystemHealth selectedVehicle={selectedVehicle} batteryData={batteryData} />
-            <PeakLoadTemp selectedVehicle={selectedVehicle} batteryData={batteryData} />
+          <div className="">
+            <IndividualCellVoltages
+              selectedVehicle={selectedVehicle}
+              batteryData={batteryData}
+            />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-6">

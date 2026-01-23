@@ -40,7 +40,7 @@ const BatteryDisplay = ({ unit, battery, index }) => {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold dark:text-white text-black">BATTERY {unit}</h3>
         <span
-          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusBg()} ${getStatusColor()}`}
+          className={`px-3 py-1 rounded-full text-xs font-medium border bg-transparent ${getStatusColor()}`}
         >
           {statusDisplay}
         </span>
@@ -48,21 +48,24 @@ const BatteryDisplay = ({ unit, battery, index }) => {
 
       {/* Battery Icon */}
       <div className="relative flex items-center justify-center mb-6">
-        <div className="relative w-36 h-56">
+        <div className="relative w-32 h-56">
           {/* Battery Container */}
-          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-700 flex items-center justify-center overflow-hidden">
-            {/* Battery Fill */}
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-700 overflow-hidden p-2">
+            {/* Battery Fill - dengan padding di semua sisi */}
             <div
-              className={`absolute bottom-0 left-0 right-0 ${getBarColor()} rounded-b-lg transition-all duration-1000`}
-              style={{ height: `${Math.max(0, Math.min(100, percentage))}%` }}
+              className={`absolute ${getBarColor()} rounded-lg transition-all duration-1000`}
+              style={{ 
+                bottom: '0.4rem',
+                left: '0.4rem',
+                right: '0.4rem',
+                height: `calc(${Math.max(0, Math.min(100, percentage))}% - 0.4rem)`,
+                minHeight: percentage > 0 ? '0.5rem' : '0'
+              }}
             />
             {/* Percentage Text */}
-            <div className="relative z-10">
+            <div className="relative z-10 w-full h-full flex items-center justify-center">
               <span 
-                className="text-5xl font-bold text-white"
-                style={{
-                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.5)'
-                }}
+                className="text-4xl font-bold text-white"
               >
                 {percentage.toFixed(0)}%
               </span>

@@ -84,6 +84,38 @@ const BatteryLog = ({ selectedVehicle }) => {
         anomaly: "Critical Load",
         statusType: "drain",
       },
+      {
+        timestamp: "13:45:12",
+        unit: "B",
+        status: "Drain Spike",
+        level: "65%",
+        anomaly: "Critical Load",
+        statusType: "drain",
+      },
+      {
+        timestamp: "13:45:12",
+        unit: "B",
+        status: "Drain Spike",
+        level: "65%",
+        anomaly: "Critical Load",
+        statusType: "drain",
+      },
+      {
+        timestamp: "13:45:12",
+        unit: "B",
+        status: "Drain Spike",
+        level: "65%",
+        anomaly: "Critical Load",
+        statusType: "drain",
+      },
+      {
+        timestamp: "13:45:12",
+        unit: "B",
+        status: "Drain Spike",
+        level: "65%",
+        anomaly: "Critical Load",
+        statusType: "drain",
+      },
     ];
 
     setLogs([...logEntries, ...historicalLogs].slice(0, 10));
@@ -134,49 +166,51 @@ const BatteryLog = ({ selectedVehicle }) => {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-300 dark:border-gray-700">
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">TIMESTAMP</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">UNIT</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">STATUS</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">LEVEL</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">ANOMALY</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log, index) => (
-              <tr
-                key={index}
-                className="border-b border-gray-200 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-              >
-                <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.timestamp}</td>
-                <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.unit}</td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${getStatusColor(log.statusType)}`}
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{log.status}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.level}</td>
-                <td className="py-3 px-4">
-                  <span
-                    className={`text-sm ${
-                      log.anomaly === "None"
-                        ? "text-gray-500 dark:text-gray-400"
-                        : "text-red-500 font-medium"
-                    }`}
-                  >
-                    {log.anomaly}
-                  </span>
-                </td>
+      <div className="relative overflow-x-auto">
+        <div className="overflow-y-auto max-h-96 custom-scrollbar">
+          <table className="w-full">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-black">
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">TIMESTAMP</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">UNIT</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">STATUS</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">LEVEL</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-gray-600 dark:text-gray-400">ANOMALY</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {logs.map((log, index) => (
+                <tr
+                  key={index}
+                  className="border-b border-gray-200 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.timestamp}</td>
+                  <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.unit}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${getStatusColor(log.statusType)}`}
+                      />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{log.status}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{log.level}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`text-sm ${
+                        log.anomaly === "None"
+                          ? "text-gray-500 dark:text-gray-400"
+                          : "text-red-500 font-medium"
+                      }`}
+                    >
+                      {log.anomaly}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

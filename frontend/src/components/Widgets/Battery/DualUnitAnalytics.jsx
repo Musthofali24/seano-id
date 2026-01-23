@@ -81,7 +81,7 @@ const DualUnitAnalytics = ({ selectedVehicle }) => {
       </div>
 
       {/* Chart - No grid, Area Chart with Shadcn styling */}
-      <div className="h-[550px]">
+      <div className="h-[560px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={filteredData}
