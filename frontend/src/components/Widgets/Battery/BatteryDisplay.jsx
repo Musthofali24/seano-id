@@ -9,17 +9,9 @@ const BatteryDisplay = ({ unit, battery, index }) => {
   const getStatusColor = () => {
     const statusLower = status.toLowerCase();
     if (statusLower === "charging") return "text-blue-500";
-    if (statusLower === "active") return "text-orange-500";
-    if (statusLower === "discharging") return "text-green-500";
+    if (statusLower === "active") return "text-green-500";
+    if (statusLower === "discharging") return "text-red-500";
     return "text-gray-500";
-  };
-
-  const getStatusBg = () => {
-    const statusLower = status.toLowerCase();
-    if (statusLower === "charging") return "bg-blue-500/20 border-blue-500/50";
-    if (statusLower === "active") return "bg-orange-500/20 border-orange-500/50";
-    if (statusLower === "discharging") return "bg-green-500/20 border-green-500/50";
-    return "bg-gray-500/20 border-gray-500/50";
   };
 
   const getBatteryColor = () => {

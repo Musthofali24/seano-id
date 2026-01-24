@@ -64,3 +64,6 @@ export {
   BatteryLog,
   BatteryStatusInfo
 } from './Battery'
+
+// DatePicker Widgets
+export { DatePickerField } from './DatePicker'

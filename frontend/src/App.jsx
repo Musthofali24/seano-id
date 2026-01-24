@@ -249,6 +249,7 @@ function App() {
           toggleDarkMode={toggleDarkMode}
           darkMode={darkMode}
           toggleSidebar={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
         />
         <Main
           isSidebarOpen={isSidebarOpen}

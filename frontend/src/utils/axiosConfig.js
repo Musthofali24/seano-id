@@ -14,14 +14,14 @@ function getTokenExpiration (token) {
   }
 }
 
-// Check if token will expire soon (within 5 minutes)
+// Check if token will expire soon (within 15 minutes)
 function shouldRefreshToken (token) {
   const expiration = getTokenExpiration(token)
   if (!expiration) return false
 
   const now = Date.now()
-  const fiveMinutes = 5 * 60 * 1000
-  return expiration - now < fiveMinutes
+  const fifteenMinutes = 15 * 60 * 1000
+  return expiration - now < fifteenMinutes
 }
 
 // Refresh token function
@@ -50,10 +50,16 @@ async function refreshAccessToken () {
       )
 
       const { access_token, refresh_token: newRefreshToken } = response.data
-      localStorage.setItem('access_token', access_token)
+      
+      // Always save the new access token
+      if (access_token) {
+        localStorage.setItem('access_token', access_token)
+      }
 
+      // Always save the new refresh token if provided
       if (newRefreshToken) {
         localStorage.setItem('refresh_token', newRefreshToken)
+        console.log('✅ New refresh token saved')
       }
 
       console.log('✅ Token refreshed successfully')

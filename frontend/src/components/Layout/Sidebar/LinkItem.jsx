@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { NavLink } from "react-router-dom";
 import { useAuthContext } from "../../../hooks/useAuthContext";
+
+const GAP = 8;
 
 const LinkItem = ({
   href,
@@ -13,20 +16,76 @@ const LinkItem = ({
   action,
 }) => {
   const { logout } = useAuthContext();
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipStyle, setTooltipStyle] = useState({});
+  const triggerRef = useRef(null);
 
-  // Handle button action (for logout)
   const handleClick = () => {
     if (type === "button" && action === "logout") {
       logout();
     }
   };
 
+  const updateTooltipPosition = () => {
+    if (!triggerRef.current || !showTooltip) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setTooltipStyle({
+      position: "fixed",
+      left: rect.right + GAP,
+      top: rect.top + rect.height / 2,
+      transform: "translateY(-50%)",
+      zIndex: 9999,
+    });
+  };
+
+  useEffect(() => {
+    if (!showTooltip) return;
+    const run = () => updateTooltipPosition();
+    const id = requestAnimationFrame(run);
+    const onScrollOrResize = () => updateTooltipPosition();
+    window.addEventListener("scroll", onScrollOrResize, true);
+    window.addEventListener("resize", onScrollOrResize);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener("scroll", onScrollOrResize, true);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [showTooltip, isSidebarOpen]);
+
+  const openTooltip = () => {
+    if (!isSidebarOpen && text) setShowTooltip(true);
+  };
+  const closeTooltip = () => setShowTooltip(false);
+
+  const tooltipPortal =
+    showTooltip &&
+    text &&
+    createPortal(
+      <div
+        role="tooltip"
+        className="px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap bg-white text-black shadow-xl ring-1 ring-black/10 dark:bg-black dark:text-white dark:ring-white/20"
+        style={{
+          ...tooltipStyle,
+          visibility: tooltipStyle.left != null ? "visible" : "hidden",
+        }}
+      >
+        {text}
+      </div>,
+      document.body
+    );
+
+  const triggerProps = {
+    ref: triggerRef,
+    onMouseEnter: openTooltip,
+    onMouseLeave: closeTooltip,
+  };
+
   if (type === "button") {
-    // Special styling for logout button
     const isLogout = action === "logout";
     return (
       <li>
         <div
+          {...triggerProps}
           onClick={handleClick}
           className={`flex items-center p-2 rounded-lg gap-2 transition-colors duration-200 cursor-pointer
           ${!isSidebarOpen ? "justify-center" : ""}
@@ -41,6 +100,7 @@ const LinkItem = ({
             {text}
           </span>
         </div>
+        {tooltipPortal}
       </li>
     );
   }
@@ -48,6 +108,7 @@ const LinkItem = ({
   return (
     <li>
       <NavLink
+        {...triggerProps}
         to={href}
         className={({ isActive }) =>
           `flex items-center p-2 rounded-lg gap-2 transition-colors duration-200
@@ -71,6 +132,7 @@ const LinkItem = ({
           </span>
         )}
       </NavLink>
+      {tooltipPortal}
     </li>
   );
 };

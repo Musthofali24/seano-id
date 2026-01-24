@@ -1,11 +1,11 @@
 import { FaMoon, FaSun, FaRegUser, FaRegBell, FaBell } from "react-icons/fa";
-import { HiOutlineMenuAlt2 } from "react-icons/hi";
+import { HiOutlineMenuAlt2, HiX } from "react-icons/hi";
 import { FiLogOut } from "react-icons/fi";
 import SeanoLogo from "../../../assets/logo_seano.webp";
 import { useState, useRef, useEffect } from "react";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 
-const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
+const Header = ({ darkMode, toggleDarkMode, toggleSidebar, isSidebarOpen }) => {
   const { user, logout } = useAuthContext();
   const [time, setTime] = useState(new Date());
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -94,18 +94,22 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar }) => {
     >
       <div className="px-2 py-2 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center justify-start rtl:justify-end">
-            <a href="#" className="flex ms-2 md:me-24 gap-2">
+          <div className="flex items-center justify-start rtl:justify-end gap-2">
+            <a href="#" className="flex gap-2">
               <img src={SeanoLogo} className="w-8" alt="seano_logo" />
               <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white hidden sm:block">
                 SeaPortal
               </span>
             </a>
             <button
-              className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 cursor-pointer"
+              className="inline-flex items-center p-1.5 ml-10 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 cursor-pointer transition-colors"
               onClick={toggleSidebar}
             >
-              <HiOutlineMenuAlt2 className="text-2xl" />
+              {isSidebarOpen ? (
+                <HiX className="text-2xl" />
+              ) : (
+                <HiOutlineMenuAlt2 className="text-2xl" />
+              )}
             </button>
           </div>
           <div className="flex items-center gap-4 relative justify-between">

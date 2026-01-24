@@ -19,50 +19,98 @@ export function AuthProvider({ children }) {
 
   // Periodic token refresh to prevent expiration
   useEffect(() => {
-    // Only set up interval if user is authenticated
-    if (!user) return;
-
     const checkAndRefreshToken = async () => {
       const token = localStorage.getItem("access_token");
-      if (!token) return;
+      const refreshToken = localStorage.getItem("refresh_token");
+      
+      // If no tokens, clear user state
+      if (!token || !refreshToken) {
+        if (user) {
+          setUser(null);
+          localStorage.removeItem("user");
+        }
+        return;
+      }
 
       try {
         // Decode JWT to check expiration
         const payload = JSON.parse(atob(token.split(".")[1]));
         const expiration = payload.exp * 1000; // Convert to milliseconds
         const now = Date.now();
-        const tenMinutes = 10 * 60 * 1000; // 10 minutes
+        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes
 
-        // If token expires in less than 10 minutes, trigger refresh via API call
-        if (expiration - now < tenMinutes) {
-          console.log("⏰ Token expiring soon, triggering refresh...");
-          // Make a simple API call to trigger axios interceptor refresh
+        // If token expires in less than 15 minutes, trigger refresh proactively
+        if (expiration - now < fifteenMinutes) {
+          console.log("⏰ Token expiring soon, proactively refreshing...");
           try {
+            // Make a simple API call to trigger axios interceptor refresh
             await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
+            console.log("✅ Token refreshed successfully");
           } catch (error) {
             // If refresh fails, interceptor will handle logout
-            console.error("Failed to refresh token:", error);
+            console.error("❌ Failed to refresh token:", error);
+            // Clear user state if refresh fails
+            if (error.response?.status === 401) {
+              setUser(null);
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("user");
+            }
           }
         }
       } catch (e) {
         console.error("Failed to decode token:", e);
+        // If token is invalid, clear everything
+        setUser(null);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
       }
     };
 
-    // Check every 5 minutes
-    const interval = setInterval(checkAndRefreshToken, 5 * 60 * 1000);
+    // Check every 2 minutes (more frequent to catch expiration)
+    const interval = setInterval(checkAndRefreshToken, 2 * 60 * 1000);
 
     // Also check immediately
     checkAndRefreshToken();
 
-    return () => clearInterval(interval);
-  }, [user]);
+    // Check when app becomes visible again (user switches tabs back)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkAndRefreshToken();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Check when window regains focus
+    const handleFocus = () => {
+      checkAndRefreshToken();
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []); // Remove user dependency - check based on tokens in localStorage
 
   // Function to check if user is authenticated
   const checkAuth = async () => {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
+      // Try to restore user from localStorage if available
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (e) {
+          localStorage.removeItem("user");
+        }
+      }
       setLoading(false);
       return;
     }
@@ -81,6 +129,7 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
+        setUser(null);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -90,6 +139,17 @@ export function AuthProvider({ children }) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
+        setUser(null);
+      } else {
+        // For network errors, try to restore user from localStorage
+        const savedUser = localStorage.getItem("user");
+        if (savedUser && !user) {
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
       }
     } finally {
       setLoading(false);

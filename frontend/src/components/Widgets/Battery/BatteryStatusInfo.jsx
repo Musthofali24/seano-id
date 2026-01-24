@@ -169,7 +169,7 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
         {/* Uptime */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">Uptime</span>
-          <div className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="text-xl font-semibold text-gray-900 dark:text-white">
             {formatUptime(stats.deviceUptime)}
           </div>
         </div>
