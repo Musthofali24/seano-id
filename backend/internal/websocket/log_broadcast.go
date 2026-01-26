@@ -25,6 +25,7 @@ type VehicleLogData struct {
 	Vehicle             *VehicleInfo `json:"vehicle,omitempty"`
 	BatteryVoltage      *float64     `json:"battery_voltage,omitempty"`
 	BatteryCurrent      *float64     `json:"battery_current,omitempty"`
+	BatteryPercentage   *float64     `json:"battery_percentage,omitempty"`
 	RSSI                *int         `json:"rssi,omitempty"`
 	Mode                *string      `json:"mode,omitempty"`
 	Latitude            *float64     `json:"latitude,omitempty"`

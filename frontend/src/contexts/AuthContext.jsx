@@ -22,7 +22,7 @@ export function AuthProvider({ children }) {
     const checkAndRefreshToken = async () => {
       const token = localStorage.getItem("access_token");
       const refreshToken = localStorage.getItem("refresh_token");
-      
+
       // If no tokens, clear user state
       if (!token || !refreshToken) {
         if (user) {
@@ -37,18 +37,15 @@ export function AuthProvider({ children }) {
         const payload = JSON.parse(atob(token.split(".")[1]));
         const expiration = payload.exp * 1000; // Convert to milliseconds
         const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000; // 15 minutes
+        const fifteenMinutes = 15 * 60 * 1000;
+        const timeUntilExpiry = expiration - now;
 
         // If token expires in less than 15 minutes, trigger refresh proactively
-        if (expiration - now < fifteenMinutes) {
-          console.log("⏰ Token expiring soon, proactively refreshing...");
+        if (timeUntilExpiry < fifteenMinutes) {
           try {
             // Make a simple API call to trigger axios interceptor refresh
             await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
-            console.log("✅ Token refreshed successfully");
           } catch (error) {
-            // If refresh fails, interceptor will handle logout
-            console.error("❌ Failed to refresh token:", error);
             // Clear user state if refresh fails
             if (error.response?.status === 401) {
               setUser(null);
@@ -59,7 +56,6 @@ export function AuthProvider({ children }) {
           }
         }
       } catch (e) {
-        console.error("Failed to decode token:", e);
         // If token is invalid, clear everything
         setUser(null);
         localStorage.removeItem("access_token");
@@ -68,7 +64,7 @@ export function AuthProvider({ children }) {
       }
     };
 
-    // Check every 2 minutes (more frequent to catch expiration)
+    // Check every 2 minutes
     const interval = setInterval(checkAndRefreshToken, 2 * 60 * 1000);
 
     // Also check immediately
@@ -215,7 +211,7 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error("Login error:", error);
       let errorMessage = "Login failed. Please check your credentials.";
-      
+
       // Handle error response
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -236,9 +232,10 @@ export function AuthProvider({ children }) {
           errorMessage = errorData.message;
         }
       } else {
-        errorMessage = error.message || "Network error. Please check your connection.";
+        errorMessage =
+          error.message || "Network error. Please check your connection.";
       }
-      
+
       return { success: false, error: errorMessage };
     }
   };

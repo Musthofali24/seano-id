@@ -39,7 +39,6 @@ async function refreshAccessToken () {
         throw new Error('No refresh token available')
       }
 
-      console.log('🔄 Refreshing access token...')
       const response = await axios.post(
         API_ENDPOINTS.AUTH.REFRESH,
         { refresh_token: refreshToken },
@@ -50,7 +49,7 @@ async function refreshAccessToken () {
       )
 
       const { access_token, refresh_token: newRefreshToken } = response.data
-      
+
       // Always save the new access token
       if (access_token) {
         localStorage.setItem('access_token', access_token)
@@ -59,13 +58,10 @@ async function refreshAccessToken () {
       // Always save the new refresh token if provided
       if (newRefreshToken) {
         localStorage.setItem('refresh_token', newRefreshToken)
-        console.log('✅ New refresh token saved')
       }
 
-      console.log('✅ Token refreshed successfully')
       return access_token
     } catch (error) {
-      console.error('❌ Token refresh failed:', error)
       // Clear tokens and redirect to login
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
@@ -112,6 +108,10 @@ axiosInstance.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config
+
+    console.log(
+      `⚠️ DEBUG: Request error - Status: ${error.response?.status}, URL: ${originalRequest?.url}`
+    )
 
     // If 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {

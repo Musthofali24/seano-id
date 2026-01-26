@@ -219,10 +219,7 @@ const Alerts = () => {
     <div className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <Title
-          title="Alerts"
-          subtitle="Real-time alerts from USV via MQTT/WebSocket"
-        />
+        <Title title="Alerts" subtitle="Real-time alerts from USV" />
         <div className="flex items-center gap-4">
           {/* Clear All Button */}
           {alerts.length > 0 && (

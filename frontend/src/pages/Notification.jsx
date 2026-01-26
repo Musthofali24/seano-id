@@ -218,16 +218,6 @@ const Notification = () => {
           title="Notifications"
           subtitle="Web application notifications and system messages"
         />
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className={`flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-            refreshing ? "animate-pulse" : ""
-          }`}
-        >
-          <FaSync className={refreshing ? "animate-spin" : ""} />
-          Refresh
-        </button>
       </div>
 
       {/* Widget Cards */}

@@ -7,6 +7,7 @@ import { AddVehicleWizard } from "../components/Widgets/Vehicle";
 import { ConfirmModal } from "../components/UI";
 import { getWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
+import { useLogData } from "../hooks/useLogData";
 import axios from "../utils/axiosConfig";
 import { API_ENDPOINTS } from "../config";
 import toast from "../components/ui/toast";
@@ -27,6 +28,9 @@ const Vehicle = () => {
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton = timeoutLoading && loading && vehicles.length === 0;
   const widgetData = getWidgetData(stats, vehicles);
+
+  // Real-time data from WebSocket
+  const { vehicleLogs, ws } = useLogData();
 
   // Fetch vehicles from API
   useEffect(() => {
@@ -50,6 +54,9 @@ const Vehicle = () => {
                 type: vehicle.type || "USV",
                 role: vehicle.role || "Patrol",
                 battery_level: vehicle.battery_level || 0,
+                rssi: vehicle.signal_strength
+                  ? Math.round(vehicle.signal_strength)
+                  : null,
               };
             })
           : [];
@@ -60,16 +67,16 @@ const Vehicle = () => {
         // Calculate stats
         const totalVehicles = processedVehicles.length;
         const onMission = processedVehicles.filter(
-          (v) => v.status === "on_mission"
+          (v) => v.status === "on_mission",
         ).length;
         const online = processedVehicles.filter(
-          (v) => v.status === "idle" || v.status === "on_mission"
+          (v) => v.status === "idle" || v.status === "on_mission",
         ).length;
         const offline = processedVehicles.filter(
-          (v) => v.status === "offline"
+          (v) => v.status === "offline",
         ).length;
         const maintenance = processedVehicles.filter(
-          (v) => v.status === "maintenance"
+          (v) => v.status === "maintenance",
         ).length;
 
         setStats({
@@ -95,6 +102,93 @@ const Vehicle = () => {
     fetchVehicles();
   }, [refreshTrigger]);
 
+  // Update vehicle data with real-time WebSocket data
+  useEffect(() => {
+    if (!vehicleLogs || vehicleLogs.length === 0) return;
+
+    console.log(
+      "🔄 Updating vehicles with WebSocket data:",
+      vehicleLogs.length,
+      "logs",
+    );
+
+    // Group latest logs by vehicle_id
+    const latestLogsByVehicle = {};
+    vehicleLogs.forEach((log) => {
+      const vehicleId = log.vehicle_id;
+      if (
+        !latestLogsByVehicle[vehicleId] ||
+        new Date(log.created_at) >
+          new Date(latestLogsByVehicle[vehicleId].created_at)
+      ) {
+        latestLogsByVehicle[vehicleId] = log;
+      }
+    });
+
+    console.log("📊 Latest logs by vehicle:", latestLogsByVehicle);
+
+    // Update vehicles with latest log data
+    setVehicles((prevVehicles) =>
+      prevVehicles.map((vehicle) => {
+        const latestLog = latestLogsByVehicle[vehicle.id];
+        if (!latestLog) return vehicle;
+
+        console.log(`🚗 Updating vehicle ${vehicle.id}:`, latestLog);
+
+        // Use battery_percentage if available, otherwise calculate from voltage
+        const batteryPercentage = latestLog.battery_percentage
+          ? Math.round(latestLog.battery_percentage)
+          : latestLog.battery_voltage
+            ? Math.round(
+                Math.min(
+                  100,
+                  Math.max(0, ((latestLog.battery_voltage - 11) / 1.6) * 100),
+                ),
+              )
+            : vehicle.battery_level;
+
+        // Use RSSI directly (in dBm)
+        const rssi = latestLog.rssi ?? vehicle.rssi;
+
+        // Format temperature (if it's a number, add unit; if string, use as-is)
+        const temperature = latestLog.temperature_system
+          ? typeof latestLog.temperature_system === "number"
+            ? latestLog.temperature_system
+            : latestLog.temperature_system
+          : vehicle.temperature;
+
+        const updatedVehicle = {
+          ...vehicle,
+          // Update position from GPS coordinates
+          latitude: latestLog.latitude ?? vehicle.latitude,
+          longitude: latestLog.longitude ?? vehicle.longitude,
+          position:
+            latestLog.latitude && latestLog.longitude
+              ? `${latestLog.latitude.toFixed(4)}, ${latestLog.longitude.toFixed(4)}`
+              : vehicle.position,
+
+          // Update battery level
+          battery_level: batteryPercentage,
+
+          // Update RSSI (dBm)
+          rssi: rssi,
+
+          // Update temperature
+          temperature: temperature,
+
+          // Update last seen timestamp
+          last_seen: latestLog.created_at ?? vehicle.last_seen,
+
+          // Update status - set to online/idle if receiving data
+          status: "idle", // Vehicle is online if sending telemetry data
+        };
+
+        console.log(`✅ Updated vehicle ${vehicle.id}:`, updatedVehicle);
+        return updatedVehicle;
+      }),
+    );
+  }, [vehicleLogs]);
+
   // Force refresh vehicle data
   const refreshVehicles = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -108,7 +202,7 @@ const Vehicle = () => {
         // Update existing vehicle
         const response = await axios.put(
           API_ENDPOINTS.VEHICLES.UPDATE(vehicleId),
-          vehicleData
+          vehicleData,
         );
         console.log("Update response:", response.data);
         toast.success("Vehicle updated successfully!");
@@ -116,7 +210,7 @@ const Vehicle = () => {
         // Create new vehicle
         const response = await axios.post(
           API_ENDPOINTS.VEHICLES.CREATE,
-          vehicleData
+          vehicleData,
         );
         console.log("Create response:", response.data);
         toast.success("Vehicle created successfully!");
@@ -224,10 +318,14 @@ const Vehicle = () => {
     setIsDeleting(true);
     try {
       await Promise.all(
-        vehicleToDelete.ids.map((id) => axios.delete(API_ENDPOINTS.VEHICLES.DELETE(id)))
+        vehicleToDelete.ids.map((id) =>
+          axios.delete(API_ENDPOINTS.VEHICLES.DELETE(id)),
+        ),
       );
 
-      toast.success(`${vehicleToDelete.ids.length} vehicle(s) deleted successfully!`);
+      toast.success(
+        `${vehicleToDelete.ids.length} vehicle(s) deleted successfully!`,
+      );
       setShowDeleteModal(false);
       setVehicleToDelete(null);
       refreshVehicles();
@@ -276,6 +374,7 @@ const Vehicle = () => {
         onEdit={handleEditVehicle}
         onDelete={handleDeleteVehicle}
         onBulkDelete={handleBulkDelete}
+        wsConnected={ws && ws.readyState === WebSocket.OPEN}
       />
 
       {/* Vehicle Modal */}
@@ -300,14 +399,16 @@ const Vehicle = () => {
           setShowDeleteModal(false);
           setVehicleToDelete(null);
         }}
-        onConfirm={vehicleToDelete?.isBulk ? handleConfirmBulkDelete : confirmDelete}
+        onConfirm={
+          vehicleToDelete?.isBulk ? handleConfirmBulkDelete : confirmDelete
+        }
         title="Delete Vehicle"
         message={
           vehicleToDelete?.isBulk
             ? `Are you sure you want to delete ${vehicleToDelete.ids.length} vehicle(s)? This action cannot be undone.`
             : vehicleToDelete
-            ? `Are you sure you want to delete "${vehicleToDelete.name}"? This action cannot be undone.`
-            : "Are you sure you want to delete this vehicle?"
+              ? `Are you sure you want to delete "${vehicleToDelete.name}"? This action cannot be undone.`
+              : "Are you sure you want to delete this vehicle?"
         }
         confirmText="Delete"
         cancelText="Cancel"

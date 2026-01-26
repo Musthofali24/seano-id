@@ -1,5 +1,5 @@
 import React from "react";
-import { VehicleDropdown, Dropdown } from "../index";
+import { VehicleDropdown, Dropdown, DatePickerField } from "../index";
 
 const TelemetryFilters = ({
   // Vehicle props
@@ -35,8 +35,8 @@ const TelemetryFilters = ({
             vehicleLoading
               ? "Loading vehicles..."
               : !vehicles || vehicles.length === 0
-              ? "No vehicles available"
-              : "Select USV"
+                ? "No vehicles available"
+                : "Select USV"
           }
           className="text-sm"
           disabled={vehicleLoading}
@@ -53,8 +53,8 @@ const TelemetryFilters = ({
             missionLoading
               ? "Loading missions..."
               : !missions || missions.length === 0
-              ? "No missions available"
-              : "Select Mission"
+                ? "No missions available"
+                : "Select Mission"
           }
           getItemKey={(mission) => mission.id}
           renderItem={(mission) => (
@@ -64,10 +64,10 @@ const TelemetryFilters = ({
                   mission.status === "Active"
                     ? "bg-green-500"
                     : mission.status === "Completed"
-                    ? "bg-blue-500"
-                    : mission.status === "Draft"
-                    ? "bg-orange-500"
-                    : "bg-gray-500"
+                      ? "bg-blue-500"
+                      : mission.status === "Draft"
+                        ? "bg-orange-500"
+                        : "bg-gray-500"
                 }`}
               />
               <span>{mission.title || mission.name}</span>
@@ -80,10 +80,10 @@ const TelemetryFilters = ({
                   mission.status === "Active"
                     ? "bg-green-500"
                     : mission.status === "Completed"
-                    ? "bg-blue-500"
-                    : mission.status === "Draft"
-                    ? "bg-orange-500"
-                    : "bg-gray-500"
+                      ? "bg-blue-500"
+                      : mission.status === "Draft"
+                        ? "bg-orange-500"
+                        : "bg-gray-500"
                 }`}
               />
               <span className="font-medium text-gray-900 dark:text-white">
@@ -98,31 +98,23 @@ const TelemetryFilters = ({
       {/* Date Range Filter */}
       <div className="flex items-center gap-2">
         {/* Start Date */}
-        <div className="relative">
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => onStartDateChange(e.target.value)}
-            className="bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Start Date"
-            max={endDate || new Date().toISOString().split("T")[0]}
-          />
-        </div>
+        <DatePickerField
+          value={startDate}
+          onChange={onStartDateChange}
+          placeholder="Start Date"
+          maxDate={endDate || new Date().toISOString().split("T")[0]}
+        />
 
         {/* Separator */}
         <span className="text-gray-500 dark:text-gray-400 text-sm">to</span>
 
         {/* End Date */}
-        <div className="relative">
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => onEndDateChange(e.target.value)}
-            className="bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="End Date"
-            min={startDate || undefined}
-          />
-        </div>
+        <DatePickerField
+          value={endDate}
+          onChange={onEndDateChange}
+          placeholder="End Date"
+          minDate={startDate || undefined}
+        />
       </div>
     </div>
   );

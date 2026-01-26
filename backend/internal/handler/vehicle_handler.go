@@ -98,6 +98,36 @@ func (h *VehicleHandler) GetAllVehicles(c *fiber.Ctx) error {
 		})
 	}
 
+	// Enrich vehicles with latest telemetry data from vehicle_logs
+	for i := range vehicles {
+		var latestLog model.VehicleLog
+		err := h.db.Where("vehicle_id = ?", vehicles[i].ID).
+			Order("created_at DESC").
+			Limit(1).
+			First(&latestLog).Error
+		
+		if err == nil {
+			// Update vehicle with latest telemetry data
+			if latestLog.BatteryPercentage != nil {
+				vehicles[i].BatteryLevel = latestLog.BatteryPercentage
+			}
+			if latestLog.RSSI != nil {
+				rssi := float64(*latestLog.RSSI)
+				vehicles[i].SignalStrength = &rssi
+			}
+			if latestLog.Latitude != nil {
+				vehicles[i].Latitude = latestLog.Latitude
+			}
+			if latestLog.Longitude != nil {
+				vehicles[i].Longitude = latestLog.Longitude
+			}
+			if latestLog.TemperatureSystem != nil {
+				vehicles[i].Temperature = latestLog.TemperatureSystem
+			}
+			vehicles[i].LastSeen = &latestLog.CreatedAt
+		}
+	}
+
 	return c.JSON(vehicles)
 }
 

@@ -85,11 +85,33 @@ func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message)
 	
 	data := payloadWithCode.CreateVehicleLogRequest
 	
+	// Convert FlexibleString to *string for database
+	var tempSystem *string
+	if data.TemperatureSystem != nil {
+		tempSystem = &data.TemperatureSystem.Value
+	}
+	
+	// Calculate battery_percentage if not provided but battery_voltage exists
+	batteryPercentage := data.BatteryPercentage
+	if batteryPercentage == nil && data.BatteryVoltage != nil {
+		// Convert 11V-12.6V to 0-100%
+		voltage := *data.BatteryVoltage
+		percentage := ((voltage - 11.0) / 1.6) * 100.0
+		if percentage < 0 {
+			percentage = 0
+		}
+		if percentage > 100 {
+			percentage = 100
+		}
+		batteryPercentage = &percentage
+	}
+	
 	// Create vehicle log
 	vehicleLog := &model.VehicleLog{
 		VehicleID:         vehicle.ID,
 		BatteryVoltage:    data.BatteryVoltage,
 		BatteryCurrent:    data.BatteryCurrent,
+		BatteryPercentage: batteryPercentage,
 		RSSI:              data.RSSI,
 		Mode:              data.Mode,
 		Latitude:          data.Latitude,
@@ -103,7 +125,7 @@ func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message)
 		Roll:              data.Roll,
 		Pitch:             data.Pitch,
 		Yaw:               data.Yaw,
-		TemperatureSystem: data.TemperatureSystem,
+		TemperatureSystem: tempSystem,
 	}
 	
 	if err := l.vehicleLogRepo.CreateVehicleLog(vehicleLog); err != nil {
@@ -124,6 +146,7 @@ func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message)
 			},
 			BatteryVoltage:    vehicleLog.BatteryVoltage,
 			BatteryCurrent:    vehicleLog.BatteryCurrent,
+			BatteryPercentage: vehicleLog.BatteryPercentage,
 			RSSI:              vehicleLog.RSSI,
 			Mode:              vehicleLog.Mode,
 			Latitude:          vehicleLog.Latitude,

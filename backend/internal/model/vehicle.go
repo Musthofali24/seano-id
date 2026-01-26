@@ -3,15 +3,24 @@ package model
 import "time"
 
 type Vehicle struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	Code        string    `json:"code" gorm:"type:varchar(50);uniqueIndex;not null"` // Registration code & MQTT topic
-	Name        string    `json:"name" gorm:"type:varchar(100);not null"`
-	Description string    `json:"description" gorm:"type:text"`
-	Status      string    `json:"status" gorm:"type:varchar(20);default:'active'"` // active, inactive, maintenance
-	UserID      uint      `json:"user_id" gorm:"not null;index"`
-	User        *User     `json:"user,omitempty" gorm:"foreignKey:UserID"`
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+	ID             uint       `json:"id" gorm:"primaryKey"`
+	Code           string     `json:"code" gorm:"type:varchar(50);uniqueIndex;not null"` // Registration code & MQTT topic
+	Name           string     `json:"name" gorm:"type:varchar(100);not null"`
+	Description    string     `json:"description" gorm:"type:text"`
+	Status         string     `json:"status" gorm:"type:varchar(20);default:'active'"` // active, inactive, maintenance
+	UserID         uint       `json:"user_id" gorm:"not null;index"`
+	User           *User      `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	
+	// Latest telemetry data (populated from vehicle_logs)
+	BatteryLevel   *float64   `json:"battery_level,omitempty" gorm:"-"`
+	SignalStrength *float64   `json:"signal_strength,omitempty" gorm:"-"`
+	Latitude       *float64   `json:"latitude,omitempty" gorm:"-"`
+	Longitude      *float64   `json:"longitude,omitempty" gorm:"-"`
+	Temperature    *string    `json:"temperature,omitempty" gorm:"-"`
+	LastSeen       *time.Time `json:"last_seen,omitempty" gorm:"-"`
+	
+	CreatedAt      time.Time  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt      time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 type VehicleBattery struct {

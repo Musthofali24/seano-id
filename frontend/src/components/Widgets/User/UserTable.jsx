@@ -16,8 +16,9 @@ const UserTable = ({
 
   const transformedData = userData.map((user) => {
     // Get display name - use username if available, otherwise use email prefix
-    const displayName = user.username || user.email?.split('@')[0] || "Unknown User";
-    
+    const displayName =
+      user.username || user.email?.split("@")[0] || "Unknown User";
+
     return {
       id: user.id,
       email: user.email || "No email",
@@ -34,7 +35,7 @@ const UserTable = ({
         : "Unknown",
       avatar: getInitials(displayName),
       userId: `U${String(user.id).padStart(3, "0")}`,
-      originalUser: user
+      originalUser: user,
     };
   });
 
@@ -59,7 +60,7 @@ const UserTable = ({
   // Handle individual checkbox
   const handleSelectOne = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -149,7 +150,7 @@ const UserTable = ({
       header: "Created",
       accessorKey: "created",
       cell: (row) => (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {row.created}
         </span>
       ),
@@ -158,7 +159,7 @@ const UserTable = ({
       header: "Last Updated",
       accessorKey: "updated",
       cell: (row) => (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {row.updated}
         </span>
       ),
@@ -174,7 +175,7 @@ const UserTable = ({
           {onView && (
             <button
               onClick={() => onView(row)}
-              className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded hover:bg-gray-50 dark:hover:bg-gray-900/20 cursor-pointer"
+              className="inline-flex items-center justify-center p-2 text-white bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
               title="View user"
             >
               <FaEye size={16} />
@@ -183,7 +184,7 @@ const UserTable = ({
           {onEdit && (
             <button
               onClick={() => onEdit(row)}
-              className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer"
+              className="inline-flex items-center justify-center p-2 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
               title="Edit user"
             >
               <FaEdit size={16} />
@@ -192,7 +193,7 @@ const UserTable = ({
           {onDelete && (
             <button
               onClick={() => onDelete(row.id, row.fullName)}
-              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+              className="inline-flex items-center justify-center p-2 text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
               title="Delete user"
             >
               <FaTrash size={16} />

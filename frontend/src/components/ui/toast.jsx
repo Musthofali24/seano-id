@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiCheckCircle,
   FiInfo,
@@ -99,9 +100,15 @@ export const ToastProvider = ({ children }) => {
       {children}
       <div className="pointer-events-none fixed inset-0 z-[99999] flex flex-col items-end px-2 py-4 sm:px-6">
         <div className="flex w-full max-w-sm flex-col gap-3 sm:w-auto">
-          {toasts.map((toastItem) => (
-            <ToastCard key={toastItem.id} toastItem={toastItem} onClose={remove} />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {toasts.map((toastItem) => (
+              <ToastCard
+                key={toastItem.id}
+                toastItem={toastItem}
+                onClose={remove}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </ToastContext.Provider>
@@ -109,7 +116,8 @@ export const ToastProvider = ({ children }) => {
 };
 
 // Base style - same for all variants (black/white based on dark mode)
-const baseStyle = "bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-200 dark:border-gray-800 shadow-lg";
+const baseStyle =
+  "bg-white dark:bg-black text-gray-900 dark:text-white border border-gray-200 dark:border-gray-800 shadow-lg";
 
 const variantIconColor = {
   default: "text-gray-600 dark:text-gray-400",
@@ -133,16 +141,27 @@ const ToastCard = ({ toastItem, onClose }) => {
   const iconColor = variantIconColor[variant] ?? variantIconColor.default;
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 100 }}
+      transition={{
+        duration: 0.3,
+        ease: "easeOut",
+      }}
       className={`pointer-events-auto flex w-full flex-row items-start gap-3 rounded-xl p-4 transition-all duration-200 ease-out sm:w-96 ${baseStyle} font-openSans`}
     >
       {icon && (
-        <span className={`mt-0.5 flex h-6 w-6 items-center justify-center flex-shrink-0 ${iconColor}`}>
+        <span
+          className={`mt-0.5 flex h-6 w-6 items-center justify-center flex-shrink-0 ${iconColor}`}
+        >
           {icon}
         </span>
       )}
       <div className="flex-1 min-w-0">
-        {title && <p className="text-sm font-semibold leading-tight">{title}</p>}
+        {title && (
+          <p className="text-sm font-semibold leading-tight">{title}</p>
+        )}
         {description && (
           <p className="mt-1 text-sm leading-snug opacity-80">{description}</p>
         )}
@@ -166,7 +185,7 @@ const ToastCard = ({ toastItem, onClose }) => {
       >
         <FiX className="h-4 w-4" />
       </button>
-    </div>
+    </motion.div>
   );
 };
 

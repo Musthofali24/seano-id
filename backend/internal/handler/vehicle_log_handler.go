@@ -184,10 +184,31 @@ func (h *VehicleLogHandler) CreateVehicleLog(c *fiber.Ctx) error {
 		})
 	}
 
+	// Convert FlexibleString to *string for database
+	var tempSystem *string
+	if req.TemperatureSystem != nil {
+		tempSystem = &req.TemperatureSystem.Value
+	}
+	
+	// Calculate battery_percentage if not provided but battery_voltage exists
+	batteryPercentage := req.BatteryPercentage
+	if batteryPercentage == nil && req.BatteryVoltage != nil {
+		voltage := *req.BatteryVoltage
+		percentage := ((voltage - 11.0) / 1.6) * 100.0
+		if percentage < 0 {
+			percentage = 0
+		}
+		if percentage > 100 {
+			percentage = 100
+		}
+		batteryPercentage = &percentage
+	}
+	
 	log := &model.VehicleLog{
 		VehicleID:         req.VehicleID,
 		BatteryVoltage:    req.BatteryVoltage,
 		BatteryCurrent:    req.BatteryCurrent,
+		BatteryPercentage: batteryPercentage,
 		RSSI:              req.RSSI,
 		Mode:              req.Mode,
 		Latitude:          req.Latitude,
@@ -201,7 +222,7 @@ func (h *VehicleLogHandler) CreateVehicleLog(c *fiber.Ctx) error {
 		Roll:              req.Roll,
 		Pitch:             req.Pitch,
 		Yaw:               req.Yaw,
-		TemperatureSystem: req.TemperatureSystem,
+		TemperatureSystem: tempSystem,
 	}
 
 	if err := h.vehicleLogRepo.CreateVehicleLog(log); err != nil {

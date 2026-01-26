@@ -18,6 +18,7 @@ const VehicleTable = ({
   onEdit,
   onDelete,
   onBulkDelete,
+  wsConnected = false,
 }) => {
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -45,12 +46,15 @@ const VehicleTable = ({
         ? `${veh.battery_level}%`
         : veh.battery || "0%",
       batteryLevel: veh.battery_level || 0,
-      signal: veh.signal_strength
-        ? `${veh.signal_strength}%`
-        : veh.signal || "0%",
+      signal: veh.rssi ? `${veh.rssi} dBm` : "N/A",
+      rssi: veh.rssi || null,
       temperature: veh.temperature
-        ? `${veh.temperature}°C`
-        : veh.temperature || "0°C",
+        ? typeof veh.temperature === "number"
+          ? `${veh.temperature}°C`
+          : veh.temperature.includes("°")
+            ? veh.temperature
+            : `${veh.temperature}°C`
+        : "0°C",
       lastSeen: veh.last_seen
         ? new Date(veh.last_seen).toLocaleString()
         : veh.lastSeen || "Unknown",
@@ -105,7 +109,7 @@ const VehicleTable = ({
   // Handle individual checkbox
   const handleSelectOne = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -178,7 +182,7 @@ const VehicleTable = ({
       header: "Position",
       accessorKey: "position",
       cell: (row) => (
-        <span className="text-xs text-gray-600 dark:text-gray-400">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
           {row.position}
         </span>
       ),
@@ -215,7 +219,7 @@ const VehicleTable = ({
       header: "Last Seen",
       accessorKey: "lastSeen",
       cell: (row) => (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {row.lastSeen}
         </span>
       ),
@@ -230,14 +234,14 @@ const VehicleTable = ({
         <div className="flex items-center justify-center gap-3 w-full h-full">
           <button
             onClick={() => onEdit(row)}
-            className="inline-flex items-center justify-center p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="inline-flex items-center justify-center p-2 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
             title="Edit vehicle"
           >
             <FaEdit size={16} />
           </button>
           <button
             onClick={() => onDelete(row.id, row.name)}
-            className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="inline-flex items-center justify-center p-2 text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
             title="Delete vehicle"
           >
             <FaTrash size={16} />
@@ -248,7 +252,7 @@ const VehicleTable = ({
   ];
 
   return (
-    <DataCard title="Vehicle Record">
+    <DataCard title="Vehicle List">
       {selectedIds.length > 0 && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
           <span className="text-sm text-gray-700 dark:text-gray-300">

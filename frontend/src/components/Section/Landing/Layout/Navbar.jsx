@@ -112,7 +112,7 @@ const Navbar = () => {
 
               {/* CTA Button */}
               <a
-                href="#get-started"
+                href="/auth/login"
                 className="relative px-6 py-2.5 text-white rounded-full font-medium shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-500 ease-in-out inline-block overflow-hidden bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_100%] bg-left hover:bg-right"
               >
                 Get it Now

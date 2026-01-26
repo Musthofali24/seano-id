@@ -1,5 +1,5 @@
 import React from "react";
-import { VehicleDropdown, Dropdown } from "../index";
+import { VehicleDropdown, Dropdown, DatePickerField } from "../index";
 
 const DataFilters = ({
   vehicles = [],
@@ -54,7 +54,7 @@ const DataFilters = ({
     <>
       <div
         className={`w-3 h-3 rounded-full ${getMissionStatusColor(
-          mission.status
+          mission.status,
         )}`}
       />
       <span className="font-medium text-gray-900 dark:text-white">
@@ -68,7 +68,7 @@ const DataFilters = ({
     <>
       <div
         className={`w-3 h-3 rounded-full ${getMissionStatusColor(
-          mission.status
+          mission.status,
         )}`}
       />
       <div className="flex-1">
@@ -148,12 +148,12 @@ const DataFilters = ({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Start Date
             </label>
-            <input
-              type="date"
+            <DatePickerField
               value={filters.startDate || ""}
-              onChange={(e) => onFilterChange("startDate", e.target.value)}
-              className="w-full bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(value) => onFilterChange("startDate", value)}
               placeholder="Start Date"
+              maxDate={filters.endDate || undefined}
+              className="w-full"
             />
           </div>
 
@@ -162,12 +162,12 @@ const DataFilters = ({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               End Date
             </label>
-            <input
-              type="date"
+            <DatePickerField
               value={filters.endDate || ""}
-              onChange={(e) => onFilterChange("endDate", e.target.value)}
-              className="w-full bg-white dark:bg-transparent border border-gray-300 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(value) => onFilterChange("endDate", value)}
               placeholder="End Date"
+              minDate={filters.startDate || undefined}
+              className="w-full"
             />
           </div>
 
