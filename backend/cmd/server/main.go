@@ -145,7 +145,7 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://72.61.141.126:5177,http://localhost:5173,http://localhost:5177",
+		AllowOrigins:     "http://72.61.141.126:5177,http://localhost:5173,http://localhost:5177,https://seano.cloud,https://api.seano.cloud",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
 		AllowCredentials: true,
