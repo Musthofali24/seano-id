@@ -52,10 +52,7 @@ const Sensor = () => {
 
   const handleUpdateSensor = async (sensorData) => {
     try {
-      await axios.put(
-        API_ENDPOINTS.SENSORS.UPDATE(editData.id),
-        sensorData,
-      );
+      await axios.put(API_ENDPOINTS.SENSORS.UPDATE(editData.id), sensorData);
       toast.success("Sensor updated successfully!");
       fetchSensors();
       setShowEditSensorModal(false);
@@ -73,7 +70,7 @@ const Sensor = () => {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-    
+
     try {
       await axios.delete(API_ENDPOINTS.SENSORS.DELETE(deleteTarget.id));
       toast.success("Sensor deleted successfully!");
@@ -93,12 +90,16 @@ const Sensor = () => {
 
   const handleConfirmBulkDelete = async () => {
     if (!deleteTarget || !deleteTarget.ids) return;
-    
+
     try {
       await Promise.all(
-        deleteTarget.ids.map((id) => axios.delete(API_ENDPOINTS.SENSORS.DELETE(id))),
+        deleteTarget.ids.map((id) =>
+          axios.delete(API_ENDPOINTS.SENSORS.DELETE(id)),
+        ),
       );
-      toast.success(`${deleteTarget.ids.length} sensor(s) deleted successfully!`);
+      toast.success(
+        `${deleteTarget.ids.length} sensor(s) deleted successfully!`,
+      );
       setShowDeleteModal(false);
       setDeleteTarget(null);
       fetchSensors();
@@ -122,7 +123,7 @@ const Sensor = () => {
           title="Sensor Management"
           subtitle="Manage and monitor all sensor devices"
         />
-        {hasPermission("sensors.manage") && (
+        {hasPermission("sensor.manage") && (
           <button
             onClick={() => setShowAddSensorModal(true)}
             className="font-semibold flex items-center gap-4 px-3 py-2 rounded-lg text-white hover:bg-blue-700 transition duration-300 cursor-pointer hover:shadow-lg hover:shadow-fourth/50 bg-fourth dark:hover:bg-blue-700"
@@ -176,9 +177,15 @@ const Sensor = () => {
           setShowDeleteModal(false);
           setDeleteTarget(null);
         }}
-        onConfirm={deleteTarget?.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+        onConfirm={
+          deleteTarget?.isBulk ? handleConfirmBulkDelete : handleConfirmDelete
+        }
         title="Delete Sensor"
-        itemName={deleteTarget?.isBulk ? `${deleteTarget.ids.length} sensor(s)` : deleteTarget?.name}
+        itemName={
+          deleteTarget?.isBulk
+            ? `${deleteTarget.ids.length} sensor(s)`
+            : deleteTarget?.name
+        }
         itemType="sensor"
       />
     </div>

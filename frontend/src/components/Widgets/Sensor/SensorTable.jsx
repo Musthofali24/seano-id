@@ -3,6 +3,7 @@ import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { DataTable } from "../../UI";
 import DataCard from "../DataCard";
 import { SensorTableSkeleton } from "../../Skeleton";
+import { usePermission } from "../../../hooks/usePermission";
 
 const SensorTable = ({
   sensorData,
@@ -12,6 +13,7 @@ const SensorTable = ({
   onView,
   onBulkDelete,
 }) => {
+  const { hasPermission } = usePermission();
   const [selectedIds, setSelectedIds] = useState([]);
 
   const transformedData = sensorData.map((sensor) => {
@@ -66,50 +68,55 @@ const SensorTable = ({
 
   // Define columns for DataTable
   const columns = [
-    {
-      header: (
-        <input
-          type="checkbox"
-          checked={
-            selectedIds.length === transformedData.length &&
-            transformedData.length > 0
-          }
-          onChange={handleSelectAll}
-          className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
-          style={{
-            backgroundImage:
-              selectedIds.length === transformedData.length &&
-              transformedData.length > 0
-                ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
-                : "none",
-            backgroundSize: "100% 100%",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-      ),
-      accessorKey: "checkbox",
-      className: "w-12 text-center",
-      cellClassName: "text-center",
-      sortable: false,
-      cell: (row) => (
-        <input
-          type="checkbox"
-          checked={selectedIds.includes(row.id)}
-          onChange={() => handleSelectOne(row.id)}
-          onClick={(e) => e.stopPropagation()}
-          className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
-          style={{
-            backgroundImage: selectedIds.includes(row.id)
-              ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
-              : "none",
-            backgroundSize: "100% 100%",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        />
-      ),
-    },
+    // Only show checkbox column if user has permission
+    ...(hasPermission("sensors.manage")
+      ? [
+          {
+            header: (
+              <input
+                type="checkbox"
+                checked={
+                  selectedIds.length === transformedData.length &&
+                  transformedData.length > 0
+                }
+                onChange={handleSelectAll}
+                className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
+                style={{
+                  backgroundImage:
+                    selectedIds.length === transformedData.length &&
+                    transformedData.length > 0
+                      ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
+                      : "none",
+                  backgroundSize: "100% 100%",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+            ),
+            accessorKey: "checkbox",
+            className: "w-12 text-center",
+            cellClassName: "text-center",
+            sortable: false,
+            cell: (row) => (
+              <input
+                type="checkbox"
+                checked={selectedIds.includes(row.id)}
+                onChange={() => handleSelectOne(row.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="appearance-none w-4 h-4 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-fourth cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-fourth focus:ring-offset-0 hover:border-gray-400 dark:hover:border-gray-500 checked:bg-fourth checked:border-fourth dark:checked:bg-fourth dark:checked:border-fourth checked:hover:bg-blue-700 dark:checked:hover:bg-blue-700"
+                style={{
+                  backgroundImage: selectedIds.includes(row.id)
+                    ? "url(\"data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e\")"
+                    : "none",
+                  backgroundSize: "100% 100%",
+                  backgroundPosition: "center",
+                  backgroundRepeat: "no-repeat",
+                }}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       header: "Sensor",
       accessorKey: "name",
@@ -191,7 +198,7 @@ const SensorTable = ({
               <FaEye size={16} />
             </button>
           )}
-          {onEdit && (
+          {onEdit && hasPermission("sensors.manage") && (
             <button
               onClick={() => onEdit(row)}
               className="inline-flex items-center justify-center p-2 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
@@ -200,7 +207,7 @@ const SensorTable = ({
               <FaEdit size={16} />
             </button>
           )}
-          {onDelete && (
+          {onDelete && hasPermission("sensors.manage") && (
             <button
               onClick={() => onDelete(row.id, row.name)}
               className="inline-flex items-center justify-center p-2 text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
@@ -216,7 +223,7 @@ const SensorTable = ({
 
   return (
     <DataCard title="Sensor Management">
-      {selectedIds.length > 0 && (
+      {selectedIds.length > 0 && hasPermission("sensors.manage") && (
         <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
           <span className="text-sm text-gray-700 dark:text-gray-300">
             <span className="font-semibold text-fourth">

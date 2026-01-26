@@ -18,7 +18,6 @@ import {
 import {
   TbGps,
   TbArrowsUpDown,
-  TbSettings,
   TbSpeedboat,
   TbRouteSquare,
   TbCompass,
@@ -32,7 +31,6 @@ import {
   FaShip,
   FaArrowRight,
   FaWrench,
-  FaLocationDot,
   FaUser,
   FaRoute,
   FaBell,
@@ -45,11 +43,12 @@ import {
   FaEye,
   FaPen,
   FaTrash,
+  FaRegUser,
 } from "react-icons/fa6";
 import { HiOutlineStatusOffline, HiOutlineStatusOnline } from "react-icons/hi";
 import { RiRouteLine, RiShieldUserLine, RiUser3Line } from "react-icons/ri";
 import { LuUserCog } from "react-icons/lu";
-import { IoGameController, IoLocationOutline } from "react-icons/io5";
+import { IoGameController } from "react-icons/io5";
 
 const sizeIcon = 18;
 
@@ -216,7 +215,7 @@ export const menuGroups = [
 export const linksbottom = [
   {
     href: "/profile",
-    icon: FaUser,
+    icon: FaRegUser,
     text: "Profile",
     size: sizeIcon,
     type: "link",

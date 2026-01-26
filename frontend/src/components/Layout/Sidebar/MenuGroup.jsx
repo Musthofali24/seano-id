@@ -25,7 +25,7 @@ const MenuGroup = ({
   useEffect(() => {
     localStorage.setItem(
       `menuGroup_${title}_expanded`,
-      JSON.stringify(isExpanded)
+      JSON.stringify(isExpanded),
     );
   }, [isExpanded, title]);
 
@@ -47,12 +47,18 @@ const MenuGroup = ({
 
       // Check permission if required
       if (item.requiredPermission && !hasPermission(item.requiredPermission)) {
+        console.log(
+          `❌ ${title} - ${item.text}: Missing permission "${item.requiredPermission}"`,
+        );
         return false;
       }
 
+      console.log(
+        `✅ ${title} - ${item.text}: Has permission "${item.requiredPermission}"`,
+      );
       return true;
     });
-  }, [user, items, hasPermission]);
+  }, [user, items, hasPermission, title]);
 
   // Don't show group if no items available or admin-only group for non-admins
   if (adminOnly && user?.role?.toLowerCase() !== "admin") {

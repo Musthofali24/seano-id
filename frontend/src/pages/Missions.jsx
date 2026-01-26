@@ -6,6 +6,7 @@ import {
   MissionSuccessRate,
   MissionLogs,
   MissionStats,
+  MissionTable,
 } from "../components/Widgets/Mission";
 import useVehicleData from "../hooks/useVehicleData";
 
@@ -43,6 +44,11 @@ const Mission = () => {
           onStartDateChange={setStartDate}
           onEndDateChange={setEndDate}
         />
+      </div>
+
+      {/* Mission Table - Detail View */}
+      <div className="">
+        <MissionTable />
       </div>
     </div>
   );

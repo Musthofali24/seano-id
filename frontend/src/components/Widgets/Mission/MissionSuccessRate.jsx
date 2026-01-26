@@ -1,14 +1,19 @@
 import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import useMissionData from "../../../hooks/useMissionData";
 
 const MissionSuccessRate = () => {
-  // Sample data - matching the image
-  const completed = 1120;
-  const ongoing = 42;
-  const failed = 12;
-  const total = completed + ongoing + failed;
-  // Success rate calculation: (completed / total) * 100, rounded to match image (88%)
-  const successRate = 88; // Fixed to match image
+  const { stats, loading } = useMissionData();
+
+  // Calculate from real data
+  const completed = stats?.completed || 0;
+  const ongoing = stats?.ongoing || 0;
+  const failed = stats?.failed || 0;
+  const draft = stats?.total - (completed + ongoing + failed) || 0;
+  const total = stats?.total || 0;
+
+  // Success rate calculation: (completed / total) * 100
+  const successRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   const data = [
     { name: "Completed", value: completed, color: "#3B82F6" },
@@ -52,8 +57,12 @@ const MissionSuccessRate = () => {
           </ResponsiveContainer>
           {/* Center Text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-5xl font-bold text-black dark:text-white">{successRate}%</div>
-            <div className="text-sm text-gray-400 mt-1">{getStatusLabel(successRate)}</div>
+            <div className="text-5xl font-bold text-black dark:text-white">
+              {successRate}%
+            </div>
+            <div className="text-sm text-gray-400 mt-1">
+              {getStatusLabel(successRate)}
+            </div>
           </div>
         </div>
 
@@ -66,13 +75,29 @@ const MissionSuccessRate = () => {
                   className="w-4 h-4 rounded"
                   style={{ backgroundColor: item.color }}
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">{item.name}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {item.name}
+                </span>
               </div>
               <span className="text-sm font-semibold text-black dark:text-white">
                 {item.value.toLocaleString()}
               </span>
             </div>
           ))}
+          {/* Draft missions row */}
+          {draft > 0 && (
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-gray-400" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Draft
+                </span>
+              </div>
+              <span className="text-sm font-semibold text-black dark:text-white">
+                {draft.toLocaleString()}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

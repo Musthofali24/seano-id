@@ -1,12 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { API_ENDPOINTS } from '../config'
 import axios from '../utils/axiosConfig'
+import config from '../config'
 
 const useMissionData = () => {
   const [missionData, setMissionData] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [lastUpdated, setLastUpdated] = useState(null)
+  const [stats, setStats] = useState({
+    total_missions: 0,
+    ongoing_missions: 0,
+    completed_missions: 0,
+    failed_missions: 0
+  })
+  const wsRef = useRef(null)
 
   const fetchMissionData = async () => {
     try {
@@ -82,15 +90,120 @@ const useMissionData = () => {
     }
   }
 
-  // Fetch data saat hook pertama kali dimuat
+  // Fetch mission stats
+  const fetchMissionStats = async () => {
+    try {
+      const response = await axios.get(
+        API_ENDPOINTS.MISSIONS.STATS || '/missions/stats'
+      )
+      setStats(response.data)
+    } catch (err) {
+      console.error('Error fetching mission stats:', err)
+    }
+  }
+
+  // Format time elapsed
+  const formatTimeElapsed = seconds => {
+    if (!seconds) return '00h 00m 00s'
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(
+      2,
+      '0'
+    )}m ${String(secs).padStart(2, '0')}s`
+  }
+
+  // Calculate energy status
+  const getEnergyStatus = mission => {
+    if (!mission.energy_budget) return 'N/A'
+
+    if (mission.status === 'Completed' || mission.status === 'Failed') {
+      return `${mission.energy_consumed?.toFixed(1) || 0} kWh used`
+    }
+
+    return `${mission.energy_consumed?.toFixed(1) || 0}/${
+      mission.energy_budget?.toFixed(1) || 0
+    } kWh`
+  }
+
+  // Fetch data saat hook pertama kali dimuat dan setup WebSocket
   useEffect(() => {
     fetchMissionData()
+    fetchMissionStats()
+
+    // Setup WebSocket untuk real-time updates
+    const connectWebSocket = () => {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const wsUrl = `${
+        config.wsBaseUrl || 'ws://localhost:8080'
+      }/ws/missions?token=${token}`
+
+      wsRef.current = new WebSocket(wsUrl)
+
+      wsRef.current.onopen = () => {
+        console.log('Mission WebSocket connected')
+      }
+
+      wsRef.current.onmessage = event => {
+        try {
+          const data = JSON.parse(event.data)
+
+          if (data.message_type === 'mission_progress') {
+            // Update mission in the list
+            setMissionData(prevMissions =>
+              prevMissions.map(mission =>
+                mission.id === data.mission_id
+                  ? {
+                      ...mission,
+                      progress: data.progress,
+                      energy_consumed: data.energy_consumed,
+                      time_elapsed: data.time_elapsed,
+                      current_waypoint: data.current_waypoint,
+                      completed_waypoint: data.completed_waypoint,
+                      status: data.status,
+                      last_update_time: data.timestamp
+                    }
+                  : mission
+              )
+            )
+
+            // Refresh stats if status changed
+            if (data.status === 'Completed' || data.status === 'Failed') {
+              fetchMissionStats()
+            }
+          }
+        } catch (err) {
+          console.error('Error parsing WebSocket message:', err)
+        }
+      }
+
+      wsRef.current.onerror = error => {
+        console.error('Mission WebSocket error:', error)
+      }
+
+      wsRef.current.onclose = () => {
+        console.log('Mission WebSocket disconnected, reconnecting...')
+        setTimeout(connectWebSocket, 3000)
+      }
+    }
+
+    connectWebSocket()
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Function untuk manual refresh
   const refreshData = () => {
     fetchMissionData()
+    fetchMissionStats()
   }
 
   // Function untuk create mission
@@ -206,11 +319,13 @@ const useMissionData = () => {
     }))
   }
 
-  // Statistics
-  const stats = {
-    total: missionData.length,
+  // Statistics (combine API stats with calculated stats)
+  const combinedStats = {
+    total: stats.total_missions || missionData.length,
+    ongoing: stats.ongoing_missions || getActiveMissions().length,
+    completed: stats.completed_missions || getCompletedMissions().length,
+    failed: stats.failed_missions || getFailedMissions().length,
     active: getActiveMissions().length,
-    completed: getCompletedMissions().length,
     totalDistance: missionData.reduce(
       (sum, mission) => sum + (mission.distance || 0),
       0
@@ -243,7 +358,9 @@ const useMissionData = () => {
     getCompletedMissions,
     getFailedMissions,
     getVehicleAnalytics,
-    stats
+    stats: combinedStats,
+    formatTimeElapsed,
+    getEnergyStatus
   }
 }
 

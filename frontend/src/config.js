@@ -4,6 +4,13 @@ export const API_BASE_URL =
 // WebSocket URL (same as API but with ws/wss protocol)
 export const WS_URL = API_BASE_URL.replace(/^http/, 'ws')
 
+const config = {
+  apiBaseUrl: API_BASE_URL,
+  wsBaseUrl: WS_URL
+}
+
+export default config
+
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_BASE_URL}/auth/login`,
@@ -126,7 +133,9 @@ export const API_ENDPOINTS = {
     BY_ID: id => `${API_BASE_URL}/missions/${id}`,
     UPDATE: id => `${API_BASE_URL}/missions/${id}`,
     DELETE: id => `${API_BASE_URL}/missions/${id}`,
-    STATS: `${API_BASE_URL}/missions/stats`
+    STATS: `${API_BASE_URL}/missions/stats`,
+    ONGOING: `${API_BASE_URL}/missions/ongoing`,
+    UPDATE_PROGRESS: id => `${API_BASE_URL}/missions/${id}/progress`
   }
 }
 
