@@ -8,7 +8,7 @@ import {
   FaBatteryEmpty,
 } from "react-icons/fa";
 import { useState } from "react";
-import { DataTable } from "../../UI";
+import { DataTable } from "../../ui";
 import DataCard from "../DataCard";
 import { VehicleTableSkeleton } from "../../Skeleton";
 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaMoon, FaSun, FaCheckCircle, FaExclamationCircle, FaInfoCircle } from "react-icons/fa";
 import SeanoLogo from "../../assets/logo_seano.webp";
 import useAuth from "../../hooks/useAuth";
-import { LoadingDots } from "../../components/UI";
+import { LoadingDots } from "../../components/ui";
 
 export default function EmailRegistration({ darkMode, toggleDarkMode }) {
   const [email, setEmail] = useState("");

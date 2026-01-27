@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import toast from "../../ui/toast";
+import { toast } from "../../ui";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 import axiosInstance from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";
-import { WizardModal } from "../../UI";
+import { WizardModal } from "../../ui";
 
 const AddVehicleWizard = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState(1);
@@ -74,7 +74,7 @@ const AddVehicleWizard = ({ isOpen, onClose, onSuccess }) => {
           name: formData.name,
           code: formData.code,
           description: formData.description,
-        }
+        },
       );
 
       const newVehicleId = vehicleResponse.data.id;
@@ -85,8 +85,8 @@ const AddVehicleWizard = ({ isOpen, onClose, onSuccess }) => {
             API_ENDPOINTS.VEHICLES.ASSIGN_SENSOR(newVehicleId),
             {
               sensor_id: sensorId,
-            }
-          )
+            },
+          ),
         );
         await Promise.all(assignPromises);
       }

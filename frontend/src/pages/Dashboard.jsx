@@ -13,7 +13,7 @@ import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
 import useMissionData from "../hooks/useMissionData";
 import useNotificationData from "../hooks/useNotificationData";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { getOverviewCardsData } from "../constant";

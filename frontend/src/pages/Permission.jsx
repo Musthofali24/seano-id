@@ -10,8 +10,7 @@ import {
 import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import usePermissionData from "../hooks/usePermissionData";
 import { API_ENDPOINTS } from "../config";
-import { Title } from "../ui";
-import toast from "../components/ui/toast";
+import { Title, toast } from "../components/ui";
 
 const Permission = () => {
   useTitle("Permission");
@@ -65,7 +64,7 @@ const Permission = () => {
     if (!selectedPermission) return;
 
     if (selectedPermission.isBulk) return;
-    
+
     const result = await actions.deletePermission(selectedPermission.id);
     if (result.success) {
       toast.success("Permission deleted successfully!");
@@ -80,12 +79,15 @@ const Permission = () => {
     // Fetch full permission data with timestamps
     try {
       const token = localStorage.getItem("access_token");
-      const response = await fetch(API_ENDPOINTS.PERMISSIONS.BY_ID(permission.id), {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+      const response = await fetch(
+        API_ENDPOINTS.PERMISSIONS.BY_ID(permission.id),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         },
-      });
+      );
       if (response.ok) {
         const fullPermission = await response.json();
         setSelectedPermission(fullPermission);
@@ -109,12 +111,14 @@ const Permission = () => {
 
   const handleConfirmBulkDelete = async () => {
     if (!selectedPermission || !selectedPermission.ids) return;
-    
+
     try {
       for (const id of selectedPermission.ids) {
         await actions.deletePermission(id);
       }
-      toast.success(`${selectedPermission.ids.length} permission(s) deleted successfully!`);
+      toast.success(
+        `${selectedPermission.ids.length} permission(s) deleted successfully!`,
+      );
       setShowDeleteModal(false);
       setSelectedPermission(null);
       actions.refreshData();
@@ -193,9 +197,17 @@ const Permission = () => {
             setShowDeleteModal(false);
             setSelectedPermission(null);
           }}
-          onConfirm={selectedPermission.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+          onConfirm={
+            selectedPermission.isBulk
+              ? handleConfirmBulkDelete
+              : handleConfirmDelete
+          }
           title="Delete Permission"
-          itemName={selectedPermission.isBulk ? `${selectedPermission.ids.length} permission(s)` : selectedPermission.name}
+          itemName={
+            selectedPermission.isBulk
+              ? `${selectedPermission.ids.length} permission(s)`
+              : selectedPermission.name
+          }
           itemType="permission"
         />
       )}

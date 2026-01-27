@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
-import { DataTable } from "../../UI";
+import { DataTable } from "../../ui";
 import DataCard from "../DataCard";
 import { SensorTypeTableSkeleton } from "../../Skeleton";
 

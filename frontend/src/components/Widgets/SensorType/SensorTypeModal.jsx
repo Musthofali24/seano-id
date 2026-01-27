@@ -1,4 +1,4 @@
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const SensorTypeModal = ({ isOpen, onClose, onSubmit, editData }) => {
   const isEditMode = !!editData;

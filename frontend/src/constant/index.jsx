@@ -14,6 +14,7 @@ import {
   MdSpeed,
   MdNavigation,
   MdSignalCellular4Bar,
+  MdOutlineSensors,
 } from "react-icons/md";
 import {
   TbGps,
@@ -52,7 +53,6 @@ import { IoGameController } from "react-icons/io5";
 
 const sizeIcon = 18;
 
-// Dashboard menu (root level)
 export const dashboardLink = {
   href: "/dashboard",
   icon: FaChartBar,
@@ -60,7 +60,6 @@ export const dashboardLink = {
   size: sizeIcon,
 };
 
-// Grouped menu items
 export const menuGroups = [
   {
     title: "Data Operations",
@@ -114,6 +113,13 @@ export const menuGroups = [
     title: "Data Monitoring",
     userOnly: true,
     items: [
+      {
+        href: "/sensor-monitoring",
+        icon: MdOutlineSensors,
+        text: "Sensor Monitoring",
+        size: sizeIcon,
+        requiredPermission: "sensor-monitoring.read",
+      },
       {
         href: "/battery",
         icon: FaBatteryHalf,

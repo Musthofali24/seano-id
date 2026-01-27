@@ -15,8 +15,7 @@ import useVehicleData from "./hooks/useVehicleData";
 
 // Layout Components
 import { Header, Sidebar } from "./components/Layout";
-import Content from "./ui/Content";
-import Main from "./ui/Main";
+import { Content, Main } from "./components/ui";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -51,6 +50,7 @@ import ErrorPage from "./components/Error/ErrorPage";
 import MissionPlanner from "./pages/Missions";
 import Mission from "./pages/Missions";
 import MissionsPlanner from "./pages/MissionPlanner";
+import SensorMonitoring from "./pages/SensorMonitoring";
 
 function App() {
   const location = useLocation();
@@ -130,6 +130,7 @@ function App() {
     "/tracking",
     "/missions",
     "/mission-planner",
+    "/sensor-monitoring",
     "/telemetry",
     "/control",
     "/battery",
@@ -300,6 +301,17 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MissionsPlanner
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sensor-monitoring"
+                element={
+                  <ProtectedRoute>
+                    <SensorMonitoring
                       darkMode={darkMode}
                       isSidebarOpen={isSidebarOpen}
                     />

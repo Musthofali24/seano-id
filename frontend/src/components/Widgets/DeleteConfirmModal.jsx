@@ -1,4 +1,4 @@
-import { Modal } from "../UI";
+import { Modal } from "../ui";
 
 const DeleteConfirmModal = ({
   isOpen,
@@ -39,4 +39,3 @@ const DeleteConfirmModal = ({
 };
 
 export default DeleteConfirmModal;
-

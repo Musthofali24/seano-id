@@ -1,9 +1,9 @@
 import { useState } from "react";
 import useTitle from "../hooks/useTitle";
 import useNotificationData from "../hooks/useNotificationData";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { WidgetCard } from "../components/Widgets";
-import { DataTable } from "../components/UI";
+import { DataTable } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import {

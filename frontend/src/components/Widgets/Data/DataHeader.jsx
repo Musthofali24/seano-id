@@ -1,6 +1,6 @@
 import React from "react";
 import { FaDownload, FaUpload, FaSync } from "react-icons/fa";
-import Title from "../../../ui/Title";
+import { Title } from "../../ui";
 
 const DataHeader = ({
   onRefreshData = () => {},

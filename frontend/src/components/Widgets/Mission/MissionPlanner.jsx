@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import useTitle from "../../../hooks/useTitle";
 import useMissionData from "../../../hooks/useMissionData";
-import toast from "../../ui/toast";
+import { toast } from "../../ui";
 import {
   calculateTotalDistance,
   calculateEstimatedTime,

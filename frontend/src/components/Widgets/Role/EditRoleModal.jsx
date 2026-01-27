@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const EditRoleModal = ({ isOpen, onClose, onSubmit, role, permissionData = [] }) => {
   const [selectedPermissions, setSelectedPermissions] = useState([]);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 
 const VehicleModal = ({ isOpen, onClose, onSubmit, editData = null }) => {

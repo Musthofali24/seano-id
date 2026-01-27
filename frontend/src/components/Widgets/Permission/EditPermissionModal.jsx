@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const EditPermissionModal = ({ isOpen, onClose, onSubmit, permission }) => {
   const [formData, setFormData] = useState({

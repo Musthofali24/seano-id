@@ -1,13 +1,17 @@
 import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
-import { RoleModal, EditRoleModal, ViewRoleModal, RoleTable } from "../components/Widgets/Role";
+import {
+  RoleModal,
+  EditRoleModal,
+  ViewRoleModal,
+  RoleTable,
+} from "../components/Widgets/Role";
 import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import useRoleData from "../hooks/useRoleData";
 import usePermissionData from "../hooks/usePermissionData";
 import { API_ENDPOINTS } from "../config";
-import { Title } from "../ui";
-import toast from "../components/ui/toast";
+import { Title, toast } from "../components/ui";
 
 const Role = () => {
   useTitle("Role");
@@ -40,7 +44,11 @@ const Role = () => {
     }
 
     // If role created successfully and has permissions, assign them
-    if (formData.permissions && formData.permissions.length > 0 && result.data?.id) {
+    if (
+      formData.permissions &&
+      formData.permissions.length > 0 &&
+      result.data?.id
+    ) {
       try {
         // Assign each permission to the role
         for (const permissionId of formData.permissions) {
@@ -110,11 +118,16 @@ const Role = () => {
     if (formData.permissions !== undefined) {
       try {
         // Get current role permissions from selectedRole (already fetched with permissions)
-        const currentPermissionIds = selectedRole?.permissions?.map(p => p.id) || [];
+        const currentPermissionIds =
+          selectedRole?.permissions?.map((p) => p.id) || [];
 
         // Find permissions to add and remove
-        const toAdd = formData.permissions.filter(id => !currentPermissionIds.includes(id));
-        const toRemove = currentPermissionIds.filter(id => !formData.permissions.includes(id));
+        const toAdd = formData.permissions.filter(
+          (id) => !currentPermissionIds.includes(id),
+        );
+        const toRemove = currentPermissionIds.filter(
+          (id) => !formData.permissions.includes(id),
+        );
 
         // Add new permissions
         for (const permissionId of toAdd) {
@@ -130,10 +143,16 @@ const Role = () => {
 
         // Remove permissions
         for (const permissionId of toRemove) {
-          await fetch(API_ENDPOINTS.PERMISSIONS.REMOVE_FROM_ROLE(selectedRole.id, permissionId), {
-            method: "DELETE",
-            headers: getAuthHeaders(),
-          });
+          await fetch(
+            API_ENDPOINTS.PERMISSIONS.REMOVE_FROM_ROLE(
+              selectedRole.id,
+              permissionId,
+            ),
+            {
+              method: "DELETE",
+              headers: getAuthHeaders(),
+            },
+          );
         }
       } catch (error) {
         console.error("Failed to update permissions:", error);
@@ -160,7 +179,7 @@ const Role = () => {
     if (!selectedRole) return;
 
     if (selectedRole.isBulk) return;
-    
+
     const result = await actions.deleteRole(selectedRole.id);
     if (result.success) {
       toast.success("Role deleted successfully!");
@@ -199,7 +218,7 @@ const Role = () => {
 
   const handleConfirmBulkDelete = async () => {
     if (!selectedRole || !selectedRole.ids) return;
-    
+
     try {
       for (const id of selectedRole.ids) {
         await actions.deleteRole(id);
@@ -282,9 +301,15 @@ const Role = () => {
             setShowDeleteModal(false);
             setSelectedRole(null);
           }}
-          onConfirm={selectedRole.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+          onConfirm={
+            selectedRole.isBulk ? handleConfirmBulkDelete : handleConfirmDelete
+          }
           title="Delete Role"
-          itemName={selectedRole.isBulk ? `${selectedRole.ids.length} role(s)` : selectedRole.name}
+          itemName={
+            selectedRole.isBulk
+              ? `${selectedRole.ids.length} role(s)`
+              : selectedRole.name
+          }
           itemType="role"
         />
       )}

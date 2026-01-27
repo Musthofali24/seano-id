@@ -1,5 +1,5 @@
 import React from "react";
-import Title from "../../../ui/Title";
+import { Title } from "../../ui";
 import TelemetryFilters from "./TelemetryFilters";
 import { FaSync } from "react-icons/fa";
 

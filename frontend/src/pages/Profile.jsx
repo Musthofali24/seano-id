@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import useTitle from "../hooks/useTitle";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { API_ENDPOINTS } from "../config";
-import Modal from "../components/UI/Modal";
-import { LoadingScreen } from "../components/UI";
-import { FaCamera, FaUser, FaEnvelope, FaShieldAlt, FaCalendarAlt } from "react-icons/fa";
+import { Modal } from "../components/ui";
+import { LoadingScreen } from "../components/ui";
+import {
+  FaCamera,
+  FaUser,
+  FaEnvelope,
+  FaShieldAlt,
+  FaCalendarAlt,
+} from "react-icons/fa";
 
 const Profile = () => {
   useTitle("Profile");
@@ -106,7 +112,9 @@ const Profile = () => {
         setIsPhotoModalOpen(false);
         setPhotoPreview(null);
         // Show success message
-        alert("Photo uploaded successfully! (Backend upload not yet implemented)");
+        alert(
+          "Photo uploaded successfully! (Backend upload not yet implemented)",
+        );
       }, 1000);
     } catch (err) {
       console.error("Upload photo error:", err);
@@ -208,7 +216,9 @@ const Profile = () => {
       <div className="px-4 pt-4">
         <Title title="Profile" subtitle="" />
         <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 mt-4">
-          <p className="text-gray-600 dark:text-gray-400">No user data available</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            No user data available
+          </p>
         </div>
       </div>
     );
@@ -216,7 +226,10 @@ const Profile = () => {
 
   return (
     <div className="px-4 pt-4 pb-8">
-      <Title title="Profile" subtitle="Manage your account settings and preferences" />
+      <Title
+        title="Profile"
+        subtitle="Manage your account settings and preferences"
+      />
 
       {/* Error Message */}
       {error && (
@@ -255,7 +268,9 @@ const Profile = () => {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-4">
                 {user.username || user.email?.split("@")[0] || "User"}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">{user.email}</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {user.email}
+              </p>
 
               {/* Status Badge */}
               <div className="mt-3">
@@ -277,7 +292,9 @@ const Profile = () => {
                 <div className="flex items-center gap-3">
                   <FaShieldAlt className="text-fourth" size={18} />
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Role</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Role
+                    </p>
                     <p className="text-gray-900 dark:text-white font-medium">
                       {user.role || "No Role"}
                     </p>
@@ -287,7 +304,9 @@ const Profile = () => {
                 <div className="flex items-center gap-3">
                   <FaCalendarAlt className="text-fourth" size={18} />
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Member Since</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Member Since
+                    </p>
                     <p className="text-gray-900 dark:text-white font-medium">
                       {formatDate(user.created_at)}
                     </p>
@@ -339,7 +358,7 @@ const Profile = () => {
               </div>
 
               {/* Password Section */}
-    <div>
+              <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   <FaShieldAlt size={14} />
                   Password
@@ -438,7 +457,9 @@ const EditProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
             <input
               type="text"
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
               required
               placeholder="Enter username"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
@@ -515,7 +536,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onChangePassword }) => {
 
     const result = await onChangePassword(
       formData.currentPassword,
-      formData.newPassword
+      formData.newPassword,
     );
     if (!result.success) {
       setError(result.error || "Failed to change password");
@@ -541,7 +562,12 @@ const ChangePasswordModal = ({ isOpen, onClose, onChangePassword }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Change Password" size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Change Password"
+      size="md"
+    >
       <form onSubmit={handleSubmit}>
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 mb-4">
@@ -639,7 +665,12 @@ const UploadPhotoModal = ({
   const fileInputRef = useRef(null);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Change Profile Photo" size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Change Profile Photo"
+      size="md"
+    >
       <div className="space-y-4">
         {/* Preview */}
         <div className="flex justify-center">

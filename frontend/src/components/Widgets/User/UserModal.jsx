@@ -1,4 +1,4 @@
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const UserModal = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = (e) => {

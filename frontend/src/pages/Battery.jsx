@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
 import useBatteryData from "../hooks/useBatteryData";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { VehicleDropdown } from "../components/Widgets";
 import {
   BatteryDisplay,

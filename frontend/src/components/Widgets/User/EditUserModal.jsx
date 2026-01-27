@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const EditUserModal = ({ isOpen, onClose, onSubmit, user }) => {
   const [formData, setFormData] = useState({

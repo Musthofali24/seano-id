@@ -1,8 +1,8 @@
 import useTitle from "../hooks/useTitle";
 import { useAlertData } from "../hooks/useAlertData";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { WidgetCard } from "../components/Widgets";
-import { DataTable } from "../components/UI";
+import { DataTable } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import {
@@ -12,7 +12,7 @@ import {
   FaCheckCircle,
   FaTrash,
 } from "react-icons/fa";
-import toast from "../components/ui/toast";
+import { toast } from "../components/ui";
 
 const Alerts = () => {
   useTitle("Alerts");

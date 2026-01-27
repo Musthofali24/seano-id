@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import useTitle from "../hooks/useTitle";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import {
   EnergyConsumptionTrends,
   MissionSuccessRate,

@@ -1,4 +1,4 @@
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const ViewRoleModal = ({ isOpen, onClose, role, permissionData = [] }) => {
   if (!role) return null;

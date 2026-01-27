@@ -54,42 +54,36 @@ const VehicleQuickView = ({
       title: "Battery",
       value: `${vehicleDetails.battery}%`,
       color: "green",
-      bgColor: "bg-green-500/20",
     },
     {
       icon: FaGaugeHigh,
       title: "Speed",
       value: vehicleDetails.speed,
       color: "blue",
-      bgColor: "bg-blue-500/20",
     },
     {
       icon: FaCompass,
       title: "Heading",
       value: vehicleDetails.heading,
       color: "purple",
-      bgColor: "bg-purple-500/20",
     },
     {
       icon: FaCrosshairs,
       title: "GPS",
       value: vehicleDetails.gps,
       color: "yellow",
-      bgColor: "bg-yellow-500/20",
     },
     {
       icon: FaGear,
       title: "Armed",
       value: vehicleDetails.armed,
       color: "orange",
-      bgColor: "bg-orange-500/20",
     },
     {
       icon: FaGear,
       title: "Mode",
       value: vehicleDetails.mode,
       color: "cyan",
-      bgColor: "bg-cyan-500/20",
     },
   ];
 
@@ -136,7 +130,7 @@ const VehicleQuickView = ({
             key={index}
             className="bg-transparent border border-gray-200 dark:border-slate-600 rounded-xl p-4 flex items-center gap-3 dark:hover:bg-slate-600 transition-colors duration-200"
           >
-            <div className={`${card.bgColor} p-3 rounded-full`}>
+            <div className="bg-white border border-gray-200 p-3 rounded-full">
               <card.icon size={24} className={`text-${card.color}-500`} />
             </div>
             <div className="flex flex-col">
@@ -152,7 +146,7 @@ const VehicleQuickView = ({
       </div>
       {/* Coordinates Card */}
       <div className="bg-transparent border border-gray-200 dark:border-slate-600 rounded-xl p-4 flex items-center gap-3 dark:hover:bg-slate-600 transition-colors duration-200 mt-4">
-        <div className="bg-red-500/20 p-3 rounded-full">
+        <div className="bg-white border border-gray-200 p-3 rounded-full">
           <FaMapPin size={24} className="text-red-500" />
         </div>
         <div className="flex flex-col">

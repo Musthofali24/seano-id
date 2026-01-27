@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { FaMoon, FaSun, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import { useState } from "react";
 import useAuth from "../../hooks/useAuth";
-import { LoadingDots } from "../../components/UI";
+import { LoadingDots } from "../../components/ui";
 
 export default function SetAccount({ darkMode, toggleDarkMode }) {
   const [searchParams] = useSearchParams();

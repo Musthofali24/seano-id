@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import useMissionData from "../../../hooks/useMissionData";
-import { DataTable } from "../../UI";
+import { DataTable } from "../../ui";
 import DataCard from "../DataCard";
 
 const MissionTable = () => {

@@ -1,4 +1,4 @@
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 
 const ViewUserModal = ({ isOpen, onClose, user }) => {
   if (!user) return null;

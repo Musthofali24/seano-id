@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import useTitle from "../hooks/useTitle";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import { WidgetCard, VehicleTable, VehicleModal } from "../components/Widgets";
 import { AddVehicleWizard } from "../components/Widgets/Vehicle";
-import { ConfirmModal } from "../components/UI";
+import { ConfirmModal } from "../components/ui";
 import { getWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { useLogData } from "../hooks/useLogData";
 import axios from "../utils/axiosConfig";
 import { API_ENDPOINTS } from "../config";
-import toast from "../components/ui/toast";
+import { toast } from "../components/ui";
 import { FaShip } from "react-icons/fa";
 
 const Vehicle = () => {

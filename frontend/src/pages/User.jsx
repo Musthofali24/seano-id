@@ -2,16 +2,20 @@ import { useState } from "react";
 import { FaPlus } from "react-icons/fa6";
 import useTitle from "../hooks/useTitle";
 import { WidgetCard } from "../components/Widgets";
-import { UserModal, EditUserModal, ViewUserModal, UserTable } from "../components/Widgets/User";
+import {
+  UserModal,
+  EditUserModal,
+  ViewUserModal,
+  UserTable,
+} from "../components/Widgets/User";
 import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
 import useUserData from "../hooks/useUserData";
 import useRoleData from "../hooks/useRoleData";
 import usePermissionData from "../hooks/usePermissionData";
 import { getUserWidgetData } from "../constant";
-import { Title } from "../ui";
+import { Title, toast } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
-import toast from "../components/ui/toast";
 
 const User = () => {
   useTitle("User");
@@ -30,7 +34,7 @@ const User = () => {
     stats,
     userData,
     roleData,
-    permissionData
+    permissionData,
   );
 
   const handleAddUser = async (formData) => {
@@ -96,7 +100,7 @@ const User = () => {
 
   const handleConfirmBulkDelete = async () => {
     if (!selectedUser || !selectedUser.ids) return;
-    
+
     try {
       for (const id of selectedUser.ids) {
         await actions.deleteUser(id);
@@ -188,9 +192,15 @@ const User = () => {
             setShowDeleteModal(false);
             setSelectedUser(null);
           }}
-          onConfirm={selectedUser.isBulk ? handleConfirmBulkDelete : handleConfirmDelete}
+          onConfirm={
+            selectedUser.isBulk ? handleConfirmBulkDelete : handleConfirmDelete
+          }
           title="Delete User"
-          itemName={selectedUser.isBulk ? `${selectedUser.ids.length} user(s)` : selectedUser.name}
+          itemName={
+            selectedUser.isBulk
+              ? `${selectedUser.ids.length} user(s)`
+              : selectedUser.name
+          }
           itemType="user"
         />
       )}

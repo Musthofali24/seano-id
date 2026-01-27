@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FaMoon, FaSun, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationCircle } from "react-icons/fa";
 import SeanoLogo from "../../assets/logo_seano.webp";
 import { useAuthContext } from "../../hooks/useAuthContext";
-import { LoadingDots } from "../../components/UI";
+import { LoadingDots } from "../../components/ui";
 
 export default function Login({ darkMode, toggleDarkMode }) {
   const { login } = useAuthContext();

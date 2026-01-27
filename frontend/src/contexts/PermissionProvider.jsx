@@ -51,6 +51,7 @@ export function PermissionProvider({ children }) {
         "telemetry.read",
         "control.read",
         "battery.read",
+        "sensor-monitoring.read",
         "logs.read",
         "alerts.read",
         "notifications.read",

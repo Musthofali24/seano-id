@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { Modal } from "../../UI";
+import { Modal } from "../../ui";
 import { Dropdown } from "../";
 import axios from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";

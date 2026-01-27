@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useTitle from "../hooks/useTitle";
 import useSensorTypesData from "../hooks/useSensorTypesData";
-import Title from "../ui/Title";
+import { Title } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import {
   WidgetCard,
@@ -11,7 +11,7 @@ import {
 import { getSensorTypeWidgetData } from "../constant";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { TbCategory } from "react-icons/tb";
-import toast from "../components/ui/toast";
+import { toast } from "../components/ui";
 import axios from "../utils/axiosConfig";
 import { API_ENDPOINTS } from "../config";
 import DeleteConfirmModal from "../components/Widgets/DeleteConfirmModal";
