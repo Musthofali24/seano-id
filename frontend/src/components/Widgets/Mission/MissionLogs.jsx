@@ -264,7 +264,7 @@ const MissionLogs = ({
   };
 
   return (
-    <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+    <div className="dark:bg-black border border-gray-300 dark:border-slate-600 rounded-xl p-6">
       <div ref={filterPopoverRef}>
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

@@ -29,7 +29,7 @@ const MissionSuccessRate = () => {
   };
 
   return (
-    <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+    <div className="dark:bg-black border border-gray-300 dark:border-slate-600 rounded-xl p-6">
       <h3 className="text-xl font-semibold text-black dark:text-white mb-6">
         Mission Success Rate
       </h3>

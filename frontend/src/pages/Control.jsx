@@ -34,13 +34,56 @@ const Control = () => {
   const [powerOn, setPowerOn] = useState(false);
   const heading = 184; // Mock heading value
 
-  // Collapse/Expand states for menus
-  const [isVesselTelemetryExpanded, setIsVesselTelemetryExpanded] =
-    useState(true);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(true);
-  const [isThrustControlExpanded, setIsThrustControlExpanded] = useState(true);
-  const [isMissionControlExpanded, setIsMissionControlExpanded] =
-    useState(true);
+  // Collapse/Expand states for menus with localStorage
+  const [isVesselTelemetryExpanded, setIsVesselTelemetryExpanded] = useState(
+    () => {
+      const saved = localStorage.getItem("control_vesselTelemetry_expanded");
+      return saved !== null ? JSON.parse(saved) : false;
+    },
+  );
+  const [isSearchExpanded, setIsSearchExpanded] = useState(() => {
+    const saved = localStorage.getItem("control_search_expanded");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [isThrustControlExpanded, setIsThrustControlExpanded] = useState(() => {
+    const saved = localStorage.getItem("control_thrustControl_expanded");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+  const [isMissionControlExpanded, setIsMissionControlExpanded] = useState(
+    () => {
+      const saved = localStorage.getItem("control_missionControl_expanded");
+      return saved !== null ? JSON.parse(saved) : false;
+    },
+  );
+
+  // Save state to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem(
+      "control_vesselTelemetry_expanded",
+      JSON.stringify(isVesselTelemetryExpanded),
+    );
+  }, [isVesselTelemetryExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "control_search_expanded",
+      JSON.stringify(isSearchExpanded),
+    );
+  }, [isSearchExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "control_thrustControl_expanded",
+      JSON.stringify(isThrustControlExpanded),
+    );
+  }, [isThrustControlExpanded]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "control_missionControl_expanded",
+      JSON.stringify(isMissionControlExpanded),
+    );
+  }, [isMissionControlExpanded]);
 
   // Update slider background dynamically
   useEffect(() => {

@@ -90,10 +90,7 @@ const MissionMap = ({
           waypoints: getActualWaypointCount([...waypoints, ...newWaypoints]),
         }));
       }
-    }
-
-    // ZONE PLANNING - Handle polygon (area coverage mission)
-    else if (layerType === "polygon") {
+    } else if (layerType === "polygon") {
       const latLngs = layer.getLatLngs()[0]; // Polygon returns nested array
       const bounds = layer.getBounds();
       const center = bounds.getCenter();

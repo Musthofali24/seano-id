@@ -83,3 +83,21 @@ func (r *VehicleRepository) GetAllLatestBatteryStatus() ([]model.VehicleBattery,
 func (r *VehicleRepository) CreateBatteryStatus(battery *model.VehicleBattery) error {
 	return r.db.Create(battery).Error
 }
+
+// GetBatteryLogsByVehicleID gets battery history for a specific vehicle
+func (r *VehicleRepository) GetBatteryLogsByVehicleID(vehicleID uint, batteryID *int, limit int) ([]model.VehicleBattery, error) {
+	var batteries []model.VehicleBattery
+	query := r.db.Where("vehicle_id = ?", vehicleID)
+	
+	if batteryID != nil {
+		query = query.Where("battery_id = ?", *batteryID)
+	}
+	
+	if limit <= 0 {
+		limit = 100
+	}
+	
+	err := query.Order("created_at DESC").Limit(limit).Find(&batteries).Error
+	return batteries, err
+}
+

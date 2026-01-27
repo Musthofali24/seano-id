@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -11,42 +11,36 @@ import useBatteryData from "../../../hooks/useBatteryData";
 
 const DualUnitAnalytics = ({ selectedVehicle }) => {
   const [filter, setFilter] = useState("Both");
-  const [chartData, setChartData] = useState([]);
-  const { batteryData } = useBatteryData();
+  const { getVehicleLogs } = useBatteryData();
 
-  useEffect(() => {
-    if (!selectedVehicle?.id) return;
+  // Get chart data from real battery logs
+  const chartData = useMemo(() => {
+    if (!selectedVehicle?.id) return [];
 
-    const vehicleBatteries = batteryData[selectedVehicle.id] || { 1: null, 2: null };
-    const batteryA = vehicleBatteries[1];
-    const batteryB = vehicleBatteries[2];
+    const logs = getVehicleLogs(selectedVehicle.id, null, 30);
 
-    // Generate time-based data for the last 5 entries only
-    const now = new Date();
-    const data = [];
-    
-    // Only generate 5 data points
-    for (let i = 4; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-      const hour = time.getHours();
-      const minute = time.getMinutes();
-      const timeLabel = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    if (logs.length === 0) return [];
 
-      // Simulate data variation (in real app, this would come from historical data)
-      const baseA = batteryA?.percentage || 84;
-      const baseB = batteryB?.percentage || 62;
-      const variationA = (Math.sin(i / 3) * 5 + Math.random() * 2 - 1);
-      const variationB = (Math.cos(i / 3) * 5 + Math.random() * 2 - 1);
+    // Group logs by time (every 2 minutes) and get latest value for each battery
+    const timeGroups = {};
 
-      data.push({
-        time: i === 4 ? "" : timeLabel,
-        "BATTERY A": Math.max(0, Math.min(100, baseA + variationA)),
-        "BATTERY B": Math.max(0, Math.min(100, baseB + variationB)),
-      });
-    }
+    logs.forEach((log) => {
+      const time = new Date(log.timestamp);
+      const timeKey = `${String(time.getHours()).padStart(2, "0")}:${String(Math.floor(time.getMinutes() / 2) * 2).padStart(2, "0")}`;
 
-    setChartData(data);
-  }, [batteryData, selectedVehicle]);
+      if (!timeGroups[timeKey]) {
+        timeGroups[timeKey] = { time: timeKey };
+      }
+
+      if (log.battery_id === 1) {
+        timeGroups[timeKey]["BATTERY A"] = log.percentage;
+      } else if (log.battery_id === 2) {
+        timeGroups[timeKey]["BATTERY B"] = log.percentage;
+      }
+    });
+
+    return Object.values(timeGroups).reverse().slice(0, 20);
+  }, [getVehicleLogs, selectedVehicle]);
 
   const filteredData = chartData.map((item) => {
     if (filter === "Unit A") {
@@ -61,7 +55,9 @@ const DualUnitAnalytics = ({ selectedVehicle }) => {
     <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-xl font-semibold text-black dark:text-white">Grafik Penggunaan Baterai</h3>
+          <h3 className="text-xl font-semibold text-black dark:text-white">
+            Grafik Penggunaan Baterai
+          </h3>
         </div>
         <div className="flex gap-2">
           {["Both", "Unit A", "Unit B"].map((f) => (
@@ -129,9 +125,15 @@ const DualUnitAnalytics = ({ selectedVehicle }) => {
                 if (active && payload && payload.length) {
                   return (
                     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{label}</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        {label}
+                      </p>
                       {payload.map((entry, index) => (
-                        <p key={index} className="text-sm font-medium" style={{ color: entry.color }}>
+                        <p
+                          key={index}
+                          className="text-sm font-medium"
+                          style={{ color: entry.color }}
+                        >
                           {entry.name}: {entry.value?.toFixed(1)}%
                         </p>
                       ))}

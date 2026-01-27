@@ -362,3 +362,64 @@ func (h *VehicleHandler) GetAllLatestBatteryStatus(c *fiber.Ctx) error {
 
 	return c.JSON(batteries)
 }
+
+// GetBatteryLogs godoc
+// @Summary Get battery logs for a vehicle
+// @Description Get battery history/logs for a specific vehicle
+// @Tags Vehicles
+// @Produce json
+// @Param id path int true "Vehicle ID"
+// @Param battery_id query int false "Battery ID (1 or 2)"
+// @Param limit query int false "Number of records (default 100)"
+// @Success 200 {array} model.VehicleBattery
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /vehicles/{id}/battery-logs [get]
+func (h *VehicleHandler) GetBatteryLogs(c *fiber.Ctx) error {
+	userID := c.Locals("user_id").(uint)
+
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid vehicle ID",
+		})
+	}
+
+	// Check if vehicle exists and check ownership
+	vehicle, err := h.vehicleRepo.GetVehicleByID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Vehicle not found",
+		})
+	}
+
+	// Check ownership or permission
+	if vehicle.UserID != userID && !middleware.HasPermission(h.db, userID, "vehicles.view") {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"error": "You don't have permission to view this vehicle",
+		})
+	}
+
+	// Get query parameters
+	var batteryID *int
+	if batteryIDStr := c.Query("battery_id"); batteryIDStr != "" {
+		if bid, err := strconv.Atoi(batteryIDStr); err == nil {
+			batteryID = &bid
+		}
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit"))
+	if limit <= 0 {
+		limit = 100
+	}
+
+	logs, err := h.vehicleRepo.GetBatteryLogsByVehicleID(uint(id), batteryID, limit)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch battery logs",
+		})
+	}
+
+	return c.JSON(logs)
+}

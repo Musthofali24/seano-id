@@ -9,12 +9,26 @@ import (
 )
 
 type SensorDataMessage struct {
-	MessageType string      `json:"message_type"` // "sensor_data"
+	MessageType string      `json:"message_type"` // "sensor_data", "mission_progress"
 	SensorType  string      `json:"sensor_type"`  // "ctd_midas3000", "adcp", etc.
 	VehicleCode string      `json:"vehicle_code"`
 	SensorCode  string      `json:"sensor_code"`
 	Timestamp   string      `json:"timestamp"`
 	Data        interface{} `json:"data"`
+}
+
+type MissionProgressMessage struct {
+	MessageType       string  `json:"message_type"` // "mission_progress"
+	MissionID         uint    `json:"mission_id"`
+	VehicleCode       string  `json:"vehicle_code"`
+	Progress          float64 `json:"progress"`
+	EnergyConsumed    float64 `json:"energy_consumed"`
+	EnergyBudget      float64 `json:"energy_budget"`
+	TimeElapsed       int64   `json:"time_elapsed"`
+	CurrentWaypoint   int     `json:"current_waypoint"`
+	CompletedWaypoint int     `json:"completed_waypoint"`
+	Status            string  `json:"status"`
+	Timestamp         string  `json:"timestamp"`
 }
 
 type Client struct {
@@ -117,6 +131,17 @@ func (h *Hub) BroadcastSensorData(msg SensorDataMessage) error {
 	h.broadcast <- data
 	return nil
 }
+
+func (h *Hub) BroadcastMissionProgress(msg MissionProgressMessage) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	h.broadcast <- data
+	return nil
+}
+
 
 // Broadcast sends raw data to all connected clients
 func (h *Hub) Broadcast(data []byte) {

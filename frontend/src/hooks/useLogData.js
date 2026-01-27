@@ -366,8 +366,17 @@ export const useLogData = () => {
               current,
               temperature,
               status,
+              cell_voltages,
+              cell_count,
               timestamp
             } = message
+
+            console.log('🔋 Received battery data:', {
+              vehicle_id,
+              battery_id,
+              percentage,
+              cell_count: cell_voltages?.length || cell_count
+            })
 
             setBatteryData(prev => {
               const vehicleBatteries = prev[vehicle_id] || { 1: null, 2: null }
@@ -382,6 +391,8 @@ export const useLogData = () => {
                     current,
                     temperature,
                     status,
+                    cell_voltages: cell_voltages || [],
+                    cell_count: cell_count || cell_voltages?.length || 0,
                     timestamp: timestamp || new Date().toISOString()
                   }
                 }
@@ -389,6 +400,7 @@ export const useLogData = () => {
               // Save to localStorage
               try {
                 localStorage.setItem('batteryData', JSON.stringify(newData))
+                console.log('💾 Battery data saved to localStorage')
               } catch (e) {
                 console.warn('Failed to save battery data to localStorage:', e)
               }

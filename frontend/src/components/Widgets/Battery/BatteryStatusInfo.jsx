@@ -1,16 +1,24 @@
 import React, { useState } from "react";
-import { FaBatteryFull, FaBolt, FaThermometerHalf, FaInfoCircle } from "react-icons/fa";
+import {
+  FaBatteryFull,
+  FaBolt,
+  FaThermometerHalf,
+  FaInfoCircle,
+} from "react-icons/fa";
 
 const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
   const [filter, setFilter] = useState("All");
-  const vehicleBatteries = batteryData[selectedVehicle?.id] || { 1: null, 2: null };
+  const vehicleBatteries = batteryData[selectedVehicle?.id] || {
+    1: null,
+    2: null,
+  };
   const batteryA = vehicleBatteries[1];
   const batteryB = vehicleBatteries[2];
 
   // Calculate stats based on filter
   const getCombinedStats = () => {
     let batteries = [];
-    
+
     if (filter === "Battery A") {
       batteries = batteryA ? [batteryA] : [];
     } else if (filter === "Battery B") {
@@ -21,42 +29,36 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
     }
 
     if (batteries.length === 0) {
-      return {
-        soc: 85,
-        batteryVoltage: 13.83,
-        chargeCurrent: 2.5,
-        powerTubeTemp: 25.5,
-        deltaVoltage: 0.003,
-        remainingCapacity: 17.5,
-        nominalCapacity: 20.0,
-        cycleCount: 15,
-        deviceName: "JK_B2A20S20P",
-        hardwareVersion: "11.XW_S11.26",
-        softwareVersion: "11.26",
-        deviceUptime: 12345,
-        powerOnCount: 100,
-      };
+      return null;
     }
 
-    const avgPercentage = batteries.reduce((sum, b) => sum + (b.percentage || 0), 0) / batteries.length;
-    const avgVoltage = batteries.reduce((sum, b) => sum + (b.voltage || 0), 0) / batteries.length;
-    const avgCurrent = batteries.reduce((sum, b) => sum + (b.current || 0), 0) / batteries.length;
-    const avgTemp = batteries.reduce((sum, b) => sum + (b.temperature || 0), 0) / batteries.length;
+    const avgPercentage =
+      batteries.reduce((sum, b) => sum + (b.percentage || 0), 0) /
+      batteries.length;
+    const avgVoltage =
+      batteries.reduce((sum, b) => sum + (b.voltage || 0), 0) /
+      batteries.length;
+    const avgCurrent =
+      batteries.reduce((sum, b) => sum + (b.current || 0), 0) /
+      batteries.length;
+    const avgTemp =
+      batteries.reduce((sum, b) => sum + (b.temperature || 0), 0) /
+      batteries.length;
 
     return {
       soc: Math.round(avgPercentage),
-      batteryVoltage: avgVoltage || 13.83,
-      chargeCurrent: avgCurrent || 2.5,
-      powerTubeTemp: avgTemp || 25.5,
+      batteryVoltage: avgVoltage || 0,
+      chargeCurrent: avgCurrent || 0,
+      powerTubeTemp: avgTemp || 0,
       deltaVoltage: 0.003,
       remainingCapacity: (avgPercentage / 100) * 20,
       nominalCapacity: 20.0,
-      cycleCount: 15,
-      deviceName: "JK_B2A20S20P",
-      hardwareVersion: "11.XW_S11.26",
-      softwareVersion: "11.26",
-      deviceUptime: 12345,
-      powerOnCount: 100,
+      cycleCount: 0,
+      deviceName: "N/A",
+      hardwareVersion: "N/A",
+      softwareVersion: "N/A",
+      deviceUptime: 0,
+      powerOnCount: 0,
     };
   };
 
@@ -71,18 +73,37 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
 
   // Get status color based on SOC
   const getStatusColor = () => {
+    if (!stats) return "text-gray-500";
     if (stats.soc >= 80) return "text-green-500";
     if (stats.soc >= 50) return "text-yellow-500";
     if (stats.soc >= 20) return "text-orange-500";
     return "text-red-500";
   };
 
+  if (!stats) {
+    return (
+      <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <FaInfoCircle className="text-gray-500 dark:text-gray-400" />
+          <h3 className="text-lg font-semibold text-black dark:text-white">
+            Status Info
+          </h3>
+        </div>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+          No battery data available.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FaInfoCircle className="text-gray-500 dark:text-gray-400" />
-          <h3 className="text-lg font-semibold text-black dark:text-white">Status Info</h3>
+          <h3 className="text-lg font-semibold text-black dark:text-white">
+            Status Info
+          </h3>
         </div>
         <div className="flex gap-2">
           {["All", "Battery A", "Battery B"].map((f) => (
@@ -106,16 +127,22 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-2">
             <FaBatteryFull className="text-blue-500" />
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">SOC</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              SOC
+            </span>
           </div>
-          <div className={`text-2xl font-bold ${getStatusColor()}`}>{stats.soc}%</div>
+          <div className={`text-2xl font-bold ${getStatusColor()}`}>
+            {stats.soc}%
+          </div>
         </div>
 
         {/* Battery Voltage */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-2">
             <FaBolt className="text-yellow-500" />
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Voltage</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Voltage
+            </span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {stats.batteryVoltage.toFixed(1)}V
@@ -126,7 +153,9 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-2">
             <FaBolt className="text-blue-500" />
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Current</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Current
+            </span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {stats.chargeCurrent.toFixed(1)}A
@@ -137,7 +166,9 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-2 mb-2">
             <FaThermometerHalf className="text-orange-500" />
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Temp</span>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Temp
+            </span>
           </div>
           <div className="text-2xl font-bold text-gray-900 dark:text-white">
             {stats.powerTubeTemp.toFixed(1)}°C
@@ -146,7 +177,9 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
 
         {/* Delta Voltage */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">Delta V</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+            Delta V
+          </span>
           <div className="text-xl font-semibold text-gray-900 dark:text-white">
             {stats.deltaVoltage.toFixed(3)}V
           </div>
@@ -154,21 +187,30 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
 
         {/* Capacity */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">Capacity</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+            Capacity
+          </span>
           <div className="text-xl font-semibold text-gray-900 dark:text-white">
-            {stats.remainingCapacity.toFixed(1)}/{stats.nominalCapacity.toFixed(1)}Ah
+            {stats.remainingCapacity.toFixed(1)}/
+            {stats.nominalCapacity.toFixed(1)}Ah
           </div>
         </div>
 
         {/* Cycle Count */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">Cycles</span>
-          <div className="text-xl font-semibold text-gray-900 dark:text-white">{stats.cycleCount}</div>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+            Cycles
+          </span>
+          <div className="text-xl font-semibold text-gray-900 dark:text-white">
+            {stats.cycleCount}
+          </div>
         </div>
 
         {/* Uptime */}
         <div className="bg-white dark:bg-black rounded-lg p-4 border border-gray-200 dark:border-gray-800">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">Uptime</span>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 block">
+            Uptime
+          </span>
           <div className="text-xl font-semibold text-gray-900 dark:text-white">
             {formatUptime(stats.deviceUptime)}
           </div>
@@ -180,19 +222,27 @@ const BatteryStatusInfo = ({ selectedVehicle, batteryData = {} }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-gray-600 dark:text-gray-400">Device</span>
-            <p className="font-medium text-gray-900 dark:text-white mt-1">{stats.deviceName}</p>
+            <p className="font-medium text-gray-900 dark:text-white mt-1">
+              {stats.deviceName}
+            </p>
           </div>
           <div>
             <span className="text-gray-600 dark:text-gray-400">Hardware</span>
-            <p className="font-medium text-gray-900 dark:text-white mt-1">{stats.hardwareVersion}</p>
+            <p className="font-medium text-gray-900 dark:text-white mt-1">
+              {stats.hardwareVersion}
+            </p>
           </div>
           <div>
             <span className="text-gray-600 dark:text-gray-400">Software</span>
-            <p className="font-medium text-gray-900 dark:text-white mt-1">{stats.softwareVersion}</p>
+            <p className="font-medium text-gray-900 dark:text-white mt-1">
+              {stats.softwareVersion}
+            </p>
           </div>
           <div>
             <span className="text-gray-600 dark:text-gray-400">Power On</span>
-            <p className="font-medium text-gray-900 dark:text-white mt-1">{stats.powerOnCount}x</p>
+            <p className="font-medium text-gray-900 dark:text-white mt-1">
+              {stats.powerOnCount}x
+            </p>
           </div>
         </div>
       </div>

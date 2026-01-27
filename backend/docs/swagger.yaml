@@ -1,5 +1,50 @@
 basePath: /
 definitions:
+  model.Alert:
+    properties:
+      acknowledged:
+        type: boolean
+      alert_type:
+        description: System, Battery, Sensor, Communication, etc.
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      latitude:
+        type: number
+      longitude:
+        type: number
+      message:
+        type: string
+      sensor:
+        $ref: '#/definitions/model.Sensor'
+      sensor_id:
+        type: integer
+      severity:
+        description: critical, warning, info
+        type: string
+      source:
+        description: USV, System, Manual
+        type: string
+      updated_at:
+        type: string
+      vehicle:
+        $ref: '#/definitions/model.Vehicle'
+      vehicle_id:
+        type: integer
+    type: object
+  model.AlertStats:
+    properties:
+      critical:
+        type: integer
+      info:
+        type: integer
+      total:
+        type: integer
+      warning:
+        type: integer
+    type: object
   model.AssignPermissionRequest:
     properties:
       permission_ids:
@@ -20,6 +65,42 @@ definitions:
         example: 1
         type: integer
     type: object
+  model.CreateAlertRequest:
+    properties:
+      alert_type:
+        example: Battery
+        type: string
+      latitude:
+        example: -6.2088
+        type: number
+      longitude:
+        example: 106.8456
+        type: number
+      message:
+        example: 'Battery voltage low: 10.5V'
+        type: string
+      sensor_id:
+        example: 1
+        type: integer
+      severity:
+        enum:
+        - critical
+        - warning
+        - info
+        example: warning
+        type: string
+      source:
+        example: USV
+        type: string
+      vehicle_id:
+        example: 1
+        type: integer
+    required:
+    - alert_type
+    - message
+    - severity
+    - vehicle_id
+    type: object
   model.CreateMissionRequest:
     properties:
       description:
@@ -27,6 +108,9 @@ definitions:
         type: string
       end_time:
         type: string
+      energy_budget:
+        example: 5.5
+        type: number
       home_location:
         $ref: '#/definitions/model.Waypoint'
       name:
@@ -122,58 +206,6 @@ definitions:
         type: string
     type: object
   model.CreateVehicleLogRequest:
-    properties:
-      altitude:
-        example: 10.5
-        type: number
-      armed:
-        example: true
-        type: boolean
-      battery_current:
-        example: 2.3
-        type: number
-      battery_voltage:
-        example: 12.5
-        type: number
-      gps_ok:
-        example: true
-        type: boolean
-      heading:
-        example: 90.5
-        type: number
-      latitude:
-        example: -6.2088
-        type: number
-      longitude:
-        example: 106.8456
-        type: number
-      mode:
-        example: AUTO
-        type: string
-      pitch:
-        example: 1.2
-        type: number
-      roll:
-        example: 0.5
-        type: number
-      rssi:
-        example: -65
-        type: integer
-      speed:
-        example: 5.2
-        type: number
-      system_status:
-        example: OK
-        type: string
-      temperature_system:
-        example: Normal
-        type: string
-      vehicle_id:
-        example: 1
-        type: integer
-      yaw:
-        example: 90.5
-        type: number
     type: object
   model.CreateVehicleRequest:
     properties:
@@ -188,6 +220,11 @@ definitions:
         type: string
       status:
         example: active
+        type: string
+    type: object
+  model.FlexibleString:
+    properties:
+      value:
         type: string
     type: object
   model.LoginRequest:
@@ -212,27 +249,48 @@ definitions:
     type: object
   model.Mission:
     properties:
+      completed_waypoint:
+        description: Number of completed waypoints
+        type: integer
       created_at:
         type: string
       created_by:
         type: integer
       creator:
         $ref: '#/definitions/model.User'
+      current_waypoint:
+        description: Current waypoint index
+        type: integer
       description:
         type: string
       end_time:
         type: string
+      energy_budget:
+        description: kWh budget
+        type: number
+      energy_consumed:
+        description: kWh consumed
+        type: number
       home_location:
         $ref: '#/definitions/model.Waypoint'
       id:
         type: integer
+      last_update_time:
+        description: Last progress update
+        type: string
       name:
         type: string
+      progress:
+        description: Progress percentage (0-100)
+        type: number
       start_time:
         type: string
       status:
-        description: Draft, Active, Completed, Cancelled
+        description: Draft, Ongoing, Completed, Failed, Cancelled
         type: string
+      time_elapsed:
+        description: seconds
+        type: integer
       updated_at:
         type: string
       vehicle:
@@ -244,13 +302,34 @@ definitions:
           $ref: '#/definitions/model.Waypoint'
         type: array
     type: object
+  model.MissionProgressUpdate:
+    properties:
+      completed_waypoint:
+        type: integer
+      current_waypoint:
+        type: integer
+      energy_consumed:
+        type: number
+      mission_id:
+        type: integer
+      progress:
+        type: number
+      status:
+        type: string
+      time_elapsed:
+        type: integer
+      timestamp:
+        type: string
+    type: object
   model.MissionStats:
     properties:
-      active_missions:
-        type: integer
       completed_missions:
         type: integer
       draft_missions:
+        type: integer
+      failed_missions:
+        type: integer
+      ongoing_missions:
         type: integer
       total_missions:
         type: integer
@@ -286,6 +365,8 @@ definitions:
   model.RefreshResponse:
     properties:
       access_token:
+        type: string
+      refresh_token:
         type: string
       token_type:
         type: string
@@ -391,20 +472,51 @@ definitions:
         example: johndoe
         type: string
     type: object
+  model.UpdateAlertRequest:
+    properties:
+      acknowledged:
+        type: boolean
+      alert_type:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      message:
+        type: string
+      severity:
+        enum:
+        - critical
+        - warning
+        - info
+        type: string
+    type: object
   model.UpdateMissionRequest:
     properties:
+      completed_waypoint:
+        type: integer
+      current_waypoint:
+        type: integer
       description:
         type: string
       end_time:
         type: string
+      energy_budget:
+        type: number
+      energy_consumed:
+        type: number
       home_location:
         $ref: '#/definitions/model.Waypoint'
       name:
         type: string
+      progress:
+        type: number
       start_time:
         type: string
       status:
         type: string
+      time_elapsed:
+        type: integer
       vehicle_id:
         type: integer
       waypoints:
@@ -519,6 +631,9 @@ definitions:
     type: object
   model.Vehicle:
     properties:
+      battery_level:
+        description: Latest telemetry data (populated from vehicle_logs)
+        type: number
       code:
         description: Registration code & MQTT topic
         type: string
@@ -528,10 +643,20 @@ definitions:
         type: string
       id:
         type: integer
+      last_seen:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
       name:
         type: string
+      signal_strength:
+        type: number
       status:
         description: active, inactive, maintenance
+        type: string
+      temperature:
         type: string
       updated_at:
         type: string
@@ -576,6 +701,8 @@ definitions:
       armed:
         type: boolean
       battery_current:
+        type: number
+      battery_percentage:
         type: number
       battery_voltage:
         type: number
@@ -665,6 +792,378 @@ info:
   title: User Management API with Authentication
   version: "1.0"
 paths:
+  /api/alerts:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve alerts with optional filters (vehicle_id, sensor_id, severity,
+        acknowledged status, time range)
+      parameters:
+      - description: Vehicle ID
+        in: query
+        name: vehicle_id
+        type: integer
+      - description: Sensor ID
+        in: query
+        name: sensor_id
+        type: integer
+      - description: Severity (critical, warning, info)
+        in: query
+        name: severity
+        type: string
+      - description: Alert Type
+        in: query
+        name: alert_type
+        type: string
+      - description: Acknowledged status
+        in: query
+        name: acknowledged
+        type: boolean
+      - description: Start Time (ISO 8601)
+        in: query
+        name: start_time
+        type: string
+      - description: End Time (ISO 8601)
+        in: query
+        name: end_time
+        type: string
+      - default: 100
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get alerts with filters
+      tags:
+      - Alerts
+    post:
+      consumes:
+      - application/json
+      description: Create a new alert entry
+      parameters:
+      - description: Alert Data
+        in: body
+        name: alert
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateAlertRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Alert'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new alert
+      tags:
+      - Alerts
+  /api/alerts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an alert by ID
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an alert
+      tags:
+      - Alerts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a specific alert by ID
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Alert'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get alert by ID
+      tags:
+      - Alerts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing alert
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Alert Update Data
+        in: body
+        name: alert
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdateAlertRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Alert'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an alert
+      tags:
+      - Alerts
+  /api/alerts/{id}/acknowledge:
+    patch:
+      consumes:
+      - application/json
+      description: Mark an alert as acknowledged
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Acknowledge an alert
+      tags:
+      - Alerts
+  /api/alerts/clear:
+    delete:
+      consumes:
+      - application/json
+      description: Delete all alerts or only acknowledged ones
+      parameters:
+      - description: Clear only acknowledged alerts
+        in: query
+        name: acknowledged_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Clear all alerts
+      tags:
+      - Alerts
+  /api/alerts/recent:
+    get:
+      consumes:
+      - application/json
+      description: Get the most recent alerts (last 24 hours)
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get recent alerts
+      tags:
+      - Alerts
+  /api/alerts/stats:
+    get:
+      consumes:
+      - application/json
+      description: Get statistics about alerts (total, critical, warning, info)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.AlertStats'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get alert statistics
+      tags:
+      - Alerts
+  /api/alerts/unacknowledged:
+    get:
+      consumes:
+      - application/json
+      description: Get all unacknowledged alerts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get unacknowledged alerts
+      tags:
+      - Alerts
   /auth/login:
     post:
       consumes:
@@ -1029,6 +1528,47 @@ paths:
       summary: Create a new mission
       tags:
       - Missions
+  /missions/{id}/progress:
+    put:
+      consumes:
+      - application/json
+      description: Update mission progress with real-time metrics
+      parameters:
+      - description: Mission ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Progress data
+        in: body
+        name: progress
+        required: true
+        schema:
+          $ref: '#/definitions/model.MissionProgressUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Mission'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update mission progress
+      tags:
+      - Missions
   /missions/{mission_id}:
     delete:
       description: Delete a mission by its ID (ownership check applied)
@@ -1160,9 +1700,32 @@ paths:
       summary: Update a mission
       tags:
       - Missions
+  /missions/ongoing:
+    get:
+      description: Get all missions with status 'Ongoing'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Mission'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get ongoing missions
+      tags:
+      - Missions
   /missions/stats:
     get:
-      description: Get statistics about missions (total, active, completed, draft)
+      description: Get statistics about missions (total, ongoing, completed, failed)
       produces:
       - application/json
       responses:

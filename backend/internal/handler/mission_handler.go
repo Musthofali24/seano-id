@@ -4,6 +4,7 @@ import (
 	"go-fiber-pgsql/internal/model"
 	"go-fiber-pgsql/internal/repository"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -281,7 +282,7 @@ func (h *MissionHandler) DeleteMission(c *fiber.Ctx) error {
 
 // GetMissionStats godoc
 // @Summary Get mission statistics
-// @Description Get statistics about missions (total, active, completed, draft)
+// @Description Get statistics about missions (total, ongoing, completed, failed)
 // @Tags Missions
 // @Produce json
 // @Success 200 {object} model.MissionStats
@@ -298,3 +299,74 @@ func (h *MissionHandler) GetMissionStats(c *fiber.Ctx) error {
 
 	return c.JSON(stats)
 }
+
+// UpdateMissionProgress godoc
+// @Summary Update mission progress
+// @Description Update mission progress with real-time metrics
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Mission ID"
+// @Param progress body model.MissionProgressUpdate true "Progress data"
+// @Success 200 {object} model.Mission
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Security BearerAuth
+// @Router /missions/{id}/progress [put]
+func (h *MissionHandler) UpdateMissionProgress(c *fiber.Ctx) error {
+	missionID, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid mission ID",
+		})
+	}
+
+	var progress model.MissionProgressUpdate
+	if err := c.BodyParser(&progress); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request data",
+		})
+	}
+
+	progress.MissionID = uint(missionID)
+	if progress.Timestamp.IsZero() {
+		progress.Timestamp = time.Now()
+	}
+
+	if err := h.missionRepo.UpdateMissionProgress(uint(missionID), &progress); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update mission progress",
+		})
+	}
+
+	// Get updated mission
+	mission, err := h.missionRepo.GetMissionByID(uint(missionID))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Mission not found",
+		})
+	}
+
+	return c.JSON(mission)
+}
+
+// GetOngoingMissions godoc
+// @Summary Get ongoing missions
+// @Description Get all missions with status 'Ongoing'
+// @Tags Missions
+// @Produce json
+// @Success 200 {array} model.Mission
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /missions/ongoing [get]
+func (h *MissionHandler) GetOngoingMissions(c *fiber.Ctx) error {
+	missions, err := h.missionRepo.GetOngoingMissions()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch ongoing missions",
+		})
+	}
+
+	return c.JSON(missions)
+}
+

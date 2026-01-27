@@ -121,6 +121,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	vehicles.Put("/:vehicle_id", vehicleHandler.UpdateVehicle)          // Ownership check in handler
 	vehicles.Delete("/:vehicle_id", vehicleHandler.DeleteVehicle)       // Ownership check in handler
 	vehicles.Get("/:vehicle_id/battery", vehicleHandler.GetVehicleBatteryStatus)  // Get latest battery status
+	vehicles.Get("/:vehicle_id/battery-logs", vehicleHandler.GetBatteryLogs)      // Get battery history/logs
 	vehicles.Get("/:vehicle_id/alerts", vehicleHandler.GetVehicleByID)  // Placeholder for alerts
 	
 	// Battery routes
@@ -166,8 +167,10 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	missions.Post("/", missionHandler.CreateMission)
 	missions.Get("/", missionHandler.GetAllMissions)                  // Returns own missions for regular users
 	missions.Get("/stats", missionHandler.GetMissionStats)
+	missions.Get("/ongoing", missionHandler.GetOngoingMissions)       // Get all ongoing missions
 	missions.Get("/:mission_id", missionHandler.GetMissionByID)       // Ownership check in handler
 	missions.Put("/:mission_id", missionHandler.UpdateMission)        // Ownership check in handler
+	missions.Put("/:id/progress", missionHandler.UpdateMissionProgress) // Update mission progress
 	missions.Delete("/:mission_id", missionHandler.DeleteMission)     // Ownership check in handler
 
 	// Alert management routes (protected)
@@ -188,4 +191,5 @@ func SetupRoutes(app *fiber.App, db *gorm.DB, wsHub *wsocket.Hub) {
 	app.Get("/ws/sensor-data", websocket.New(wsHandler.HandleWebSocket))
 	app.Get("/ws/logs", websocket.New(wsHandler.HandleWebSocket)) // Reuse existing handler
 	app.Get("/ws/alerts", websocket.New(wsHandler.HandleWebSocket)) // Alerts WebSocket
+	app.Get("/ws/missions", websocket.New(wsHandler.HandleWebSocket)) // Mission progress WebSocket
 }

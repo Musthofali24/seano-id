@@ -53,14 +53,17 @@ func (r *MissionRepository) GetMissionStats() (*model.MissionStats, error) {
 	// Total missions
 	r.db.Model(&model.Mission{}).Count(&stats.TotalMissions)
 	
-	// Active missions
-	r.db.Model(&model.Mission{}).Where("status = ?", "Active").Count(&stats.ActiveMissions)
+	// Draft missions
+	r.db.Model(&model.Mission{}).Where("status = ?", "Draft").Count(&stats.DraftMissions)
+	
+	// Ongoing missions
+	r.db.Model(&model.Mission{}).Where("status = ?", "Ongoing").Count(&stats.OngoingMissions)
 	
 	// Completed missions
 	r.db.Model(&model.Mission{}).Where("status = ?", "Completed").Count(&stats.CompletedMissions)
 	
-	// Draft missions
-	r.db.Model(&model.Mission{}).Where("status = ?", "Draft").Count(&stats.DraftMissions)
+	// Failed missions
+	r.db.Model(&model.Mission{}).Where("status = ?", "Failed").Count(&stats.FailedMissions)
 	
 	return &stats, nil
 }
@@ -76,3 +79,23 @@ func (r *MissionRepository) GetMissionsByStatus(status string) ([]model.Mission,
 	err := r.db.Preload("Vehicle").Preload("Creator").Where("status = ?", status).Order("created_at DESC").Find(&missions).Error
 	return missions, err
 }
+
+func (r *MissionRepository) UpdateMissionProgress(id uint, progress *model.MissionProgressUpdate) error {
+	updates := map[string]interface{}{
+		"progress":           progress.Progress,
+		"energy_consumed":    progress.EnergyConsumed,
+		"time_elapsed":       progress.TimeElapsed,
+		"current_waypoint":   progress.CurrentWaypoint,
+		"completed_waypoint": progress.CompletedWaypoint,
+		"status":             progress.Status,
+		"last_update_time":   progress.Timestamp,
+	}
+	return r.db.Model(&model.Mission{}).Where("id = ?", id).Updates(updates).Error
+}
+
+func (r *MissionRepository) GetOngoingMissions() ([]model.Mission, error) {
+	var missions []model.Mission
+	err := r.db.Preload("Vehicle").Preload("Creator").Where("status = ?", "Ongoing").Order("last_update_time DESC").Find(&missions).Error
+	return missions, err
+}
+

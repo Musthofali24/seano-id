@@ -128,6 +128,12 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     console.log("Loading mission:", mission);
     console.log("Home location from DB:", mission.home_location);
 
+    // Clear previous mission data first
+    setGeneratedPaths([]);
+    setWaypoints([]);
+    setHomeLocation(null);
+    setHasGeneratedWaypoints(false);
+
     // Convert waypoints from database format to application format
     const loadedWaypoints = Array.isArray(mission.waypoints)
       ? mission.waypoints.map((wp, index) => ({
@@ -288,7 +294,7 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   };
 
   return (
-    <div className="-mt-4 -mr-4 h-screen">
+    <div className="-mt-4 -mr-4 h-[calc(100vh-3.5rem)] overflow-hidden">
       <MissionSidebar {...sharedProps} />
 
       <div className={`${isSidebarOpen ? "md:ml-68" : "ml-68"} h-full`}>

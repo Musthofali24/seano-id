@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
@@ -47,13 +48,15 @@ func (l *BatteryListener) Start() error {
 
 // BatteryData represents the MQTT battery message payload
 type BatteryData struct {
-	VehicleCode *string  `json:"vehicle_code,omitempty"`
-	BatteryID   int      `json:"battery_id"`           // 1 or 2
-	Percentage  float64  `json:"percentage"`           // 0-100
-	Voltage     *float64 `json:"voltage,omitempty"`    // Volts
-	Current     *float64 `json:"current,omitempty"`    // Amps
-	Temperature *float64 `json:"temperature,omitempty"` // Celsius
-	Status      *string  `json:"status,omitempty"`     // charging, discharging, full, low
+	VehicleCode  *string    `json:"vehicle_code,omitempty"`
+	BatteryID    int        `json:"battery_id"`           // 1 or 2
+	Percentage   float64    `json:"percentage"`           // 0-100
+	Voltage      *float64   `json:"voltage,omitempty"`    // Volts
+	Current      *float64   `json:"current,omitempty"`    // Amps
+	Temperature  *float64   `json:"temperature,omitempty"` // Celsius
+	Status       *string    `json:"status,omitempty"`     // charging, discharging, full, low
+	CellVoltages []float64  `json:"cell_voltages,omitempty"` // Individual cell voltages
+	CellCount    *int       `json:"cell_count,omitempty"` // Number of cells
 }
 
 // handleMessage processes incoming MQTT battery messages
@@ -100,14 +103,23 @@ func (l *BatteryListener) handleMessage(client mqtt.Client, msg mqtt.Message) {
 	}
 
 	// Create battery record
+	cellVoltagesJSON, _ := json.Marshal(data.CellVoltages)
+	metadataMap := map[string]interface{}{}
+	if data.CellCount != nil {
+		metadataMap["cell_count"] = *data.CellCount
+	}
+	metadataJSON, _ := json.Marshal(metadataMap)
+
 	battery := &model.VehicleBattery{
-		VehicleID:   vehicle.ID,
-		BatteryID:   data.BatteryID, // Save battery_id (1 or 2)
-		Percentage:  data.Percentage,
-		Voltage:     valueOrZero(data.Voltage),
-		Current:     valueOrZero(data.Current),
-		Status:      status,
-		Temperature: valueOrZero(data.Temperature),
+		VehicleID:    vehicle.ID,
+		BatteryID:    data.BatteryID,
+		Percentage:   data.Percentage,
+		Voltage:      valueOrZero(data.Voltage),
+		Current:      valueOrZero(data.Current),
+		Status:       status,
+		Temperature:  valueOrZero(data.Temperature),
+		CellVoltages: cellVoltagesJSON,
+		Metadata:     metadataJSON,
 	}
 
 	// Save to database
@@ -119,21 +131,25 @@ func (l *BatteryListener) handleMessage(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("✓ Battery data saved: vehicle=%s battery_id=%d percentage=%.1f%%",
 		vehicleCode, data.BatteryID, data.Percentage)
 
-	// Broadcast via WebSocket
-	wsMessage := wsocket.BatteryMessage{
-		Type:        "battery",
-		VehicleID:   vehicle.ID,
-		VehicleCode: vehicleCode,
-		BatteryID:   data.BatteryID,
-		Percentage:  data.Percentage,
-		Voltage:     data.Voltage,
-		Current:     data.Current,
-		Temperature: data.Temperature,
-		Status:      status,
+	// Broadcast via WebSocket with timestamp
+	timestamp := time.Now().Format(time.RFC3339)
+	wsMessage := map[string]interface{}{
+		"type":          "battery",
+		"vehicle_id":    vehicle.ID,
+		"vehicle_code":  vehicleCode,
+		"battery_id":    data.BatteryID,
+		"percentage":    data.Percentage,
+		"voltage":       data.Voltage,
+		"current":       data.Current,
+		"temperature":   data.Temperature,
+		"status":        status,
+		"cell_voltages": data.CellVoltages,
+		"cell_count":    data.CellCount,
+		"timestamp":     timestamp,
 	}
 
 	l.wsHub.BroadcastToVehicle(vehicle.ID, wsMessage)
-	log.Printf("✓ Battery data broadcasted via WebSocket: vehicle=%s", vehicleCode)
+	log.Printf("✓ Battery data broadcasted via WebSocket: vehicle=%s battery_id=%d cells=%d", vehicleCode, data.BatteryID, len(data.CellVoltages))
 }
 
 // Helper function to get value or zero

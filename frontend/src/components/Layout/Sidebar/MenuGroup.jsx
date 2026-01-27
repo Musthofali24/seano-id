@@ -15,10 +15,10 @@ const MenuGroup = ({
   const { user } = useContext(AuthContext);
   const { hasPermission } = usePermission();
 
-  // Load initial state from localStorage, default to true (expanded)
+  // Load initial state from localStorage, default to false (collapsed)
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem(`menuGroup_${title}_expanded`);
-    return saved !== null ? JSON.parse(saved) : true;
+    return saved !== null ? JSON.parse(saved) : false;
   });
 
   // Save state to localStorage whenever it changes

@@ -23,6 +23,585 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/alerts": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve alerts with optional filters (vehicle_id, sensor_id, severity, acknowledged status, time range)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get alerts with filters",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Vehicle ID",
+                        "name": "vehicle_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Sensor ID",
+                        "name": "sensor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Severity (critical, warning, info)",
+                        "name": "severity",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Alert Type",
+                        "name": "alert_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Acknowledged status",
+                        "name": "acknowledged",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start Time (ISO 8601)",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End Time (ISO 8601)",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new alert entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Create a new alert",
+                "parameters": [
+                    {
+                        "description": "Alert Data",
+                        "name": "alert",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateAlertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/model.Alert"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/clear": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete all alerts or only acknowledged ones",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Clear all alerts",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Clear only acknowledged alerts",
+                        "name": "acknowledged_only",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/recent": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get the most recent alerts (last 24 hours)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get recent alerts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get statistics about alerts (total, critical, warning, info)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get alert statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.AlertStats"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/unacknowledged": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all unacknowledged alerts",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get unacknowledged alerts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a specific alert by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Get alert by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Alert"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update an existing alert",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Update an alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Alert Update Data",
+                        "name": "alert",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateAlertRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Alert"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Delete an alert by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Delete an alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/alerts/{id}/acknowledge": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mark an alert as acknowledged",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Alerts"
+                ],
+                "summary": "Acknowledge an alert",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Alert ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Login with email and password, returns JWT tokens",
@@ -587,6 +1166,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/missions/ongoing": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all missions with status 'Ongoing'",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Get ongoing missions",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Mission"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/missions/stats": {
             "get": {
                 "security": [
@@ -594,7 +1210,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get statistics about missions (total, active, completed, draft)",
+                "description": "Get statistics about missions (total, ongoing, completed, failed)",
                 "produces": [
                     "application/json"
                 ],
@@ -611,6 +1227,70 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/missions/{id}/progress": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update mission progress with real-time metrics",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Update mission progress",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Mission ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Progress data",
+                        "name": "progress",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.MissionProgressUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Mission"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -4046,6 +4726,73 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.Alert": {
+            "type": "object",
+            "properties": {
+                "acknowledged": {
+                    "type": "boolean"
+                },
+                "alert_type": {
+                    "description": "System, Battery, Sensor, Communication, etc.",
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "sensor": {
+                    "$ref": "#/definitions/model.Sensor"
+                },
+                "sensor_id": {
+                    "type": "integer"
+                },
+                "severity": {
+                    "description": "critical, warning, info",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "USV, System, Manual",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "vehicle": {
+                    "$ref": "#/definitions/model.Vehicle"
+                },
+                "vehicle_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.AlertStats": {
+            "type": "object",
+            "properties": {
+                "critical": {
+                    "type": "integer"
+                },
+                "info": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "warning": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.AssignPermissionRequest": {
             "type": "object",
             "properties": {
@@ -4075,6 +4822,54 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CreateAlertRequest": {
+            "type": "object",
+            "required": [
+                "alert_type",
+                "message",
+                "severity",
+                "vehicle_id"
+            ],
+            "properties": {
+                "alert_type": {
+                    "type": "string",
+                    "example": "Battery"
+                },
+                "latitude": {
+                    "type": "number",
+                    "example": -6.2088
+                },
+                "longitude": {
+                    "type": "number",
+                    "example": 106.8456
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Battery voltage low: 10.5V"
+                },
+                "sensor_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "severity": {
+                    "type": "string",
+                    "enum": [
+                        "critical",
+                        "warning",
+                        "info"
+                    ],
+                    "example": "warning"
+                },
+                "source": {
+                    "type": "string",
+                    "example": "USV"
+                },
+                "vehicle_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "model.CreateMissionRequest": {
             "type": "object",
             "properties": {
@@ -4084,6 +4879,10 @@ const docTemplate = `{
                 },
                 "end_time": {
                     "type": "string"
+                },
+                "energy_budget": {
+                    "type": "number",
+                    "example": 5.5
                 },
                 "home_location": {
                     "$ref": "#/definitions/model.Waypoint"
@@ -4220,77 +5019,7 @@ const docTemplate = `{
             }
         },
         "model.CreateVehicleLogRequest": {
-            "type": "object",
-            "properties": {
-                "altitude": {
-                    "type": "number",
-                    "example": 10.5
-                },
-                "armed": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "battery_current": {
-                    "type": "number",
-                    "example": 2.3
-                },
-                "battery_voltage": {
-                    "type": "number",
-                    "example": 12.5
-                },
-                "gps_ok": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "heading": {
-                    "type": "number",
-                    "example": 90.5
-                },
-                "latitude": {
-                    "type": "number",
-                    "example": -6.2088
-                },
-                "longitude": {
-                    "type": "number",
-                    "example": 106.8456
-                },
-                "mode": {
-                    "type": "string",
-                    "example": "AUTO"
-                },
-                "pitch": {
-                    "type": "number",
-                    "example": 1.2
-                },
-                "roll": {
-                    "type": "number",
-                    "example": 0.5
-                },
-                "rssi": {
-                    "type": "integer",
-                    "example": -65
-                },
-                "speed": {
-                    "type": "number",
-                    "example": 5.2
-                },
-                "system_status": {
-                    "type": "string",
-                    "example": "OK"
-                },
-                "temperature_system": {
-                    "type": "string",
-                    "example": "Normal"
-                },
-                "vehicle_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "yaw": {
-                    "type": "number",
-                    "example": 90.5
-                }
-            }
+            "type": "object"
         },
         "model.CreateVehicleRequest": {
             "type": "object",
@@ -4310,6 +5039,14 @@ const docTemplate = `{
                 "status": {
                     "type": "string",
                     "example": "active"
+                }
+            }
+        },
+        "model.FlexibleString": {
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "string"
                 }
             }
         },
@@ -4346,6 +5083,10 @@ const docTemplate = `{
         "model.Mission": {
             "type": "object",
             "properties": {
+                "completed_waypoint": {
+                    "description": "Number of completed waypoints",
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -4355,11 +5096,23 @@ const docTemplate = `{
                 "creator": {
                     "$ref": "#/definitions/model.User"
                 },
+                "current_waypoint": {
+                    "description": "Current waypoint index",
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
                 "end_time": {
                     "type": "string"
+                },
+                "energy_budget": {
+                    "description": "kWh budget",
+                    "type": "number"
+                },
+                "energy_consumed": {
+                    "description": "kWh consumed",
+                    "type": "number"
                 },
                 "home_location": {
                     "$ref": "#/definitions/model.Waypoint"
@@ -4367,15 +5120,27 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "last_update_time": {
+                    "description": "Last progress update",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
+                },
+                "progress": {
+                    "description": "Progress percentage (0-100)",
+                    "type": "number"
                 },
                 "start_time": {
                     "type": "string"
                 },
                 "status": {
-                    "description": "Draft, Active, Completed, Cancelled",
+                    "description": "Draft, Ongoing, Completed, Failed, Cancelled",
                     "type": "string"
+                },
+                "time_elapsed": {
+                    "description": "seconds",
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
@@ -4394,16 +5159,48 @@ const docTemplate = `{
                 }
             }
         },
+        "model.MissionProgressUpdate": {
+            "type": "object",
+            "properties": {
+                "completed_waypoint": {
+                    "type": "integer"
+                },
+                "current_waypoint": {
+                    "type": "integer"
+                },
+                "energy_consumed": {
+                    "type": "number"
+                },
+                "mission_id": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "time_elapsed": {
+                    "type": "integer"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
         "model.MissionStats": {
             "type": "object",
             "properties": {
-                "active_missions": {
-                    "type": "integer"
-                },
                 "completed_missions": {
                     "type": "integer"
                 },
                 "draft_missions": {
+                    "type": "integer"
+                },
+                "failed_missions": {
+                    "type": "integer"
+                },
+                "ongoing_missions": {
                     "type": "integer"
                 },
                 "total_missions": {
@@ -4457,6 +5254,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
                     "type": "string"
                 },
                 "token_type": {
@@ -4614,14 +5414,54 @@ const docTemplate = `{
                 }
             }
         },
+        "model.UpdateAlertRequest": {
+            "type": "object",
+            "properties": {
+                "acknowledged": {
+                    "type": "boolean"
+                },
+                "alert_type": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string",
+                    "enum": [
+                        "critical",
+                        "warning",
+                        "info"
+                    ]
+                }
+            }
+        },
         "model.UpdateMissionRequest": {
             "type": "object",
             "properties": {
+                "completed_waypoint": {
+                    "type": "integer"
+                },
+                "current_waypoint": {
+                    "type": "integer"
+                },
                 "description": {
                     "type": "string"
                 },
                 "end_time": {
                     "type": "string"
+                },
+                "energy_budget": {
+                    "type": "number"
+                },
+                "energy_consumed": {
+                    "type": "number"
                 },
                 "home_location": {
                     "$ref": "#/definitions/model.Waypoint"
@@ -4629,11 +5469,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "progress": {
+                    "type": "number"
+                },
                 "start_time": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
+                },
+                "time_elapsed": {
+                    "type": "integer"
                 },
                 "vehicle_id": {
                     "type": "integer"
@@ -4809,6 +5655,10 @@ const docTemplate = `{
         "model.Vehicle": {
             "type": "object",
             "properties": {
+                "battery_level": {
+                    "description": "Latest telemetry data (populated from vehicle_logs)",
+                    "type": "number"
+                },
                 "code": {
                     "description": "Registration code \u0026 MQTT topic",
                     "type": "string"
@@ -4822,11 +5672,26 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "last_seen": {
+                    "type": "string"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
                 "name": {
                     "type": "string"
                 },
+                "signal_strength": {
+                    "type": "number"
+                },
                 "status": {
                     "description": "active, inactive, maintenance",
+                    "type": "string"
+                },
+                "temperature": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -4891,6 +5756,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "battery_current": {
+                    "type": "number"
+                },
+                "battery_percentage": {
                     "type": "number"
                 },
                 "battery_voltage": {

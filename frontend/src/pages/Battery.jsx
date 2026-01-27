@@ -15,15 +15,24 @@ import {
 const Battery = () => {
   useTitle("Battery Monitoring");
 
-  const { vehicles, selectedVehicleId, setSelectedVehicleId, loading: vehicleLoading } = useVehicleData();
-  const { batteryData } = useBatteryData();
+  const {
+    vehicles,
+    selectedVehicleId,
+    setSelectedVehicleId,
+    loading: vehicleLoading,
+  } = useVehicleData();
+  const { batteryData = {} } = useBatteryData() || {};
 
   // Get selected vehicle object
   const selectedVehicle = useMemo(() => {
     if (!selectedVehicleId || !vehicles || vehicles.length === 0) {
       return vehicles?.[0] || null;
     }
-    return vehicles.find((v) => v.id === parseInt(selectedVehicleId)) || vehicles[0] || null;
+    return (
+      vehicles.find((v) => v.id === parseInt(selectedVehicleId)) ||
+      vehicles[0] ||
+      null
+    );
   }, [selectedVehicleId, vehicles]);
 
   // Handle vehicle change
@@ -35,28 +44,22 @@ const Battery = () => {
     }
   };
 
-  // Get battery data for selected vehicle
-  const vehicleBatteries = batteryData[selectedVehicle?.id] || { 1: null, 2: null };
-  const batteryA = vehicleBatteries[1] || {
-    percentage: 84,
-    voltage: 12.6,
-    status: "charging",
-    temperature: 32,
-    timestamp: new Date().toISOString(),
+  // Get battery data for selected vehicle (no dummy data)
+  const vehicleBatteries = batteryData[selectedVehicle?.id] || {
+    1: null,
+    2: null,
   };
-  const batteryB = vehicleBatteries[2] || {
-    percentage: 62,
-    voltage: 11.9,
-    status: "active",
-    temperature: 34,
-    timestamp: new Date().toISOString(),
-  };
+  const batteryA = vehicleBatteries[1] || null;
+  const batteryB = vehicleBatteries[2] || null;
 
   return (
     <div className="min-h-screen text-white p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <Title title="Battery Monitoring" subtitle="System Batteries Monitoring" />
+        <Title
+          title="Battery Monitoring"
+          subtitle="System Batteries Monitoring"
+        />
         <div className="min-w-[200px]">
           <VehicleDropdown
             vehicles={vehicles || []}
@@ -66,8 +69,8 @@ const Battery = () => {
               vehicleLoading
                 ? "Loading vehicles..."
                 : !vehicles || vehicles.length === 0
-                ? "No vehicles available"
-                : "Select USV"
+                  ? "No vehicles available"
+                  : "Select USV"
             }
             className="text-sm"
             disabled={vehicleLoading}

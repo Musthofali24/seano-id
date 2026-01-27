@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { WS_URL } from '../config'
+import { useLogData } from './useLogData'
 
 /**
  * useBatteryData - Hook untuk battery monitoring real-time
  *
  * SUMBER DATA:
- * - WebSocket untuk real-time battery updates dari MQTT
+ * - useLogData hook yang sudah handle WebSocket connection
+ * - WebSocket message type: "battery" di /ws/logs endpoint
  *
  * MESSAGE FORMAT:
  * {
@@ -22,122 +23,74 @@ import { WS_URL } from '../config'
  * }
  */
 const useBatteryData = () => {
-  const [batteryData, setBatteryData] = useState({})
-  const [ws, setWs] = useState(null)
-  const [isConnected, setIsConnected] = useState(false)
+  const { batteryData: batteryDataFromLog } = useLogData()
+  const [batteryLogs, setBatteryLogs] = useState([]) // Store battery history
   const [lastUpdate, setLastUpdate] = useState(null)
 
-  // Handle incoming WebSocket messages
-  const handleMessage = useCallback(event => {
-    try {
-      const message = JSON.parse(event.data)
-      console.log('Parsed message:', message)
+  // Monitor battery data changes and add to logs
+  useEffect(() => {
+    if (!batteryDataFromLog || Object.keys(batteryDataFromLog).length === 0) {
+      return
+    }
 
-      // Only handle battery type messages
-      if (message.type === 'battery') {
-        const {
-          vehicle_id,
-          battery_id,
-          percentage,
-          voltage,
-          current,
-          temperature,
-          status,
-          timestamp
-        } = message
-
-        console.log('Battery data:', {
-          vehicle_id,
-          battery_id,
-          percentage,
-          voltage,
-          current,
-          temperature,
-          status
-        })
-
-        setBatteryData(prev => {
-          const vehicleBatteries = prev[vehicle_id] || { 1: null, 2: null }
-
-          const newData = {
-            ...prev,
-            [vehicle_id]: {
-              ...vehicleBatteries,
-              [battery_id]: {
-                battery_id,
-                percentage,
-                voltage,
-                current,
-                temperature,
-                status,
-                timestamp: timestamp || new Date().toISOString()
-              }
-            }
+    // Convert current battery data to log entries
+    Object.entries(batteryDataFromLog).forEach(([vehicleId, batteries]) => {
+      Object.entries(batteries).forEach(([batteryId, battery]) => {
+        if (battery) {
+          const logEntry = {
+            id: Date.now() + parseInt(batteryId),
+            vehicle_id: parseInt(vehicleId),
+            ...battery
           }
 
-          console.log('Updated batteryData state:', newData)
-          return newData
-        })
+          setBatteryLogs(prev => {
+            // Check if this entry already exists (avoid duplicates)
+            const exists = prev.some(
+              log =>
+                log.vehicle_id === logEntry.vehicle_id &&
+                log.battery_id === logEntry.battery_id &&
+                log.timestamp === logEntry.timestamp
+            )
 
-        setLastUpdate(new Date().toISOString())
-        console.log(
-          `✓ Battery data updated: vehicle=${vehicle_id} battery=${battery_id} percentage=${percentage}%`
-        )
-      }
-    } catch (error) {
-      console.error('Error parsing battery WebSocket message:', error)
-    }
-  }, [])
+            if (!exists) {
+              const updated = [logEntry, ...prev].slice(0, 100)
+              console.log('🔋 Added battery log entry:', logEntry)
+              return updated
+            }
+            return prev
+          })
+        }
+      })
+    })
 
-  // Setup WebSocket connection
-  useEffect(() => {
-    const wsUrl = WS_URL.replace('/api', '')
-    const socket = new WebSocket(`${wsUrl}/ws/logs`)
-
-    socket.onopen = () => {
-      console.log('✓ Battery WebSocket connected')
-      setIsConnected(true)
-    }
-
-    socket.onmessage = handleMessage
-
-    socket.onerror = error => {
-      console.error('Battery WebSocket error:', error)
-      setIsConnected(false)
-    }
-
-    socket.onclose = () => {
-      console.log('✗ Battery WebSocket disconnected')
-      setIsConnected(false)
-    }
-
-    setWs(socket)
-
-    // Cleanup on unmount
-    return () => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.close()
-      }
-    }
-  }, [handleMessage])
+    setLastUpdate(new Date().toISOString())
+  }, [batteryDataFromLog])
 
   // Get battery data for specific vehicle
   const getVehicleBatteries = useCallback(
     vehicleId => {
-      console.log('🔍 getVehicleBatteries called with vehicleId:', vehicleId)
-      console.log('🔍 Current batteryData state:', batteryData)
-      console.log('🔍 batteryData keys:', Object.keys(batteryData))
-
-      if (!vehicleId) {
-        console.log('⚠️ No vehicleId provided, returning empty batteries')
+      if (!vehicleId || !batteryDataFromLog) {
         return { 1: null, 2: null }
       }
-
-      const result = batteryData[vehicleId] || { 1: null, 2: null }
-      console.log(`🔍 Returning batteries for vehicle ${vehicleId}:`, result)
-      return result
+      return batteryDataFromLog[vehicleId] || { 1: null, 2: null }
     },
-    [batteryData]
+    [batteryDataFromLog]
+  )
+
+  // Get logs for specific vehicle
+  const getVehicleLogs = useCallback(
+    (vehicleId, batteryId = null, limit = 50) => {
+      if (!vehicleId) return []
+
+      let filtered = batteryLogs.filter(log => log.vehicle_id === vehicleId)
+
+      if (batteryId !== null) {
+        filtered = filtered.filter(log => log.battery_id === batteryId)
+      }
+
+      return filtered.slice(0, limit)
+    },
+    [batteryLogs]
   )
 
   // Get summary stats
@@ -190,11 +143,12 @@ const useBatteryData = () => {
   )
 
   return {
-    batteryData,
-    ws,
-    isConnected,
+    batteryData: batteryDataFromLog || {},
+    batteryLogs: batteryLogs || [],
+    isConnected: true, // Connected through useLogData WebSocket
     lastUpdate,
     getVehicleBatteries,
+    getVehicleLogs,
     getSummary
   }
 }

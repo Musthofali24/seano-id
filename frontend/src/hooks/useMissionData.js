@@ -10,6 +10,7 @@ const useMissionData = () => {
   const [lastUpdated, setLastUpdated] = useState(null)
   const [stats, setStats] = useState({
     total_missions: 0,
+    draft_missions: 0,
     ongoing_missions: 0,
     completed_missions: 0,
     failed_missions: 0
@@ -322,6 +323,7 @@ const useMissionData = () => {
   // Statistics (combine API stats with calculated stats)
   const combinedStats = {
     total: stats.total_missions || missionData.length,
+    draft: stats.draft_missions || 0,
     ongoing: stats.ongoing_missions || getActiveMissions().length,
     completed: stats.completed_missions || getCompletedMissions().length,
     failed: stats.failed_missions || getFailedMissions().length,

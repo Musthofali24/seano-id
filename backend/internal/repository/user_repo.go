@@ -53,7 +53,7 @@ func GetAllUsers(db *gorm.DB) ([]model.User, error) {
 
 func GetUserByID(db *gorm.DB, id string) (*model.User, error) {
 	var user model.User
-	result := db.First(&user, id)
+	result := db.Preload("Role.Permissions").First(&user, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")

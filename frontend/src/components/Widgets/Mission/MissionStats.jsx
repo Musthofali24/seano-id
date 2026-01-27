@@ -1,5 +1,11 @@
 import React from "react";
-import { FaCheckCircle, FaClock, FaTimesCircle, FaList } from "react-icons/fa";
+import {
+  FaCheckCircle,
+  FaClock,
+  FaTimesCircle,
+  FaList,
+  FaFileAlt,
+} from "react-icons/fa";
 import useMissionData from "../../../hooks/useMissionData";
 
 const MissionStats = () => {
@@ -13,6 +19,13 @@ const MissionStats = () => {
       icon: FaList,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
+    },
+    {
+      label: "Draft",
+      value: stats?.draft || 0,
+      icon: FaFileAlt,
+      color: "text-gray-500",
+      bgColor: "bg-gray-500/10",
     },
     {
       label: "Completed",
@@ -44,8 +57,8 @@ const MissionStats = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
             className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6 animate-pulse"
@@ -64,13 +77,13 @@ const MissionStats = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       {statsConfig.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <div
             key={index}
-            className="dark:bg-black border border-gray-200 dark:border-gray-700 rounded-xl p-6"
+            className="dark:bg-black border border-gray-300 dark:border-gray-600 rounded-xl p-6"
           >
             <div className="flex items-center justify-between">
               <div>

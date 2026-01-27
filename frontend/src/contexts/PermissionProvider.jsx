@@ -50,6 +50,7 @@ export function PermissionProvider({ children }) {
         "missions.read",
         "telemetry.read",
         "control.read",
+        "battery.read",
         "logs.read",
         "alerts.read",
         "notifications.read",
