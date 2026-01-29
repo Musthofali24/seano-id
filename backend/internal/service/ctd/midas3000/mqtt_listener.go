@@ -29,7 +29,10 @@ type MQTTConfig struct {
 func NewMQTTListener(config MQTTConfig, handler *DataHandler) (*MQTTListener, error) {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(config.BrokerURL)
-	opts.SetClientID(config.ClientID)
+	
+	// Add timestamp to ClientID to avoid conflicts on restart
+	clientID := fmt.Sprintf("%s-%d", config.ClientID, time.Now().Unix())
+	opts.SetClientID(clientID)
 	opts.SetUsername(config.Username)
 	opts.SetPassword(config.Password)
 	
@@ -40,8 +43,8 @@ func NewMQTTListener(config MQTTConfig, handler *DataHandler) (*MQTTListener, er
 	opts.SetMaxReconnectInterval(60 * time.Second)
 	opts.SetKeepAlive(30 * time.Second)        // Send ping every 30s
 	opts.SetPingTimeout(10 * time.Second)       // Wait 10s for ping response
-	opts.SetCleanSession(false)                 // Persist subscriptions across reconnects
-	opts.SetResumeSubs(true)                    // Resume subscriptions on reconnect
+	opts.SetCleanSession(true)                  // Clean session to avoid conflicts on restart
+	opts.SetResumeSubs(false)                   // Don't resume old subscriptions
 
 	// Set connection lost handler
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
