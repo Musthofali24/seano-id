@@ -22,6 +22,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaX } from "react-icons/fa6";
 
 // Fix default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -579,13 +580,13 @@ const MissionMap = ({
         {!showSearchInput ? (
           <button
             onClick={() => setShowSearchInput(true)}
-            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 p-3 rounded-lg shadow-lg transition-all border border-gray-200 dark:border-gray-600 flex items-center gap-2"
+            className="bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 p-3 rounded-full shadow-lg transition-all border border-gray-200 dark:border-gray-600 flex items-center gap-2"
             title="Search Coordinates"
           >
             <FaSearch className="text-base" />
           </button>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 p-2 w-96">
+          <div className="bg-white dark:bg-black rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 p-2 w-96">
             <div className="relative flex items-center">
               <FaSearch className="absolute left-3 text-gray-400 dark:text-gray-500 z-10" />
               <input
@@ -600,7 +601,7 @@ const MissionMap = ({
                   }, 200);
                 }}
                 autoFocus
-                className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-20 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                className="w-full bg-white dark:bg-black border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-20 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
               />
               <div className="absolute right-2 flex gap-1">
                 {searchQuery && (
@@ -621,10 +622,10 @@ const MissionMap = ({
                     setShowSearchInput(false);
                     setSearchQuery("");
                   }}
-                  className="p-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors text-xs font-medium"
+                  className="p-1.5 bg-gray-200 dark:bg-black hover:text-red-600 dark:hover:text-red-600 text-gray-700 dark:text-gray-300 rounded-md font-bold transition-colors text-xs"
                   title="Close"
                 >
-                  ✕
+                  <FaX className="text-xs" />
                 </button>
               </div>
             </div>
@@ -1119,7 +1120,7 @@ const MissionMap = ({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="mb-4 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col max-h-[calc(100vh-200px)]"
+              className="mb-4 w-80 bg-white dark:bg-black rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col max-h-[calc(100vh-200px)]"
             >
               {/* Guide Header */}
               <div className="bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-t-lg flex items-center justify-between">
@@ -1249,20 +1250,6 @@ const MissionMap = ({
                     deploy.
                   </p>
                 </div>
-
-                <div className="mt-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1.5 text-xs">
-                    Pro Tips
-                  </h4>
-                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5">
-                    <li>
-                      • Monitor battery usage and estimated time in the sidebar
-                    </li>
-                    <li>• Use polygon for efficient area coverage</li>
-                    <li>• Set appropriate loiter time for data collection</li>
-                    <li>• Load previous missions to reuse waypoints</li>
-                  </ul>
-                </div>
               </div>
             </motion.div>
           )}
@@ -1276,7 +1263,7 @@ const MissionMap = ({
           className={`${
             showGuide
               ? "bg-blue-500 hover:bg-blue-600"
-              : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+              : "bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-700"
           } ${
             showGuide ? "text-white" : "text-gray-700 dark:text-gray-200"
           } p-3 rounded-full shadow-lg transition-all border ${

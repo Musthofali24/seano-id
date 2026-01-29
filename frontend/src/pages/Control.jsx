@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { HeadingIndicator } from "react-flight-indicators";
 import { motion, AnimatePresence } from "framer-motion";
 import { VehicleDropdown } from "../components/Widgets/Vehicle";
+import SlideToConfirm from "../components/ui/SlideToConfirm";
 import {
   FaCompass,
   FaSatelliteDish,
@@ -52,7 +53,14 @@ const Control = () => {
   const [leftMotor, setLeftMotor] = useState(72);
   const [rightMotor, setRightMotor] = useState(68);
   const [powerOn, setPowerOn] = useState(false);
+  const [isArmed, setIsArmed] = useState(true);
   const heading = 184; // Mock heading value
+
+  // Confirmation states
+  const [showDisarmConfirm, setShowDisarmConfirm] = useState(false);
+  const [showArmConfirm, setShowArmConfirm] = useState(false);
+  const [showModeConfirm, setShowModeConfirm] = useState(false);
+  const [pendingMode, setPendingMode] = useState(null);
 
   // Search coordinates state
   const [searchQuery, setSearchQuery] = useState("");
@@ -202,11 +210,36 @@ const Control = () => {
     { id: "RTL", label: "Return to Launch", icon: FaHome },
   ];
 
-  const waypoints = [
-    { id: 1, name: "Entrance Buoy", status: "Active target", active: true },
-    { id: 2, name: "North Reef", status: "Pending", active: false },
-    { id: 3, name: "Research Dock", status: "Pending", active: false },
-  ];
+  // Handlers
+  const handleDisarmConfirm = () => {
+    console.log("System disarmed!");
+    setIsArmed(false);
+    setPowerOn(false);
+    setShowDisarmConfirm(false);
+    // Add your disarm logic here
+  };
+
+  const handleArmConfirm = () => {
+    console.log("System armed!");
+    setIsArmed(true);
+    setShowArmConfirm(false);
+    // Add your arm logic here
+  };
+
+  const handleModeChangeRequest = (modeId) => {
+    if (activeMode !== modeId) {
+      setPendingMode(modeId);
+    }
+  };
+
+  const handleModeChangeConfirm = () => {
+    if (pendingMode) {
+      console.log(`Mode changed to: ${pendingMode}`);
+      setActiveMode(pendingMode);
+      setPendingMode(null);
+      // Add your mode change logic here
+    }
+  };
 
   return (
     <div className="relative -mx-4 -mt-6 min-h-[calc(100vh-56px)] overflow-hidden">
@@ -508,7 +541,12 @@ const Control = () => {
                   </button>
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-2 w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium"
+                    disabled={!isArmed}
+                    className={`flex items-center justify-center gap-2 w-full py-2 rounded-lg text-white text-sm font-medium transition-all ${
+                      isArmed
+                        ? "bg-blue-600 hover:bg-blue-500 cursor-pointer"
+                        : "bg-gray-400 dark:bg-gray-600 cursor-not-allowed opacity-50"
+                    }`}
                   >
                     TEST MOTORS
                   </button>
@@ -531,7 +569,12 @@ const Control = () => {
                       max="100"
                       value={leftMotor}
                       onChange={(e) => setLeftMotor(Number(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer slider motor-slider-left"
+                      disabled={!isArmed}
+                      className={`w-full h-2 rounded-lg appearance-none slider motor-slider-left ${
+                        isArmed
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed opacity-50"
+                      }`}
                     />
                   </div>
                   <div>
@@ -549,7 +592,12 @@ const Control = () => {
                       max="100"
                       value={rightMotor}
                       onChange={(e) => setRightMotor(Number(e.target.value))}
-                      className="w-full h-2 rounded-lg appearance-none cursor-pointer slider motor-slider-right"
+                      disabled={!isArmed}
+                      className={`w-full h-2 rounded-lg appearance-none slider motor-slider-right ${
+                        isArmed
+                          ? "cursor-pointer"
+                          : "cursor-not-allowed opacity-50"
+                      }`}
                     />
                   </div>
                 </div>
@@ -600,41 +648,123 @@ const Control = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className={`${textCls} font-medium`}>SYSTEM ARMED</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                <span className={`${textCls} font-medium`}>
+                  {isArmed ? "SYSTEM ARMED" : "SYSTEM DISARMED"}
+                </span>
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    isArmed ? "bg-red-500" : "bg-gray-400"
+                  }`}
+                />
               </div>
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-sm transition-colors"
-              >
-                <FaLock className="text-sm" /> DISARM SYSTEM
-              </button>
-              <p className={`text-xs ${muteCls}`}>
-                Long press for emergency disarm.
-              </p>
+
+              {isArmed ? (
+                !showDisarmConfirm ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDisarmConfirm(true)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium text-sm transition-colors"
+                  >
+                    <FaLock className="text-sm" /> DISARM SYSTEM
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <SlideToConfirm
+                      onConfirm={handleDisarmConfirm}
+                      text="Slide to disarm"
+                      confirmText="Disarmed!"
+                      icon={FaLock}
+                      variant="danger"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowDisarmConfirm(false)}
+                      className={`text-xs ${muteCls} hover:text-gray-700 dark:hover:text-gray-200 transition-colors`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )
+              ) : !showArmConfirm ? (
+                <button
+                  type="button"
+                  onClick={() => setShowArmConfirm(true)}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-500 text-white font-medium text-sm transition-colors"
+                >
+                  <FaLock className="text-sm" /> ARM SYSTEM
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <SlideToConfirm
+                    onConfirm={handleArmConfirm}
+                    text="Slide to arm"
+                    confirmText="Armed!"
+                    icon={FaLock}
+                    variant="success"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowArmConfirm(false)}
+                    className={`text-xs ${muteCls} hover:text-gray-700 dark:hover:text-gray-200 transition-colors`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {!showDisarmConfirm && !showArmConfirm && (
+                <p className={`text-xs ${muteCls}`}>
+                  {isArmed
+                    ? "Slide to confirm disarm action."
+                    : "Slide to confirm arm action."}
+                </p>
+              )}
 
               {/* Control modes */}
               <div className="space-y-2">
                 {modes.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setActiveMode(m.id)}
-                    className={`w-full rounded-lg p-3 text-left flex items-center gap-3 transition-colors border ${
-                      activeMode === m.id
-                        ? "border-blue-500 bg-blue-500/10 dark:bg-blue-500/20 " +
-                          textCls
-                        : "border-gray-300 dark:border-gray-600 bg-transparent " +
-                          muteCls +
-                          " hover:border-gray-400 dark:hover:border-gray-500"
-                    }`}
-                  >
-                    <m.icon className="text-lg shrink-0" />
-                    <div className="min-w-0">
-                      <p className="font-medium">{m.id}</p>
-                      <p className={`text-xs ${muteCls} truncate`}>{m.label}</p>
-                    </div>
-                  </button>
+                  <div key={m.id}>
+                    {pendingMode === m.id ? (
+                      <div className="space-y-2">
+                        <SlideToConfirm
+                          onConfirm={handleModeChangeConfirm}
+                          text={`Slide to ${m.id}`}
+                          confirmText="Changed!"
+                          icon={m.icon}
+                          variant="primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPendingMode(null)}
+                          className={`text-xs ${muteCls} hover:text-gray-700 dark:hover:text-gray-200 transition-colors w-full text-center`}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleModeChangeRequest(m.id)}
+                        disabled={activeMode === m.id}
+                        className={`w-full rounded-lg p-3 text-left flex items-center gap-3 transition-colors border ${
+                          activeMode === m.id
+                            ? "border-blue-500 bg-blue-500/10 dark:bg-blue-500/20 " +
+                              textCls
+                            : "border-gray-300 dark:border-gray-600 bg-transparent " +
+                              muteCls +
+                              " hover:border-gray-400 dark:hover:border-gray-500 cursor-pointer"
+                        } ${activeMode === m.id ? "cursor-default" : ""}`}
+                      >
+                        <m.icon className="text-lg shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium">{m.id}</p>
+                          <p className={`text-xs ${muteCls} truncate`}>
+                            {m.label}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
 
