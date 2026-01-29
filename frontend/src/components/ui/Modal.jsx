@@ -35,7 +35,7 @@ const Modal = ({
       className={`fixed inset-0 bg-transparent backdrop-blur-sm bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ease-out ${
         isAnimating ? "opacity-100" : "opacity-0"
       }`}
-      style={{ zIndex: 10003 }}
+      style={{ zIndex: 99999 }}
       onClick={onClose}
     >
       <div

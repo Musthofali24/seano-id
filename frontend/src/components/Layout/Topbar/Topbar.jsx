@@ -166,10 +166,10 @@ const Topbar = ({ isSidebarOpen, selectedVehicle, setSelectedVehicle }) => {
 
   return (
     <div
-      className={`fixed z-30 top-14 right-0 bg-white
-                  h-15 sm:h-15 py-2 px-4 border-b border-gray-200
+      className={`fixed z-30 top-13 right-0 bg-white
+                  h-30 sm:h-15 py-2 px-4 border-b border-gray-200
                   dark:bg-black dark:border-gray-700
-                  flex flex-col sm:flex-row space-y-1 md:space-y-0 sm:items-center sm:justify-between
+                  flex flex-col sm:flex-row space-y-3 md:space-y-0 sm:items-center sm:justify-between
                   ${isSidebarOpen ? "md:left-64 left-16" : "left-16"}`}
     >
       <div className="flex items-center gap-4 dark:text-white text-sm">

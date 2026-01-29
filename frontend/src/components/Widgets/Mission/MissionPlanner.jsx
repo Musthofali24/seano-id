@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import useTitle from "../../../hooks/useTitle";
 import useMissionData from "../../../hooks/useMissionData";
 import { toast } from "../../ui";
@@ -16,6 +17,7 @@ import MissionModals from "./MissionModals";
 const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   useTitle("Missions");
   const { createMission, updateMission, missionData } = useMissionData();
+  const [searchParams] = useSearchParams();
 
   // Main mission state
   const [homeLocation, setHomeLocation] = useState(null);
@@ -36,6 +38,7 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
 
   // FeatureGroup ref for programmatic layer management
   const [featureGroupRef, setFeatureGroupRef] = useState(null);
+  const hasLoadedMissionRef = useRef(false);
 
   // Mission Parameters state
   const [missionParams, setMissionParams] = useState({
@@ -63,6 +66,25 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
       battery: Math.round(batteryPercent),
     };
   }, [waypoints, homeLocation, missionParams.speed]);
+
+  // Auto-load mission from URL parameter
+  useEffect(() => {
+    const editMissionId = searchParams.get("edit");
+    if (
+      editMissionId &&
+      missionData.length > 0 &&
+      !hasLoadedMissionRef.current
+    ) {
+      const missionToEdit = missionData.find(
+        (m) => m.id === parseInt(editMissionId),
+      );
+      if (missionToEdit) {
+        hasLoadedMissionRef.current = true;
+        handleSelectMission(missionToEdit);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, missionData]);
 
   // Helper functions
   const getActualWaypointCount = (waypointsList) => {

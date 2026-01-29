@@ -1,11 +1,49 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import useMissionData from "../../../hooks/useMissionData";
-import { DataTable } from "../../ui";
+import { DataTable, ConfirmModal } from "../../ui";
 import DataCard from "../DataCard";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const MissionTable = () => {
-  const { missionData, loading, formatTimeElapsed } = useMissionData();
+  const { missionData, loading, formatTimeElapsed, deleteMission } =
+    useMissionData();
+  const navigate = useNavigate();
   const [filterStatus, setFilterStatus] = useState("All");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedMission, setSelectedMission] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Handle delete mission
+  const handleDeleteClick = (mission) => {
+    setSelectedMission(mission);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedMission) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteMission(selectedMission.id);
+      setShowDeleteModal(false);
+      setSelectedMission(null);
+    } catch (error) {
+      console.error("Failed to delete mission:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setSelectedMission(null);
+  };
+
+  // Handle edit mission
+  const handleEditClick = (mission) => {
+    navigate(`/mission-planner?edit=${mission.id}`);
+  };
 
   // Get status badge color
   const getStatusBadge = (status) => {
@@ -144,6 +182,31 @@ const MissionTable = () => {
         </span>
       ),
     },
+    {
+      header: "Actions",
+      accessorKey: "actions",
+      className: "text-center w-32",
+      cellClassName: "text-center whitespace-nowrap",
+      sortable: false,
+      cell: (row) => (
+        <div className="flex items-center justify-center gap-3 w-full h-full">
+          <button
+            onClick={() => handleEditClick(row)}
+            className="inline-flex items-center justify-center p-2 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
+            title="Edit Mission"
+          >
+            <FaEdit size={16} />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(row)}
+            className="inline-flex items-center justify-center p-2 text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
+            title="Delete Mission"
+          >
+            <FaTrash size={16} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   // Get unique statuses for filter buttons
@@ -179,6 +242,23 @@ const MissionTable = () => {
         emptyMessage="No missions found."
         loading={loading}
         skeletonRows={5}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Mission"
+        message={
+          selectedMission
+            ? `Are you sure you want to delete mission "${selectedMission.name}"? This action cannot be undone.`
+            : "Are you sure you want to delete this mission?"
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        isLoading={isDeleting}
       />
     </DataCard>
   );

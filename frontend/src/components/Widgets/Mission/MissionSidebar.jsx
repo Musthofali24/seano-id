@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FaHome,
   FaPlus,
@@ -11,6 +13,7 @@ import {
   FaCog,
 } from "react-icons/fa";
 import Dropdown from "../Dropdown";
+import { ConfirmModal } from "../../ui";
 
 const MissionSidebar = ({
   isSidebarOpen,
@@ -38,6 +41,8 @@ const MissionSidebar = ({
   getActualWaypointCount,
   isPointInPolygon,
 }) => {
+  const [showClearModal, setShowClearModal] = useState(false);
+
   const handleDeleteWaypoint = (waypointId) => {
     const waypointToDelete = waypoints.find((wp) => wp.id === waypointId);
     const updatedWaypoints = waypoints.filter((wp) => wp.id !== waypointId);
@@ -681,15 +686,7 @@ const MissionSidebar = ({
           (hasGeneratedWaypoints ||
             waypoints.some((wp) => wp.type === "path")) && (
             <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "Are you sure you want to clear all waypoints? This will allow you to start planning again.",
-                  )
-                ) {
-                  handleClearWaypoints();
-                }
-              }}
+              onClick={() => setShowClearModal(true)}
               className="w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               <FaTrash size={12} />
@@ -721,6 +718,24 @@ const MissionSidebar = ({
           Upload to Vehicle
         </button>
       </div>
+
+      {/* Clear Waypoints Confirmation Modal - Using Portal to render outside */}
+      {createPortal(
+        <ConfirmModal
+          isOpen={showClearModal}
+          onClose={() => setShowClearModal(false)}
+          onConfirm={() => {
+            handleClearWaypoints();
+            setShowClearModal(false);
+          }}
+          title="Clear All Waypoints"
+          message="Are you sure you want to clear all waypoints? This will allow you to start planning again."
+          confirmText="Clear"
+          cancelText="Cancel"
+          type="danger"
+        />,
+        document.body,
+      )}
     </aside>
   );
 };

@@ -26,7 +26,7 @@ const Main = ({
 
       {/* Content */}
       <div
-        className={`text-gray-500 bg-white px-4 mt-16 sm:mt-12
+        className={`text-gray-500 bg-white px-4 mt-28 sm:mt-12
                     transition-all duration-300 dark:bg-black dark:text-gray-400
                     min-h-[calc(100vh-56px)]
                     ${isSidebarOpen ? "md:ml-64 ml-16" : "ml-16"} ${

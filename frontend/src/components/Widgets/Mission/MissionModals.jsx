@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import useMissionData from "../../../hooks/useMissionData";
+import { LoadingDots } from "../../ui";
 
 const MissionModals = ({
   showNewMissionModal,
@@ -97,7 +98,7 @@ const MissionModals = ({
             </h3>
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <LoadingDots size="md" color="blue" />
               </div>
             ) : missionData.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">

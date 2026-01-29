@@ -219,20 +219,20 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
   }
 
   return (
-    <div className="h-full p-6 flex flex-col">
+    <div className="h-2/6 p-4 md:p-6 flex flex-col">
       {/* Header */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      <div className="mb-4 md:mb-6">
+        <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white mb-1 md:mb-2">
           Vehicle Status
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 truncate">
           {currentVehicle.name || `No Vehicle Selected`}
         </p>
       </div>
 
       {/* Connection Status */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6 flex-shrink-0">
+        <div className="p-2.5 md:p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaWifi
               className={
@@ -256,7 +256,7 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </p>
         </div>
 
-        <div className="p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
+        <div className="p-2.5 md:p-3 rounded-lg bg-white dark:bg-black border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2 mb-1">
             <FaShieldAlt
               className={
@@ -280,13 +280,13 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* Flight Mode & Guidance */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="mb-4 md:mb-6 flex-shrink-0">
+        <div className="flex items-center justify-between mb-2 md:mb-3">
+          <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">
             Flight Mode
           </span>
           <span
-            className={`px-3 py-1 text-xs font-semibold rounded-full ${getModeColor(
+            className={`px-2.5 md:px-3 py-1 text-xs font-semibold rounded-full ${getModeColor(
               vehicleStates.mode,
             )}`}
           >
@@ -346,14 +346,14 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* System Status */}
-      <div className="mb-6 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="mb-4 md:mb-6 p-3 md:p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex items-center gap-2 mb-1.5 md:mb-2">
           <FaExclamationTriangle className={systemStatus.color} size={16} />
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <span className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300">
             System Status
           </span>
         </div>
-        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+        <p className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100">
           {systemStatus.text}
         </p>
         {mergedData.system_status && (
@@ -364,14 +364,14 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* Position Data */}
-      <div className="mb-4 p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="mb-3 md:mb-4 p-3 md:p-4 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="flex items-center gap-2 mb-2 md:mb-3">
           <FaArrowUp className="text-purple-600" />
-          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          <span className="text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300">
             Position
           </span>
         </div>
-        <div className="space-y-2 text-sm">
+        <div className="space-y-1.5 md:space-y-2 text-xs md:text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Latitude:</span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -394,9 +394,9 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
       </div>
 
       {/* Signal & Temperature */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-2">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 flex-shrink-0">
+        <div className="p-2.5 md:p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1.5 md:mb-2">
             <FaWifi className={getRSSIColor(mergedData.rssi)} />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
               Signal
@@ -425,8 +425,8 @@ const VehicleStatusPanel = React.memo(({ selectedVehicle }) => {
           </div>
         </div>
 
-        <div className="p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-2">
+        <div className="p-2.5 md:p-3 bg-white dark:bg-black rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-2 mb-1.5 md:mb-2">
             <FaThermometerHalf className="text-orange-500" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
               Temp

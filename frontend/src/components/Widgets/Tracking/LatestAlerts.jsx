@@ -120,16 +120,16 @@ const LatestAlerts = ({ selectedVehicle }) => {
   }
 
   return (
-    <div className="p-4 h-full flex flex-col">
+    <div className="p-3 md:p-4 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 md:mb-4">
         <div className="flex items-center gap-2">
           <FaBell className="text-orange-500" />
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
             Latest Alerts
           </h3>
         </div>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
           {selectedVehicle?.registration_code ||
             selectedVehicle?.name ||
             "USV 001"}
@@ -137,21 +137,27 @@ const LatestAlerts = ({ selectedVehicle }) => {
       </div>
 
       {/* Alerts List */}
-      <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800">
+      <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
         {alerts.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-            <FaCheckCircle className="text-4xl mb-3 text-green-500" />
-            <div className="text-sm font-medium">No alerts found</div>
-            <div className="text-xs">Vehicle is operating normally</div>
+            <FaCheckCircle className="text-3xl md:text-4xl mb-2 md:mb-3 text-green-500" />
+            <div className="text-xs md:text-sm font-medium">
+              No alerts found
+            </div>
+            <div className="text-[10px] md:text-xs">
+              Vehicle is operating normally
+            </div>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>0 alerts</span>
-          <span>Last updated: {formatTime(new Date())}</span>
+      <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+          <span className="font-medium">0 alerts</span>
+          <span className="hidden sm:inline">
+            Last updated: {formatTime(new Date())}
+          </span>
         </div>
       </div>
     </div>

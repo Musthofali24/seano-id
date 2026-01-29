@@ -326,7 +326,7 @@ const Control = () => {
               animate={{ width: 320, opacity: 1 }}
               exit={{ width: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className={`absolute left-4 top-4 ${panelCls} rounded-xl p-4 flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-auto shadow-lg pointer-events-auto`}
+              className={`absolute left-4 top-4 ${panelCls} rounded-xl p-4 flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-auto custom-scrollbar shadow-lg pointer-events-auto`}
             >
               <div className="flex items-center justify-between">
                 <h2
@@ -630,7 +630,7 @@ const Control = () => {
               animate={{ width: 320, opacity: 1 }}
               exit={{ width: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className={`absolute right-4 top-4 ${panelCls} rounded-xl p-4 flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-auto shadow-lg pointer-events-auto`}
+              className={`absolute right-4 top-4 ${panelCls} rounded-xl p-4 flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-auto custom-scrollbar shadow-lg pointer-events-auto`}
             >
               <div className="flex items-center justify-between">
                 <h2

@@ -6,6 +6,27 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
   const { vehicleLogs, ws } = useLogData(); // Get vehicle logs from WebSocket
   const [loading, setLoading] = useState(true);
   const [showTimeout, setShowTimeout] = useState(false);
+  const [indicatorSize, setIndicatorSize] = useState(280);
+
+  // Handle responsive indicator size
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setIndicatorSize(Math.min(width * 0.75, 240)); // Mobile - increased
+      } else if (width < 768) {
+        setIndicatorSize(280); // Small tablet - increased
+      } else if (width < 1024) {
+        setIndicatorSize(300); // Tablet - increased
+      } else {
+        setIndicatorSize(320); // Desktop - increased
+      }
+    };
+
+    updateSize();
+    window.addEventListener("resize", updateSize);
+    return () => window.removeEventListener("resize", updateSize);
+  }, []);
 
   // Find latest vehicle log for selected vehicle
   const vehicleLog = useMemo(() => {
@@ -13,7 +34,7 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
 
     // Filter by vehicle ID and get the latest (first in array, newest first)
     const filtered = vehicleLogs.filter(
-      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id
+      (log) => (log.vehicle?.id || log.vehicle_id) == selectedVehicle.id,
     );
 
     const latest = filtered.length > 0 ? filtered[0] : null;
@@ -54,13 +75,13 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
   const heading = vehicleLog?.heading || vehicleLog?.yaw || 0;
 
   return (
-    <div className="h-full p-6 flex flex-col items-center justify-center">
+    <div className="h-full p-3 md:p-6 flex flex-col items-center justify-center">
       {/* Flight Indicators - Vertical Layout */}
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-3 md:gap-6 w-full">
         {/* Attitude Indicator */}
-        <div className="flex justify-center">
+        <div className="flex justify-center w-full">
           <AttitudeIndicator
-            size={300}
+            size={indicatorSize}
             roll={roll}
             pitch={pitch}
             showBox={false}
@@ -68,8 +89,12 @@ const TelemetryPanel = React.memo(({ selectedVehicle = null }) => {
         </div>
 
         {/* Heading Indicator */}
-        <div className="flex justify-center">
-          <HeadingIndicator size={300} heading={heading} showBox={false} />
+        <div className="flex justify-center w-full">
+          <HeadingIndicator
+            size={indicatorSize}
+            heading={heading}
+            showBox={false}
+          />
         </div>
       </div>
     </div>

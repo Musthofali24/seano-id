@@ -239,7 +239,7 @@ const AddVehicleWizard = ({ isOpen, onClose, onSuccess }) => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto custom-scrollbar">
               {availableSensors.map((sensor) => (
                 <div
                   key={sensor.id}

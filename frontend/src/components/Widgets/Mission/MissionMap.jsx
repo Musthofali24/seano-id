@@ -576,7 +576,7 @@ const MissionMap = ({
       style={{ position: "relative" }}
     >
       {/* Search Coordinates - Floating Button at Top Center */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-auto">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-1000 pointer-events-auto">
         {!showSearchInput ? (
           <button
             onClick={() => setShowSearchInput(true)}
@@ -1112,146 +1112,153 @@ const MissionMap = ({
       </MapContainer>
 
       {/* Floating Guide Button */}
-      <div className="absolute bottom-6 right-6 z-[1000] pointer-events-auto">
+      <div className="absolute bottom-6 right-6 z-1000 pointer-events-auto">
         <AnimatePresence>
           {showGuide && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.2 }}
-              className="mb-4 w-80 bg-white dark:bg-black rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col max-h-[calc(100vh-200px)]"
-            >
-              {/* Guide Header */}
-              <div className="bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-t-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FaQuestionCircle className="text-base" />
-                  <h3 className="font-semibold">Mission Planner Guide</h3>
-                </div>
-                <button
-                  onClick={() => setShowGuide(false)}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                >
-                  <FaTimes className="text-sm" />
-                </button>
-              </div>
-
-              {/* Guide Content - Scrollable */}
-              <div className="overflow-y-auto p-4 space-y-3 text-sm custom-scrollbar">
-                <div className="space-y-1.5">
+            <>
+              {/* Backdrop untuk close saat klik di luar */}
+              <div
+                className="fixed inset-0 z-999"
+                onClick={() => setShowGuide(false)}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-16 right-0 w-80 bg-white dark:bg-black rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col max-h-[calc(100vh-200px)] z-1000"
+              >
+                {/* Guide Header */}
+                <div className="bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-t-lg flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      1
-                    </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Create New Mission
-                    </h4>
+                    <FaQuestionCircle className="text-base" />
+                    <h3 className="font-semibold">Mission Planner Guide</h3>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Click "+ New Mission" button to start planning.
-                  </p>
+                  <button
+                    onClick={() => setShowGuide(false)}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <FaTimes className="text-sm" />
+                  </button>
                 </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      2
+                {/* Guide Content - Scrollable */}
+                <div className="overflow-y-auto p-4 space-y-3 text-sm custom-scrollbar">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        1
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Create New Mission
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Set Home Location
-                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Click "+ New Mission" button to start planning.
+                    </p>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Click the <FaHome className="inline" /> button, then click
-                    on map to set starting point.
-                  </p>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      3
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        2
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Set Home Location
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Draw Waypoints
-                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Click the <FaHome className="inline" /> button, then click
+                      on map to set starting point.
+                    </p>
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300 ml-7 text-xs space-y-1">
-                    <p>Use drawing tools on the left:</p>
-                    <ul className="list-disc list-inside space-y-0.5 text-xs">
-                      <li>Polyline - Sequential path</li>
-                      <li>Polygon - Area coverage</li>
-                      <li>Rectangle - Quick area mapping</li>
-                      <li>Circle - Circular patrol zone</li>
-                    </ul>
-                  </div>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      4
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        3
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Draw Waypoints
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Edit Waypoints
-                    </h4>
+                    <div className="text-gray-600 dark:text-gray-300 ml-7 text-xs space-y-1">
+                      <p>Use drawing tools on the left:</p>
+                      <ul className="list-disc list-inside space-y-0.5 text-xs">
+                        <li>Polyline - Sequential path</li>
+                        <li>Polygon - Area coverage</li>
+                        <li>Rectangle - Quick area mapping</li>
+                        <li>Circle - Circular patrol zone</li>
+                      </ul>
+                    </div>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Click on waypoint markers to edit altitude, speed, and other
-                    parameters. Enable Edit Mode to drag waypoints.
-                  </p>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      5
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        4
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Edit Waypoints
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Search Location
-                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Click on waypoint markers to edit altitude, speed, and
+                      other parameters. Enable Edit Mode to drag waypoints.
+                    </p>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Use the <FaSearch className="inline" /> search button at the
-                    top to find coordinates.
-                    <br />
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      Format: -6.2088, 106.8456
-                    </span>
-                  </p>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
-                      6
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        5
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Search Location
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Mission Parameters
-                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Use the <FaSearch className="inline" /> search button at
+                      the top to find coordinates.
+                      <br />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Format: -6.2088, 106.8456
+                      </span>
+                    </p>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Adjust speed, delay, loiter time, and radius in the left
-                    sidebar.
-                  </p>
-                </div>
 
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold">
-                      7
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                        6
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Mission Parameters
+                      </h4>
                     </div>
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                      Save & Upload
-                    </h4>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Adjust speed, delay, loiter time, and radius in the left
+                      sidebar.
+                    </p>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
-                    Click "Save Mission" to save, then "Upload to Vehicle" to
-                    deploy.
-                  </p>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold">
+                        7
+                      </div>
+                      <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                        Save & Upload
+                      </h4>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                      Click "Save Mission" to save, then "Upload to Vehicle" to
+                      deploy.
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 

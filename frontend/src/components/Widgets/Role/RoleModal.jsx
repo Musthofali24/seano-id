@@ -37,7 +37,7 @@ const RoleModal = ({ isOpen, onClose, onSubmit, permissionData = [] }) => {
     setSelectedPermissions((prev) =>
       prev.includes(permissionId)
         ? prev.filter((id) => id !== permissionId)
-        : [...prev, permissionId]
+        : [...prev, permissionId],
     );
   };
 
@@ -54,32 +54,32 @@ const RoleModal = ({ isOpen, onClose, onSubmit, permissionData = [] }) => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-6">
           {/* Left Side - Form */}
-        <div className="space-y-4">
-          {/* Role Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Role Name *
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="Enter role name"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
-            />
-          </div>
+          <div className="space-y-4">
+            {/* Role Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+                Role Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                required
+                placeholder="Enter role name"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
+              />
+            </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+                Description
+              </label>
+              <textarea
+                name="description"
                 rows="6"
-              placeholder="Enter role description"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
-            />
+                placeholder="Enter role description"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
+              />
             </div>
           </div>
 
@@ -99,7 +99,7 @@ const RoleModal = ({ isOpen, onClose, onSubmit, permissionData = [] }) => {
                   : "Select All"}
               </button>
             </div>
-            <div className="border border-gray-300 dark:border-slate-600 rounded-xl p-3 space-y-2 bg-gray-50 dark:bg-gray-800/50 h-[280px] overflow-y-auto">
+            <div className="border border-gray-300 dark:border-slate-600 rounded-xl p-3 space-y-2 bg-gray-50 dark:bg-gray-800/50 h-[280px] overflow-y-auto custom-scrollbar">
               {permissionData.length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                   No permissions available

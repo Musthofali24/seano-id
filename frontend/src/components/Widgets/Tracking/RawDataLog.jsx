@@ -40,9 +40,9 @@ const RawDataLog = ({ selectedVehicle }) => {
 
   // Debug: Check raw log structure
   if (rawLogs.length > 0) {
-    console.log('RawDataLog - First raw log structure:', rawLogs[0]);
-    console.log('RawDataLog - First log vehicle:', rawLogs[0].vehicle);
-    console.log('RawDataLog - First log vehicle_id:', rawLogs[0].vehicle_id);
+    console.log("RawDataLog - First raw log structure:", rawLogs[0]);
+    console.log("RawDataLog - First log vehicle:", rawLogs[0].vehicle);
+    console.log("RawDataLog - First log vehicle_id:", rawLogs[0].vehicle_id);
   }
 
   // Filter logs by selected vehicle (handle both number and string IDs)
@@ -51,7 +51,7 @@ const RawDataLog = ({ selectedVehicle }) => {
         const logVehicleId = log.vehicle?.id || log.vehicle_id;
         const match = logVehicleId == selectedVehicle.id;
         if (!match && rawLogs.indexOf(log) === 0) {
-          console.log('RawDataLog - Filter mismatch:', {
+          console.log("RawDataLog - Filter mismatch:", {
             logVehicleId,
             selectedVehicleId: selectedVehicle.id,
             logVehicle: log.vehicle,
@@ -61,11 +61,11 @@ const RawDataLog = ({ selectedVehicle }) => {
       })
     : rawLogs;
 
-  console.log('RawDataLog - Selected Vehicle:', selectedVehicle);
-  console.log('RawDataLog - Total raw logs:', rawLogs.length);
-  console.log('RawDataLog - Filtered logs:', filteredLogs.length);
+  console.log("RawDataLog - Selected Vehicle:", selectedVehicle);
+  console.log("RawDataLog - Total raw logs:", rawLogs.length);
+  console.log("RawDataLog - Filtered logs:", filteredLogs.length);
   if (filteredLogs.length > 0) {
-    console.log('RawDataLog - Sample filtered log:', filteredLogs[0]);
+    console.log("RawDataLog - Sample filtered log:", filteredLogs[0]);
   }
 
   const formatTime = (timestamp) => {
@@ -133,61 +133,59 @@ const RawDataLog = ({ selectedVehicle }) => {
   }
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="p-3 md:p-4 h-full flex flex-col">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 md:mb-4">
+        <div className="flex items-center gap-2">
+          <h3 className="text-base md:text-lg font-semibold text-gray-900 dark:text-white">
             Raw Data Log
           </h3>
-          <div className="flex items-center space-x-1">
-            {isConnected && (
-              <>
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    hasNewData ? "bg-green-500 animate-pulse" : "bg-green-500"
-                  }`}
-                ></div>
-                <span className="text-xs text-green-600 dark:text-green-400">
-                  Live
-                </span>
-              </>
-            )}
-          </div>
+          {isConnected && (
+            <div className="flex items-center gap-1">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  hasNewData ? "bg-green-500 animate-pulse" : "bg-green-500"
+                }`}
+              ></div>
+              <span className="text-xs text-green-600 dark:text-green-400">
+                Live
+              </span>
+            </div>
+          )}
         </div>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
           {selectedVehicle?.name || selectedVehicle?.code || "All Vehicles"}
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-1 font-mono text-xs scrollbar-hide">
+      <div className="flex-1 overflow-y-auto space-y-1.5 md:space-y-2 font-mono custom-scrollbar">
         {filteredLogs.map((log, index) => {
           const level = getLogLevel(log.logs);
           return (
             <div
               key={log.id || index}
-              className={`p-2 rounded border-l-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+              className={`p-2 md:p-2.5 rounded-md border-l-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                 level === "ERROR"
                   ? "border-red-500"
                   : level === "WARN"
-                  ? "border-yellow-500"
-                  : level === "INFO"
-                  ? "border-blue-500"
-                  : "border-gray-400"
+                    ? "border-yellow-500"
+                    : level === "INFO"
+                      ? "border-blue-500"
+                      : "border-gray-400"
               }`}
             >
-              <div className="flex items-start justify-between mb-1">
-                <span className="text-gray-500 dark:text-gray-400 text-xs">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <span className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                   {formatTime(log.created_at)}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded text-xs font-semibold ${getLogLevelStyle(
-                    level
+                  className={`px-1.5 md:px-2 py-0.5 rounded text-[9px] md:text-xs font-semibold flex-shrink-0 ${getLogLevelStyle(
+                    level,
                   )}`}
                 >
                   {level}
                 </span>
               </div>
-              <div className="text-gray-700 dark:text-gray-300 break-all text-xs leading-relaxed">
+              <div className="text-gray-700 dark:text-gray-300 break-words text-[10px] md:text-xs leading-relaxed">
                 {log.logs}
               </div>
             </div>
@@ -195,16 +193,25 @@ const RawDataLog = ({ selectedVehicle }) => {
         })}
 
         {filteredLogs.length === 0 && !loading && (
-          <div className="text-center text-gray-500 font-openSans dark:text-gray-400 py-20">
-            No logs available
+          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 font-openSans dark:text-gray-400 py-12 md:py-20">
+            <div className="text-3xl md:text-4xl mb-2">📋</div>
+            <p className="text-sm md:text-base">No logs available</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Waiting for data...
+            </p>
           </div>
         )}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <span>{filteredLogs.length} entries</span>
-          <span>Last updated: {formatTime(new Date().toISOString())}</span>
+      <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-[10px] md:text-xs text-gray-500 dark:text-gray-400">
+          <span className="font-medium">
+            {filteredLogs.length}{" "}
+            {filteredLogs.length === 1 ? "entry" : "entries"}
+          </span>
+          <span className="hidden sm:inline">
+            Last updated: {formatTime(new Date().toISOString())}
+          </span>
         </div>
       </div>
     </div>

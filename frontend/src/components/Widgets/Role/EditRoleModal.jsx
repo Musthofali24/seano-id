@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../../ui";
 
-const EditRoleModal = ({ isOpen, onClose, onSubmit, role, permissionData = [] }) => {
+const EditRoleModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  role,
+  permissionData = [],
+}) => {
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
   // Initialize with role's existing permissions
   useEffect(() => {
     if (isOpen && role) {
       // If role has permissions array, use it; otherwise empty
-      setSelectedPermissions(role.permissions?.map(p => p.id) || []);
+      setSelectedPermissions(role.permissions?.map((p) => p.id) || []);
     } else if (!isOpen) {
       setSelectedPermissions([]);
     }
@@ -39,7 +45,7 @@ const EditRoleModal = ({ isOpen, onClose, onSubmit, role, permissionData = [] })
     setSelectedPermissions((prev) =>
       prev.includes(permissionId)
         ? prev.filter((id) => id !== permissionId)
-        : [...prev, permissionId]
+        : [...prev, permissionId],
     );
   };
 
@@ -105,7 +111,7 @@ const EditRoleModal = ({ isOpen, onClose, onSubmit, role, permissionData = [] })
                   : "Select All"}
               </button>
             </div>
-            <div className="border border-gray-300 dark:border-slate-600 rounded-xl p-3 space-y-2 bg-gray-50 dark:bg-gray-800/50 h-[280px] overflow-y-auto">
+            <div className="border border-gray-300 dark:border-slate-600 rounded-xl p-3 space-y-2 bg-gray-50 dark:bg-gray-800/50 h-[280px] overflow-y-auto custom-scrollbar">
               {permissionData.length === 0 ? (
                 <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
                   No permissions available
@@ -166,4 +172,3 @@ const EditRoleModal = ({ isOpen, onClose, onSubmit, role, permissionData = [] })
 };
 
 export default EditRoleModal;
-

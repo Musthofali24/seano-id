@@ -48,7 +48,7 @@ const VehicleLogPanel = ({ selectedVehicle = null }) => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (response.ok) {
@@ -186,14 +186,14 @@ const VehicleLogPanel = ({ selectedVehicle = null }) => {
       </div>
 
       {/* Log Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto custom-scrollbar">
         {activeTab === "system" ? (
           <div className="p-6 space-y-3">
             {logData.system.map((log) => (
               <div
                 key={log.id}
                 className={`p-3 rounded-lg border ${getLogLevelColor(
-                  log.level
+                  log.level,
                 )}`}
               >
                 <div className="flex items-start gap-3">
@@ -205,7 +205,7 @@ const VehicleLogPanel = ({ selectedVehicle = null }) => {
                       </span>
                       <span
                         className={`px-2 py-0.5 text-xs font-medium rounded ${getLogLevelColor(
-                          log.level
+                          log.level,
                         )}`}
                       >
                         {log.module}
