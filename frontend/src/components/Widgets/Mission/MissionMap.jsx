@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -7,13 +7,21 @@ import {
   Popup,
   useMapEvents,
   Polyline,
+  useMap,
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import L from "leaflet";
 import "leaflet-draw";
-import { FaHome, FaEdit } from "react-icons/fa";
+import {
+  FaHome,
+  FaEdit,
+  FaSearch,
+  FaQuestionCircle,
+  FaTimes,
+} from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Fix default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -25,6 +33,22 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
+
+// Map controller component to update map position
+const MapController = ({ center, zoom }) => {
+  const map = useMap();
+
+  React.useEffect(() => {
+    if (center) {
+      map.setView(center, zoom || map.getZoom(), {
+        animate: true,
+        duration: 1,
+      });
+    }
+  }, [center, zoom, map]);
+
+  return null;
+};
 
 const MissionMap = ({
   darkMode,
@@ -49,6 +73,135 @@ const MissionMap = ({
   setActiveMission,
   getActualWaypointCount,
 }) => {
+  // Search coordinates state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mapCenter, setMapCenter] = useState(null);
+  const [mapZoom, setMapZoom] = useState(null);
+  const [showSearchInput, setShowSearchInput] = useState(false);
+
+  // Guide state
+  const [showGuide, setShowGuide] = useState(false);
+
+  // Restore polygon/zone shapes when waypoints are loaded
+  React.useEffect(() => {
+    console.log("Restoring zones - featureGroupRef:", featureGroupRef);
+    console.log("Restoring zones - waypoints:", waypoints);
+
+    if (featureGroupRef && waypoints.length > 0) {
+      // Clear existing zone layers first
+      featureGroupRef.eachLayer((layer) => {
+        if (layer.options && layer.options.isZoneLayer) {
+          console.log("Removing existing zone layer:", layer);
+          featureGroupRef.removeLayer(layer);
+        }
+      });
+
+      // Redraw zones from waypoints
+      waypoints.forEach((wp) => {
+        console.log("Processing waypoint:", wp);
+        if (wp.type === "zone" && wp.shape) {
+          console.log("Found zone waypoint to restore:", wp);
+          let layer;
+
+          if (wp.shape === "polygon" && wp.vertices) {
+            // Recreate polygon
+            console.log("Recreating polygon with vertices:", wp.vertices);
+            const latLngs = wp.vertices.map((v) => [v.lat, v.lng]);
+            layer = L.polygon(latLngs, {
+              color: "#018190",
+              weight: 3,
+              fillOpacity: 0.15,
+              isZoneLayer: true,
+            });
+          } else if (wp.shape === "rectangle" && wp.bounds) {
+            // Recreate rectangle
+            console.log("Recreating rectangle with bounds:", wp.bounds);
+            const bounds = L.latLngBounds(
+              [wp.bounds.south, wp.bounds.west],
+              [wp.bounds.north, wp.bounds.east],
+            );
+            layer = L.rectangle(bounds, {
+              color: "#018190",
+              weight: 3,
+              fillOpacity: 0.15,
+              isZoneLayer: true,
+            });
+          } else if (wp.shape === "circle" && wp.radius) {
+            // Recreate circle
+            console.log("Recreating circle with radius:", wp.radius);
+            layer = L.circle([wp.lat, wp.lng], {
+              radius: wp.radius,
+              color: "#018190",
+              weight: 3,
+              fillOpacity: 0.15,
+              isZoneLayer: true,
+            });
+          }
+
+          if (layer) {
+            console.log("Adding layer to featureGroup:", layer);
+            layer.waypointId = wp.id;
+            featureGroupRef.addLayer(layer);
+          } else {
+            console.log("No layer created for waypoint:", wp);
+          }
+        }
+      });
+    } else {
+      console.log(
+        "Skipping zone restoration - featureGroupRef or waypoints not ready",
+      );
+    }
+  }, [waypoints, featureGroupRef]);
+
+  // Handle coordinate search
+  const handleSearchCoordinates = (e) => {
+    // Check if it's Enter key press or button click (mousedown)
+    if (e.key === "Enter" || e.type === "mousedown") {
+      e.preventDefault();
+      const query = searchQuery.trim();
+      if (!query) return;
+
+      let lat, lng;
+
+      // Try comma-separated format
+      if (query.includes(",")) {
+        const parts = query.split(",").map((s) => s.trim());
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0]);
+          lng = parseFloat(parts[1]);
+        }
+      }
+      // Try space-separated format
+      else {
+        const parts = query.split(/\s+/);
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0]);
+          lng = parseFloat(parts[1]);
+        }
+      }
+
+      // Validate coordinates
+      if (
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180
+      ) {
+        setMapCenter([lat, lng]);
+        setMapZoom(18);
+        setShowSearchInput(false);
+        setSearchQuery("");
+      } else {
+        alert(
+          "Invalid coordinates. Please use format: latitude, longitude\nExample: -6.2088, 106.8456",
+        );
+      }
+    }
+  };
+
   // Home icon definition
   const homeIcon = L.divIcon({
     html: `<div style="background-color: #018190; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.15); font-size: 14px;">
@@ -421,6 +574,64 @@ const MissionMap = ({
       className="w-full h-full overflow-hidden z-30"
       style={{ position: "relative" }}
     >
+      {/* Search Coordinates - Floating Button at Top Center */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-auto">
+        {!showSearchInput ? (
+          <button
+            onClick={() => setShowSearchInput(true)}
+            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 p-3 rounded-lg shadow-lg transition-all border border-gray-200 dark:border-gray-600 flex items-center gap-2"
+            title="Search Coordinates"
+          >
+            <FaSearch className="text-base" />
+          </button>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 p-2 w-96">
+            <div className="relative flex items-center">
+              <FaSearch className="absolute left-3 text-gray-400 dark:text-gray-500 z-10" />
+              <input
+                type="text"
+                placeholder="Enter coordinates (e.g., -6.2088, 106.8456)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchCoordinates}
+                onBlur={() => {
+                  setTimeout(() => {
+                    if (!searchQuery) setShowSearchInput(false);
+                  }, 200);
+                }}
+                autoFocus
+                className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-20 py-2.5 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+              />
+              <div className="absolute right-2 flex gap-1">
+                {searchQuery && (
+                  <button
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSearchCoordinates(e);
+                    }}
+                    className="p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                    title="Search"
+                  >
+                    <FaSearch className="text-xs" />
+                  </button>
+                )}
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setShowSearchInput(false);
+                    setSearchQuery("");
+                  }}
+                  className="p-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md transition-colors text-xs font-medium"
+                  title="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <style jsx global>{`
         .leaflet-draw-toolbar {
           display: block !important;
@@ -456,6 +667,7 @@ const MissionMap = ({
         maxBoundsViscosity={1.5}
         minZoom={18}
       >
+        <MapController center={mapCenter} zoom={mapZoom} />
         <TileLayer
           attribution="&copy; Esri"
           url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -897,6 +1109,186 @@ const MissionMap = ({
           </Marker>
         )}
       </MapContainer>
+
+      {/* Floating Guide Button */}
+      <div className="absolute bottom-6 right-6 z-[1000] pointer-events-auto">
+        <AnimatePresence>
+          {showGuide && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="mb-4 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col max-h-[calc(100vh-200px)]"
+            >
+              {/* Guide Header */}
+              <div className="bg-blue-500 dark:bg-blue-600 text-white p-3 rounded-t-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FaQuestionCircle className="text-base" />
+                  <h3 className="font-semibold">Mission Planner Guide</h3>
+                </div>
+                <button
+                  onClick={() => setShowGuide(false)}
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <FaTimes className="text-sm" />
+                </button>
+              </div>
+
+              {/* Guide Content - Scrollable */}
+              <div className="overflow-y-auto p-4 space-y-3 text-sm custom-scrollbar">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      1
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Create New Mission
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Click "+ New Mission" button to start planning.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      2
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Set Home Location
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Click the <FaHome className="inline" /> button, then click
+                    on map to set starting point.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      3
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Draw Waypoints
+                    </h4>
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-300 ml-7 text-xs space-y-1">
+                    <p>Use drawing tools on the left:</p>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs">
+                      <li>Polyline - Sequential path</li>
+                      <li>Polygon - Area coverage</li>
+                      <li>Rectangle - Quick area mapping</li>
+                      <li>Circle - Circular patrol zone</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      4
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Edit Waypoints
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Click on waypoint markers to edit altitude, speed, and other
+                    parameters. Enable Edit Mode to drag waypoints.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      5
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Search Location
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Use the <FaSearch className="inline" /> search button at the
+                    top to find coordinates.
+                    <br />
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      Format: -6.2088, 106.8456
+                    </span>
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-semibold">
+                      6
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Mission Parameters
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Adjust speed, delay, loiter time, and radius in the left
+                    sidebar.
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-semibold">
+                      7
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Save & Upload
+                    </h4>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 ml-7 text-xs">
+                    Click "Save Mission" to save, then "Upload to Vehicle" to
+                    deploy.
+                  </p>
+                </div>
+
+                <div className="mt-3 p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-1.5 text-xs">
+                    Pro Tips
+                  </h4>
+                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5">
+                    <li>
+                      • Monitor battery usage and estimated time in the sidebar
+                    </li>
+                    <li>• Use polygon for efficient area coverage</li>
+                    <li>• Set appropriate loiter time for data collection</li>
+                    <li>• Load previous missions to reuse waypoints</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Guide Toggle Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowGuide(!showGuide)}
+          className={`${
+            showGuide
+              ? "bg-blue-500 hover:bg-blue-600"
+              : "bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
+          } ${
+            showGuide ? "text-white" : "text-gray-700 dark:text-gray-200"
+          } p-3 rounded-full shadow-lg transition-all border ${
+            showGuide
+              ? "border-blue-500"
+              : "border-gray-200 dark:border-gray-600"
+          } flex items-center justify-center`}
+          title="Mission Planner Guide"
+        >
+          <FaQuestionCircle className="text-xl" />
+        </motion.button>
+      </div>
     </div>
   );
 };

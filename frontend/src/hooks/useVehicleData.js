@@ -39,14 +39,16 @@ const useVehicleData = () => {
         if (!response.ok) {
           const errorText = await response.text()
           console.error('❌ Vehicles API error:', response.status, errorText)
-          throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+          throw new Error(
+            `HTTP error! status: ${response.status}, message: ${errorText}`
+          )
         }
 
         const data = await response.json()
         console.log('📦 Vehicles API response:', data)
         console.log('📦 Response type:', typeof data)
         console.log('📦 Is array?:', Array.isArray(data))
-        
+
         // Handle different response formats
         let vehiclesArray = []
         if (Array.isArray(data)) {
@@ -58,23 +60,22 @@ const useVehicleData = () => {
         } else {
           console.warn('⚠️ Unexpected vehicles response format:', data)
         }
-        
+
         console.log('✅ Vehicles array length:', vehiclesArray.length)
 
         // Process and validate API data
         const processedVehicles = vehiclesArray.map(vehicle => ({
-              id: vehicle.id,
-              name: vehicle.name || `Vehicle ${vehicle.id}`,
-              code:
-                vehicle.code || `USV-${String(vehicle.id).padStart(3, '0')}`,
-              type: vehicle.type || 'USV',
-              role: vehicle.role || 'Patrol',
-              status: vehicle.status || 'offline',
-              battery_level: vehicle.battery_level || 0,
-              latitude: vehicle.latitude || null,
-              longitude: vehicle.longitude || null,
-              created_at: vehicle.created_at || new Date().toISOString()
-            }))
+          id: vehicle.id,
+          name: vehicle.name || `Vehicle ${vehicle.id}`,
+          code: vehicle.code || `USV-${String(vehicle.id).padStart(3, '0')}`,
+          type: vehicle.type || 'USV',
+          role: vehicle.role || 'Patrol',
+          status: vehicle.status || 'offline',
+          battery_level: vehicle.battery_level || 0,
+          latitude: vehicle.latitude || null,
+          longitude: vehicle.longitude || null,
+          created_at: vehicle.created_at || new Date().toISOString()
+        }))
 
         // Only update state if data actually changed
         setVehicles(prevVehicles => {

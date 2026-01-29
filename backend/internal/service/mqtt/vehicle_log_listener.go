@@ -50,14 +50,18 @@ func (l *VehicleLogListener) Start() error {
 
 // handleMessage processes incoming MQTT messages
 func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message) {
+	log.Printf("🚗 Received vehicle telemetry on topic: %s", msg.Topic())
+	log.Printf("   Payload: %s", string(msg.Payload()))
+	
 	// Parse topic: seano/{vehicle_code}/telemetry
 	parts := strings.Split(msg.Topic(), "/")
 	if len(parts) != 3 {
-		log.Printf("Invalid topic format: %s", msg.Topic())
+		log.Printf("❌ Invalid topic format: %s", msg.Topic())
 		return
 	}
 	
 	vehicleCodeFromTopic := parts[1]
+	log.Printf("   Vehicle code from topic: %s", vehicleCodeFromTopic)
 	
 	// Parse JSON payload (might contain vehicle_code)
 	var payloadWithCode struct {
@@ -66,9 +70,12 @@ func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message)
 	}
 	
 	if err := json.Unmarshal(msg.Payload(), &payloadWithCode); err != nil {
-		log.Printf("Failed to parse vehicle log data: %v", err)
+		log.Printf("❌ Failed to parse vehicle log data: %v", err)
+		log.Printf("   Raw payload: %s", string(msg.Payload()))
 		return
 	}
+	
+	log.Printf("   Parsed successfully")
 	
 	// Use vehicle_code from JSON if provided, otherwise use from topic
 	vehicleCode := vehicleCodeFromTopic
@@ -79,9 +86,11 @@ func (l *VehicleLogListener) handleMessage(client mqtt.Client, msg mqtt.Message)
 	// Get vehicle ID from code
 	vehicle, err := l.vehicleRepo.GetVehicleByCode(vehicleCode)
 	if err != nil {
-		log.Printf("Vehicle not found for code %s: %v", vehicleCode, err)
+		log.Printf("❌ Vehicle not found for code %s: %v", vehicleCode, err)
 		return
 	}
+	
+	log.Printf("   Found vehicle: ID=%d, Code=%s, Name=%s", vehicle.ID, vehicle.Code, vehicle.Name)
 	
 	data := payloadWithCode.CreateVehicleLogRequest
 	

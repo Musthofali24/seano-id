@@ -32,18 +32,25 @@ func NewMQTTListener(config MQTTConfig, handler *DataHandler) (*MQTTListener, er
 	opts.SetClientID(config.ClientID)
 	opts.SetUsername(config.Username)
 	opts.SetPassword(config.Password)
+	
+	// Enable auto-reconnect with proper settings
 	opts.SetAutoReconnect(true)
 	opts.SetConnectRetry(true)
 	opts.SetConnectRetryInterval(5 * time.Second)
+	opts.SetMaxReconnectInterval(60 * time.Second)
+	opts.SetKeepAlive(30 * time.Second)        // Send ping every 30s
+	opts.SetPingTimeout(10 * time.Second)       // Wait 10s for ping response
+	opts.SetCleanSession(false)                 // Persist subscriptions across reconnects
+	opts.SetResumeSubs(true)                    // Resume subscriptions on reconnect
 
 	// Set connection lost handler
 	opts.SetConnectionLostHandler(func(client mqtt.Client, err error) {
-		log.Printf("MQTT connection lost: %v", err)
+		log.Printf("⚠️  MQTT connection lost: %v - Will auto-reconnect...", err)
 	})
 
 	// Set on connect handler
 	opts.SetOnConnectHandler(func(client mqtt.Client) {
-		log.Println("MQTT connected successfully")
+		log.Println("✓ MQTT connected successfully")
 	})
 
 	client := mqtt.NewClient(opts)

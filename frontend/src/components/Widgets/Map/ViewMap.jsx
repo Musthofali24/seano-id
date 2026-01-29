@@ -30,7 +30,7 @@ const VehicleMarker = memo(
     const heading = vehicleLog?.heading || vehicleLog?.yaw || 0;
     const icon = useMemo(
       () => createBoatIcon(vehicle.id, heading, isSelected),
-      [vehicle.id, heading, isSelected, createBoatIcon]
+      [vehicle.id, heading, isSelected, createBoatIcon],
     );
 
     return (
@@ -69,7 +69,7 @@ const VehicleMarker = memo(
       prevLog?.yaw === nextLog?.yaw &&
       prevLog?.speed === nextLog?.speed
     );
-  }
+  },
 );
 
 VehicleMarker.displayName = "VehicleMarker";
@@ -239,7 +239,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
 
       return null;
     },
-    [vehicles, vehicleLogsMap]
+    [vehicles, vehicleLogsMap],
   );
 
   const handleMapReady = (map) => {
@@ -320,7 +320,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selectedVehicle]
+    [selectedVehicle],
   );
 
   const focusToVehicle = (e) => {
@@ -509,7 +509,7 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
 
             // Only update state if it actually changed to prevent unnecessary re-renders
             setShowFocusButton((prev) =>
-              prev !== shouldShow ? shouldShow : prev
+              prev !== shouldShow ? shouldShow : prev,
             );
           } catch (error) {
             setShowFocusButton(false);
@@ -590,16 +590,6 @@ const ViewMap = ({ darkMode, selectedVehicle, vehicles: propVehicles }) => {
           />
         </svg>
       </button>
-
-      {/* Debug panel - shows button state */}
-      {process.env.NODE_ENV === "development" && selectedVehicle && (
-        <div className="absolute bottom-4 left-4 z-[9999] bg-black bg-opacity-75 text-white text-xs p-2 rounded font-mono">
-          <div>Button: {shouldShowFocusButton ? "✅ SHOWN" : "❌ HIDDEN"}</div>
-          <div>showFocus: {showFocusButton ? "true" : "false"}</div>
-          <div>interacted: {userInteractedRef.current ? "true" : "false"}</div>
-          <div>showTrails: {showTrails ? "✅ ON" : "❌ OFF"}</div>
-        </div>
-      )}
 
       <MapContainer
         ref={mapRef}

@@ -37,16 +37,19 @@ export function AuthProvider({ children }) {
         const payload = JSON.parse(atob(token.split(".")[1]));
         const expiration = payload.exp * 1000; // Convert to milliseconds
         const now = Date.now();
-        const fifteenMinutes = 15 * 60 * 1000;
+        const sixHours = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
         const timeUntilExpiry = expiration - now;
 
-        // If token expires in less than 15 minutes, trigger refresh proactively
-        if (timeUntilExpiry < fifteenMinutes) {
+        // If token expires in less than 6 hours, trigger refresh proactively
+        if (timeUntilExpiry < sixHours) {
+          console.log("🔄 Token will expire soon, refreshing...");
           try {
             // Make a simple API call to trigger axios interceptor refresh
             await axiosInstance.get(API_ENDPOINTS.AUTH.ME);
+            console.log("✅ Token refreshed successfully");
           } catch (error) {
             // Clear user state if refresh fails
+            console.error("❌ Token refresh failed:", error);
             if (error.response?.status === 401) {
               setUser(null);
               localStorage.removeItem("access_token");

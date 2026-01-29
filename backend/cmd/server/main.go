@@ -104,14 +104,17 @@ func main() {
 			if err := mqttListener.Connect(); err != nil {
 				log.Printf("Warning: Failed to connect to MQTT broker: %v", err)
 			} else {
+				// Subscribe to legacy MIDAS 3000 topic
 				if err := mqttListener.Subscribe(); err != nil {
 					log.Printf("Warning: Failed to subscribe to MQTT topics: %v", err)
 				} else {
 					log.Println("MQTT Listener started and subscribed to topics")
 				}
 				
-				// Start new log listeners
+				// Get shared MQTT client for all listeners
 				mqttClient := mqttListener.GetClient()
+				
+				// Create all listeners (they will auto-resubscribe on reconnect via paho library)
 				
 				// Vehicle Log Listener
 				vehicleLogListener := mqttservice.NewVehicleLogListener(mqttClient, vehicleLogRepo, vehicleRepo, wsHub)
@@ -136,6 +139,8 @@ func main() {
 				if err := batteryListener.Start(); err != nil {
 					log.Printf("Warning: Failed to start battery listener: %v", err)
 				}
+				
+				log.Println("✓ All MQTT listeners started successfully")
 			}
 		}
 	} else {

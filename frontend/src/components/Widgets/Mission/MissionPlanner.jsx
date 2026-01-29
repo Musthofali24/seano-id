@@ -138,16 +138,23 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
     const loadedWaypoints = Array.isArray(mission.waypoints)
       ? mission.waypoints.map((wp, index) => ({
           id: Date.now() + index,
-          name: `WP${index + 1}`,
-          type: "path",
+          name: wp.name || `WP${index + 1}`,
+          type: wp.type || "path",
+          shape: wp.shape,
           lat: wp.lat,
           lng: wp.lng,
-          altitude: 0,
-          speed: missionParams.speed,
-          delay: missionParams.delay,
-          loiter: missionParams.loiter,
-          radius: missionParams.radius,
-          action: missionParams.action,
+          altitude: wp.altitude || 0,
+          speed: wp.speed || missionParams.speed,
+          delay: wp.delay || missionParams.delay,
+          loiter: wp.loiter || missionParams.loiter,
+          radius: wp.radius || missionParams.radius,
+          action: wp.action || missionParams.action,
+          // Preserve zone/polygon data
+          bounds: wp.bounds,
+          vertices: wp.vertices,
+          pattern: wp.pattern,
+          coverage: wp.coverage,
+          overlap: wp.overlap,
         }))
       : [];
 
@@ -186,12 +193,9 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
       console.log("Waypoints to save:", waypoints);
       console.log("Home location:", homeLocation);
 
-      // Filter out zone type waypoints AND home location
-      // Only save actual mission waypoints, not home
+      // Convert waypoints to save format, preserving zone/polygon data
       const waypointData = waypoints
         .filter((wp) => {
-          // Exclude zones
-          if (wp.type === "zone") return false;
           // Exclude home location (if coordinates match)
           if (
             homeLocation &&
@@ -202,10 +206,35 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
           }
           return true;
         })
-        .map((wp) => ({
-          lat: wp.lat,
-          lng: wp.lng,
-        }));
+        .map((wp) => {
+          const baseData = {
+            name: wp.name,
+            type: wp.type,
+            lat: wp.lat,
+            lng: wp.lng,
+            altitude: wp.altitude,
+            speed: wp.speed,
+            delay: wp.delay,
+            loiter: wp.loiter,
+            radius: wp.radius,
+            action: wp.action,
+          };
+
+          // Include zone/polygon specific data
+          if (wp.type === "zone" && wp.shape) {
+            return {
+              ...baseData,
+              shape: wp.shape,
+              bounds: wp.bounds,
+              vertices: wp.vertices,
+              pattern: wp.pattern,
+              coverage: wp.coverage,
+              overlap: wp.overlap,
+            };
+          }
+
+          return baseData;
+        });
 
       console.log("Converted waypoint data:", waypointData);
 

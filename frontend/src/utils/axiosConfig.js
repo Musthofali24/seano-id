@@ -14,14 +14,14 @@ function getTokenExpiration (token) {
   }
 }
 
-// Check if token will expire soon (within 15 minutes)
+// Check if token will expire soon (within 6 hours)
 function shouldRefreshToken (token) {
   const expiration = getTokenExpiration(token)
   if (!expiration) return false
 
   const now = Date.now()
-  const fifteenMinutes = 15 * 60 * 1000
-  return expiration - now < fifteenMinutes
+  const sixHours = 6 * 60 * 60 * 1000 // 6 hours in milliseconds
+  return expiration - now < sixHours
 }
 
 // Refresh token function

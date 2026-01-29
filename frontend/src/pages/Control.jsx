@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useTitle from "../hooks/useTitle";
-import { MapContainer, TileLayer } from "react-leaflet";
+import useVehicleData from "../hooks/useVehicleData";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { HeadingIndicator } from "react-flight-indicators";
 import { motion, AnimatePresence } from "framer-motion";
+import { VehicleDropdown } from "../components/Widgets/Vehicle";
 import {
   FaCompass,
   FaSatelliteDish,
@@ -26,13 +28,36 @@ import { TbAnchor, TbRoute } from "react-icons/tb";
 const MAP_CENTER = [45.4215, -75.6972];
 const MAP_ZOOM = 14;
 
+// Component to update map position
+const MapController = ({ center, zoom }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      map.setView(center, zoom || map.getZoom(), {
+        animate: true,
+        duration: 1,
+      });
+    }
+  }, [center, zoom, map]);
+
+  return null;
+};
+
 const Control = () => {
   useTitle("Control");
+  const { vehicles } = useVehicleData();
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [activeMode, setActiveMode] = useState("MANUAL");
   const [leftMotor, setLeftMotor] = useState(72);
   const [rightMotor, setRightMotor] = useState(68);
   const [powerOn, setPowerOn] = useState(false);
   const heading = 184; // Mock heading value
+
+  // Search coordinates state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mapCenter, setMapCenter] = useState(MAP_CENTER);
+  const [mapZoom, setMapZoom] = useState(MAP_ZOOM);
 
   // Collapse/Expand states for menus with localStorage
   const [isVesselTelemetryExpanded, setIsVesselTelemetryExpanded] = useState(
@@ -84,6 +109,56 @@ const Control = () => {
       JSON.stringify(isMissionControlExpanded),
     );
   }, [isMissionControlExpanded]);
+
+  // Handle coordinate search
+  const handleSearchCoordinates = (e) => {
+    if (e.key === "Enter" || e.type === "click") {
+      const query = searchQuery.trim();
+      if (!query) return;
+
+      // Parse different coordinate formats
+      // Format 1: lat, lng or lat,lng
+      // Format 2: lat lng
+      // Format 3: decimal degrees
+
+      let lat, lng;
+
+      // Try comma-separated format first
+      if (query.includes(",")) {
+        const parts = query.split(",").map((s) => s.trim());
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0]);
+          lng = parseFloat(parts[1]);
+        }
+      }
+      // Try space-separated format
+      else {
+        const parts = query.split(/\s+/);
+        if (parts.length === 2) {
+          lat = parseFloat(parts[0]);
+          lng = parseFloat(parts[1]);
+        }
+      }
+
+      // Validate coordinates
+      if (
+        !isNaN(lat) &&
+        !isNaN(lng) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180
+      ) {
+        setMapCenter([lat, lng]);
+        setMapZoom(15);
+        // Optionally show a success message
+      } else {
+        alert(
+          "Invalid coordinates. Please use format: latitude, longitude\nExample: -6.2088, 106.8456",
+        );
+      }
+    }
+  };
 
   // Update slider background dynamically
   useEffect(() => {
@@ -183,6 +258,7 @@ const Control = () => {
           maxZoom={16}
           zoomControl={false}
         >
+          <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -232,6 +308,17 @@ const Control = () => {
                 >
                   <FaChevronUp className="text-sm" />
                 </button>
+              </div>
+
+              {/* Vehicle Dropdown */}
+              <div className="mb-2">
+                <VehicleDropdown
+                  vehicles={vehicles}
+                  selectedVehicle={selectedVehicle}
+                  onVehicleChange={(vehicle) => setSelectedVehicle(vehicle)}
+                  placeholder="Select a vessel to control"
+                  showPlaceholder={true}
+                />
               </div>
 
               {/* Compass / Heading Indicator */}
@@ -344,9 +431,21 @@ const Control = () => {
                 <FaSearch className="absolute left-3 text-gray-400 dark:text-gray-500 z-10" />
                 <input
                   type="text"
-                  placeholder="Search coordinates..."
-                  className={`w-full bg-white dark:bg-black border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-4 py-2.5 ${textCls} placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
+                  placeholder="Search coordinates... (e.g., -6.2088, 106.8456)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchCoordinates}
+                  className={`w-full bg-white dark:bg-black border border-gray-200 dark:border-gray-600 rounded-lg pl-10 pr-12 py-2.5 ${textCls} placeholder-gray-400 dark:placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all`}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={handleSearchCoordinates}
+                    className="absolute right-2 p-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors"
+                    title="Search"
+                  >
+                    <FaSearch className="text-sm" />
+                  </button>
+                )}
               </div>
             </motion.section>
           )}

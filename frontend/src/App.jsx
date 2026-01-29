@@ -6,12 +6,25 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "./contexts/AuthContext";
 import { PermissionProvider } from "./contexts/PermissionProvider";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import RegistrationRoute from "./components/RegistrationRoute";
 import useVehicleData from "./hooks/useVehicleData";
+
+// Setup React Query client dengan caching configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // Data dianggap fresh selama 5 menit
+      gcTime: 10 * 60 * 1000, // Cache disimpan 10 menit (formerly cacheTime)
+      refetchOnWindowFocus: false, // Tidak auto-refetch saat window focus
+      retry: 1, // Retry 1x jika gagal
+    },
+  },
+});
 
 // Layout Components
 import { Header, Sidebar } from "./components/Layout";
@@ -457,13 +470,15 @@ function App() {
 }
 
 const AppWithRouter = () => (
-  <BrowserRouter>
-    <AuthProvider>
-      <PermissionProvider>
-        <App />
-      </PermissionProvider>
-    </AuthProvider>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <AuthProvider>
+        <PermissionProvider>
+          <App />
+        </PermissionProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </QueryClientProvider>
 );
 
 export default AppWithRouter;
