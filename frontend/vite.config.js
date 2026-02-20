@@ -5,10 +5,10 @@ import commonjs from 'vite-plugin-commonjs'
 
 export default defineConfig({
   plugins: [
-    react(), 
+    react(),
     tailwindcss(),
     commonjs({
-      filter(id) {
+      filter (id) {
         // Transform react-flight-indicators and its dependencies
         if (id.includes('react-flight-indicators')) {
           return true
@@ -39,15 +39,29 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Separate Three.js into its own chunk (lazy load)
-          three: ['three', '@react-three/fiber', '@react-three/drei'],
-          // Separate vendor libraries
-          vendor: ['react', 'react-dom']
-        }
+        // Optimize chunk size
+        manualChunks: undefined,
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       }
     },
-    // Increase chunk size warning limit
-    chunkSizeWarningLimit: 1000
+    // Optimize build - use esbuild (faster & built-in)
+    minify: 'esbuild',
+    // Better CSS handling
+    cssCodeSplit: true,
+    cssMinify: true,
+    // Reduce chunk size for better mobile performance
+    chunkSizeWarningLimit: 400,
+    // No sourcemaps for production
+    sourcemap: false,
+    // Target modern browsers for smaller bundle
+    target: 'es2020',
+    // Enable module preload polyfill
+    modulePreload: {
+      polyfill: true
+    },
+    // Aggressive tree shaking
+    reportCompressedSize: false
   }
 })

@@ -28,13 +28,18 @@ const UserModal = ({ isOpen, onClose, onSubmit }) => {
         <div className="space-y-4">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="user-email"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Email *
             </label>
             <input
+              id="user-email"
               type="email"
               name="email"
               required
+              autoComplete="email"
               placeholder="Enter email address"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
@@ -42,13 +47,19 @@ const UserModal = ({ isOpen, onClose, onSubmit }) => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="user-password"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Password *
             </label>
             <input
+              id="user-password"
               type="password"
               name="password"
               required
+              autoComplete="new-password"
+              minLength={6}
               placeholder="Enter password"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
@@ -56,13 +67,18 @@ const UserModal = ({ isOpen, onClose, onSubmit }) => {
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="user-fullname"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Full Name *
             </label>
             <input
+              id="user-fullname"
               type="text"
               name="full_name"
               required
+              autoComplete="name"
               placeholder="Enter full name"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />

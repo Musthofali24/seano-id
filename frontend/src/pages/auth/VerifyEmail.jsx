@@ -38,20 +38,26 @@ export default function VerifyEmail() {
   }, [searchParams, navigate, verifyEmail]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center text-center px-6 font-openSans">
-      <h1
-        className={`text-6xl font-semibold mb-4 ${
-          status === "error" ? "text-red-600" : "text-blue-600"
-        }`}
-      >
-        {status === "loading"
-          ? "Verifying..."
-          : status === "success"
-          ? "Success!"
-          : "Verification Failed"}
-      </h1>
+    <main className="min-h-screen flex flex-col justify-center items-center text-center px-6 font-openSans">
+      <div role="status" aria-live="polite">
+        <h1
+          className={`text-6xl font-semibold mb-4 ${
+            status === "error"
+              ? "text-red-600"
+              : "text-blue-700 dark:text-blue-400"
+          }`}
+        >
+          {status === "loading"
+            ? "Verifying..."
+            : status === "success"
+              ? "Success!"
+              : "Verification Failed"}
+        </h1>
 
-      <p className="text-gray-700 dark:text-gray-300 mb-6 text-xl">{message}</p>
-    </div>
+        <p className="text-gray-800 dark:text-gray-200 mb-6 text-xl">
+          {message}
+        </p>
+      </div>
+    </main>
   );
 }

@@ -32,6 +32,9 @@ const Modal = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? "modal-title" : undefined}
       className={`fixed inset-0 bg-transparent backdrop-blur-sm bg-opacity-50 flex items-center justify-center transition-opacity duration-300 ease-out ${
         isAnimating ? "opacity-100" : "opacity-0"
       }`}
@@ -51,18 +54,23 @@ const Modal = ({
         {/* Modal Header */}
         {title && (
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3
+              id="modal-title"
+              className="text-lg font-bold text-gray-900 dark:text-white"
+            >
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors duration-200"
+              aria-label="Close modal"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
             >
               <svg
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"

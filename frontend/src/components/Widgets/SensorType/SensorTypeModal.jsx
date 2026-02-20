@@ -35,10 +35,14 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit, editData }) => {
         <div className="space-y-4">
           {/* Sensor Type Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="sensor-type-name"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Sensor Type Name *
             </label>
             <input
+              id="sensor-type-name"
               type="text"
               name="name"
               required
@@ -50,10 +54,14 @@ const SensorTypeModal = ({ isOpen, onClose, onSubmit, editData }) => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="sensor-type-description"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Description
             </label>
             <textarea
+              id="sensor-type-description"
               name="description"
               rows="3"
               defaultValue={editData?.description || ""}

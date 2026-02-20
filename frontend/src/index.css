@@ -14,6 +14,29 @@
   --color-fourth: #155dfc;
 }
 
+/* Accessibility: Better focus indicators for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Skip to main content link for screen readers */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: #3b82f6;
+  color: white;
+  text-decoration: none;
+}
+
+.skip-to-main:focus {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -52,7 +75,8 @@ html {
 
 /* Battery Wave Animation */
 @keyframes batteryWave {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scaleY(1);
     opacity: 0.3;
   }
@@ -68,7 +92,9 @@ html {
 
 /* Loading Dots Wave Animation */
 @keyframes wave {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.7;
   }
@@ -338,7 +364,9 @@ html {
   background: #2563eb;
   color: #fff;
 }
-.dark .date-picker-popover .react-calendar__month-view__days__day--neighboringMonth {
+.dark
+  .date-picker-popover
+  .react-calendar__month-view__days__day--neighboringMonth {
   color: rgb(100 116 139);
 }
 .dark .date-picker-popover .react-calendar__tile:disabled {

@@ -29,18 +29,29 @@ const EditPermissionModal = ({ isOpen, onClose, onSubmit, permission }) => {
   if (!permission) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Edit Permission" size="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Edit Permission"
+      size="md"
+    >
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           {/* Permission Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="edit-permission-name"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Permission Name *
             </label>
             <input
+              id="edit-permission-name"
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               required
               placeholder="Enter permission name"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
@@ -49,12 +60,18 @@ const EditPermissionModal = ({ isOpen, onClose, onSubmit, permission }) => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="edit-permission-description"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Description
             </label>
             <textarea
+              id="edit-permission-description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               rows="4"
               placeholder="Enter permission description"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
@@ -84,4 +101,3 @@ const EditPermissionModal = ({ isOpen, onClose, onSubmit, permission }) => {
 };
 
 export default EditPermissionModal;
-

@@ -1,5 +1,3 @@
-import { lazy } from 'react'
-
 // Core Widgets
 export { default as WidgetCard } from './WidgetCard'
 export { default as Dropdown } from './Dropdown'
@@ -19,9 +17,6 @@ export { SensorChart, SensorModal, SensorTable } from './Sensor'
 // SensorType Widgets
 export { SensorTypeModal, SensorTypeTable } from './SensorType'
 
-// Gyroscope Widgets - Lazy loaded to avoid loading Three.js on every page
-export const Gyroscope3D = lazy(() => import('./Gyroscope/Gyroscope3D.jsx'))
-
 // Map Widgets
 export { ViewMap } from './Map'
 
@@ -31,8 +26,7 @@ export {
   MissionAnalytics,
   VehicleQuickView,
   OverviewMap,
-  LatestAlerts,
-  RealtimeMBES
+  LatestAlerts
 } from './Dashboard'
 
 // Data Management Widgets

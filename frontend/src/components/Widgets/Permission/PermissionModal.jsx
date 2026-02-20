@@ -31,10 +31,14 @@ const PermissionModal = ({ isOpen, onClose, onSubmit }) => {
         <div className="space-y-4">
           {/* Permission Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="permission-name"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Permission Name *
             </label>
             <input
+              id="permission-name"
               type="text"
               name="name"
               required
@@ -45,10 +49,14 @@ const PermissionModal = ({ isOpen, onClose, onSubmit }) => {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="permission-description"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Description
             </label>
             <textarea
+              id="permission-description"
               name="description"
               rows="3"
               placeholder="Enter permission description"

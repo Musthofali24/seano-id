@@ -95,20 +95,26 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar, isSidebarOpen }) => {
       <div className="px-2 py-2 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-start rtl:justify-end gap-2">
-            <a href="#" className="flex gap-2">
-              <img src={SeanoLogo} className="w-8" alt="seano_logo" />
+            <div className="flex gap-2">
+              <img
+                src={SeanoLogo}
+                className="w-8"
+                alt="SEANO Logo"
+                loading="eager"
+              />
               <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white hidden sm:block">
                 SeaPortal
               </span>
-            </a>
+            </div>
             <button
+              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
               className="inline-flex items-center p-1.5 ml-10 text-sm text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 cursor-pointer transition-colors"
               onClick={toggleSidebar}
             >
               {isSidebarOpen ? (
-                <HiX className="text-2xl" />
+                <HiX className="text-2xl" aria-hidden="true" />
               ) : (
-                <HiOutlineMenuAlt2 className="text-2xl" />
+                <HiOutlineMenuAlt2 className="text-2xl" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -125,19 +131,37 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar, isSidebarOpen }) => {
             </div>
             <div className="flex items-center gap-4">
               <button
-                className="dark:bg-slate-50 dark:text-slate-700 rounded-full p-2 transition-all duration-300 cursor-pointer"
+                aria-label={
+                  darkMode ? "Switch to light mode" : "Switch to dark mode"
+                }
+                className="dark:bg-slate-50 dark:text-slate-700 rounded-full p-2 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onClick={toggleDarkMode}
               >
-                {darkMode ? <FaSun /> : <FaMoon />}
+                {darkMode ? (
+                  <FaSun aria-hidden="true" />
+                ) : (
+                  <FaMoon aria-hidden="true" />
+                )}
               </button>
 
               {/* Notifications */}
               <div ref={notificationsRef} className="relative">
-                <button onClick={handleNotificationsClick}>
+                <button
+                  onClick={handleNotificationsClick}
+                  aria-label="Notifications"
+                  aria-expanded={isNotificationsOpen}
+                  className="focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                >
                   {isNotificationsOpen ? (
-                    <FaBell className="mt-1 text-xl dark:text-white cursor-pointer duration-300" />
+                    <FaBell
+                      className="mt-1 text-xl dark:text-white cursor-pointer duration-300"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <FaRegBell className="mt-1 text-xl dark:text-white cursor-pointer duration-300" />
+                    <FaRegBell
+                      className="mt-1 text-xl dark:text-white cursor-pointer duration-300"
+                      aria-hidden="true"
+                    />
                   )}
                 </button>
                 {isNotificationsOpen && (
@@ -157,7 +181,9 @@ const Header = ({ darkMode, toggleDarkMode, toggleSidebar, isSidebarOpen }) => {
               {/* User Menu */}
               <div ref={userMenuRef} className="relative">
                 <button
-                  className="rounded-full transition-all duration-300 cursor-pointer overflow-hidden"
+                  aria-label="User menu"
+                  aria-expanded={isUserMenuOpen}
+                  className="rounded-full transition-all duration-300 cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onClick={handleUserClick}
                 >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-fourth to-blue-600 flex items-center justify-center text-white text-xs font-bold">

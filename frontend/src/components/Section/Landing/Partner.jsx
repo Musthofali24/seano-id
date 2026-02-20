@@ -48,11 +48,13 @@ const Partner = () => {
                   href={partner.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Visit ${partner.name} website`}
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
                     src={partner.logo}
-                    alt={partner.name}
+                    alt={`${partner.name} logo`}
+                    loading="lazy"
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
                 </a>
@@ -67,11 +69,13 @@ const Partner = () => {
                   href={partner.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Visit ${partner.name} website`}
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
                     src={partner.logo}
-                    alt={partner.name}
+                    alt={`${partner.name} logo`}
+                    loading="lazy"
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
                 </a>
@@ -85,11 +89,13 @@ const Partner = () => {
                   href={partner.link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Visit ${partner.name} website`}
                   className="relative w-32 h-20 flex items-center justify-center transition-all duration-300"
                 >
                   <img
                     src={partner.logo}
-                    alt={partner.name}
+                    alt={`${partner.name} logo`}
+                    loading="lazy"
                     className="max-w-full max-h-full object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 hover:scale-110 cursor-pointer"
                   />
                 </a>

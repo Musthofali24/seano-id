@@ -16,34 +16,50 @@ export default function CheckEmailVerification({ darkMode, toggleDarkMode }) {
             <h1 className="text-2xl font-semibold">
               <Link
                 to="/"
+                aria-label="Go to homepage"
                 className="text-gray-900 font-semibold dark:text-white"
               >
-                <img src={SeanoLogo} className="w-12" alt="Seano Logo" />
+                <img
+                  src={SeanoLogo}
+                  className="w-12"
+                  alt="SEANO Logo"
+                  width="48"
+                  height="48"
+                  loading="eager"
+                />
               </Link>
             </h1>
           </div>
           <button
             onClick={toggleDarkMode}
-            className="p-3 rounded-full text-lg transition cursor-pointer text-gray-900 dark:text-white"
+            aria-label={
+              darkMode ? "Switch to light mode" : "Switch to dark mode"
+            }
+            className="p-3 rounded-full text-lg transition cursor-pointer text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {darkMode ? <FaMoon /> : <FaSun />}
+            {darkMode ? (
+              <FaMoon aria-hidden="true" />
+            ) : (
+              <FaSun aria-hidden="true" />
+            )}
           </button>
         </div>
         {/* End Header Auth */}
 
         {/* Main Content */}
-        <div className="flex flex-col items-center justify-center h-full">
+        <main className="flex flex-col items-center justify-center h-full">
           <div className="flex flex-col items-center gap-6 text-center">
             <div className="bg-blue-100 dark:bg-blue-900 p-6 rounded-full mb-2">
               <FaEnvelope
-                className="text-blue-500 dark:text-blue-300"
+                className="text-blue-700 dark:text-blue-300"
                 size={48}
+                aria-hidden="true"
               />
             </div>
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white">
               Check Your Email!
             </h1>
-            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl">
+            <p className="text-lg text-gray-800 dark:text-gray-200 max-w-2xl">
               We have sent a verification link to your email address.
               <br />
               Please check your inbox and follow the instructions to verify your
@@ -51,17 +67,17 @@ export default function CheckEmailVerification({ darkMode, toggleDarkMode }) {
               <br />
               If you don't see the email, please check your spam or junk folder.
             </p>
-            <button className="cursor-pointer mt-4 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition">
+            <button className="cursor-pointer mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
               Resend Email
             </button>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
               Didn't receive the email?{" "}
-              <span className="font-semibold cursor-pointer text-blue-500">
+              <span className="font-semibold cursor-pointer text-blue-700 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">
                 Resend
               </span>
             </p>
           </div>
-        </div>
+        </main>
         {/* End Main Content */}
       </div>
     </div>

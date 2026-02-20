@@ -35,14 +35,21 @@ const EditUserModal = ({ isOpen, onClose, onSubmit, user }) => {
         <div className="space-y-4">
           {/* Username */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="edit-user-username"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Username *
             </label>
             <input
+              id="edit-user-username"
               type="text"
               value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, username: e.target.value })
+              }
               required
+              autoComplete="username"
               placeholder="Enter username"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
@@ -50,13 +57,18 @@ const EditUserModal = ({ isOpen, onClose, onSubmit, user }) => {
 
           {/* Email (Read-only) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+            <label
+              htmlFor="edit-user-email"
+              className="block text-sm font-medium text-gray-700 dark:text-white mb-1"
+            >
               Email
             </label>
             <input
+              id="edit-user-email"
               type="email"
               value={formData.email}
               disabled
+              aria-disabled="true"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
           </div>
@@ -84,4 +96,3 @@ const EditUserModal = ({ isOpen, onClose, onSubmit, user }) => {
 };
 
 export default EditUserModal;
-

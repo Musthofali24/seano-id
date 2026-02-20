@@ -1,6 +1,6 @@
 import { memo } from "react";
 import useTitle from "../hooks/useTitle";
-import { ViewMap, Gyroscope3D } from "../components/Widgets";
+import { ViewMap } from "../components/Widgets";
 import {
   VehicleStatusPanel,
   TelemetryPanel,
