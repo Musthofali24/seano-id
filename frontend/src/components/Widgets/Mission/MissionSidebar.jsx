@@ -13,7 +13,9 @@ import {
   FaCog,
 } from "react-icons/fa";
 import Dropdown from "../Dropdown";
-import { ConfirmModal } from "../../ui";
+import { ConfirmModal, toast } from "../../ui";
+import { useMissionUpload, useVehicleData } from "../../../hooks";
+import MissionUploadModal from "./MissionUploadModal";
 
 const MissionSidebar = ({
   isSidebarOpen,
@@ -42,6 +44,24 @@ const MissionSidebar = ({
   isPointInPolygon,
 }) => {
   const [showClearModal, setShowClearModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedVehicleId, setSelectedVehicleId] = useState(null);
+
+  // Upload hooks
+  const {
+    uploadState,
+    vehicleState,
+    checkVehicleReadiness,
+    uploadMissionToVehicle,
+    resetUploadState,
+  } = useMissionUpload();
+
+  const { vehicles } = useVehicleData();
+
+  // Get selected vehicle info
+  const selectedVehicle = selectedVehicleId
+    ? vehicles.find((v) => v.id === parseInt(selectedVehicleId))
+    : null;
 
   const handleDeleteWaypoint = (waypointId) => {
     const waypointToDelete = waypoints.find((wp) => wp.id === waypointId);
@@ -97,6 +117,91 @@ const MissionSidebar = ({
     setEditingWaypoint(null);
   };
 
+  // Handle upload to vehicle button click
+  const handleUploadToVehicle = () => {
+    if (!activeMission) {
+      toast.error("No active mission to upload");
+      return;
+    }
+
+    if (!activeMission.id) {
+      toast.warning("Please save the mission before uploading to vehicle");
+      return;
+    }
+
+    // Pre-select vehicle if mission already has one
+    if (activeMission.vehicle_id) {
+      setSelectedVehicleId(activeMission.vehicle_id.toString());
+      checkVehicleReadiness(activeMission.vehicle_id);
+    } else {
+      setSelectedVehicleId(null);
+    }
+
+    // Open modal
+    setShowUploadModal(true);
+  };
+
+  // Handle vehicle selection in modal
+  const handleVehicleSelect = async (vehicleId) => {
+    setSelectedVehicleId(vehicleId);
+    if (vehicleId) {
+      await checkVehicleReadiness(parseInt(vehicleId));
+    }
+  };
+
+  // Confirm upload in modal
+  const handleConfirmUpload = async () => {
+    if (!activeMission || !activeMission.id || !selectedVehicleId) {
+      toast.error("Invalid mission or vehicle");
+      return;
+    }
+
+    const vehicleId = parseInt(selectedVehicleId);
+
+    // Prepare mission data for upload
+    const missionData = {
+      name: activeMission.name,
+      waypoints: waypoints
+        .filter((wp) => wp.type === "path")
+        .map((wp) => ({
+          lat: wp.lat,
+          lng: wp.lng,
+          altitude: wp.altitude || 0,
+          speed: wp.speed || missionParams.speed,
+          radius: wp.radius || missionParams.radius,
+        })),
+      home_location: homeLocation,
+      speed: missionParams.speed,
+      altitude: missionParams.altitude || 0,
+      radius: missionParams.radius,
+    };
+
+    const result = await uploadMissionToVehicle(
+      activeMission.id,
+      vehicleId,
+      missionData,
+    );
+
+    if (result.success) {
+      toast.success("Mission uploaded successfully to vehicle!");
+      setTimeout(() => {
+        setShowUploadModal(false);
+        resetUploadState();
+      }, 2000);
+    } else {
+      toast.error(result.error || "Failed to upload mission");
+    }
+  };
+
+  // Handle modal close
+  const handleCloseUploadModal = () => {
+    if (!uploadState.isUploading) {
+      setShowUploadModal(false);
+      setSelectedVehicleId(null);
+      resetUploadState();
+    }
+  };
+
   const handleClearWaypoints = () => {
     setWaypoints([]);
     setGeneratedPaths([]);
@@ -119,14 +224,16 @@ const MissionSidebar = ({
 
   const handleGenerateWaypoints = () => {
     if (!homeLocation) {
-      alert("Please set home location first before generating waypoints!");
+      toast.warning(
+        "Please set home location first before generating waypoints!",
+      );
       return;
     }
 
     const zoneWaypoints = waypoints.filter((wp) => wp.type === "zone");
 
     if (zoneWaypoints.length === 0) {
-      alert("No zones found! Please create a zone first.");
+      toast.warning("No zones found! Please create a zone first.");
       return;
     }
 
@@ -335,7 +442,7 @@ const MissionSidebar = ({
 
   return (
     <aside
-      className={`fixed top-14 z-30 h-screen w-72 bg-white border-r border-gray-200 dark:border-gray-700 duration-300 dark:bg-black p-4 overflow-y-auto scrollbar-hide ${
+      className={`fixed top-14 z-30 h-[calc(100vh-3.5rem)] w-72 bg-white border-r border-gray-200 dark:border-gray-700 duration-300 dark:bg-black p-4 overflow-y-auto scrollbar-hide ${
         isSidebarOpen ? "md:left-64 left-16" : "left-16"
       }`}
     >
@@ -638,7 +745,7 @@ const MissionSidebar = ({
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 pb-6">
         {/* Generate Waypoints button */}
         {activeMission && waypoints.some((wp) => wp.type === "zone") && (
           <button
@@ -707,12 +814,20 @@ const MissionSidebar = ({
           Save Mission
         </button>
         <button
-          disabled={!activeMission}
+          onClick={handleUploadToVehicle}
+          disabled={!activeMission || !activeMission.id}
           className={`w-full px-3 py-2 text-sm rounded-xl transition-colors flex items-center justify-center gap-2 ${
-            activeMission
+            activeMission && activeMission.id
               ? "bg-orange-600 hover:bg-orange-700 text-white"
               : "bg-gray-400 dark:bg-gray-700 text-gray-600 dark:text-gray-500 cursor-not-allowed"
           }`}
+          title={
+            !activeMission
+              ? "No active mission"
+              : !activeMission.id
+                ? "Save mission first"
+                : "Upload mission to vehicle"
+          }
         >
           <FaUpload size={12} />
           Upload to Vehicle
@@ -736,6 +851,24 @@ const MissionSidebar = ({
         />,
         document.body,
       )}
+
+      {/* Mission Upload Modal */}
+      <MissionUploadModal
+        isOpen={showUploadModal}
+        onClose={handleCloseUploadModal}
+        onConfirm={handleConfirmUpload}
+        missionData={{
+          name: activeMission?.name,
+          waypoints: waypoints.filter((wp) => wp.type === "path"),
+          home_location: homeLocation,
+        }}
+        vehicleState={vehicleState}
+        uploadState={uploadState}
+        vehicleInfo={selectedVehicle}
+        vehicles={vehicles}
+        selectedVehicleId={selectedVehicleId}
+        onVehicleSelect={handleVehicleSelect}
+      />
     </aside>
   );
 };

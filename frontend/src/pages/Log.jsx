@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { useLogData } from "../hooks/useLogData";
+import useVehicleData from "../hooks/useVehicleData";
 import { Title } from "../components/ui";
 import { WidgetCard } from "../components/Widgets";
+import {
+  VehicleDropdown,
+  DatePickerField,
+  TimePickerField,
+} from "../components/Widgets";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import { DataTable } from "../components/ui";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
@@ -9,17 +15,65 @@ import { FiActivity, FiCpu, FiFileText } from "react-icons/fi";
 
 const Log = () => {
   const { stats, vehicleLogs, sensorLogs, rawLogs, loading } = useLogData();
+  const { vehicles, loading: vehicleLoading } = useVehicleData();
   const [activeTab, setActiveTab] = useState("vehicle");
+
+  // Filter states
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   // Use loading timeout to prevent infinite skeleton loading
   const { loading: timeoutLoading } = useLoadingTimeout(loading, 5000);
   const shouldShowSkeleton =
     timeoutLoading && loading && vehicleLogs.length === 0;
 
+  // Filter functions
+  const filterLogs = (logs) => {
+    let filtered = logs;
+
+    // Filter by vehicle
+    if (selectedVehicle) {
+      filtered = filtered.filter(
+        (log) =>
+          log.vehicle?.code === selectedVehicle.code ||
+          log.vehicle_id === selectedVehicle.id,
+      );
+    }
+
+    // Filter by date range and time
+    if (startDate || endDate || startTime || endTime) {
+      filtered = filtered.filter((log) => {
+        const logDate = new Date(log.created_at);
+
+        // Combine date and time for comparison
+        const startDateTime = startDate
+          ? new Date(startDate + "T" + (startTime || "00:00:00"))
+          : null;
+        const endDateTime = endDate
+          ? new Date(endDate + "T" + (endTime || "23:59:59"))
+          : null;
+
+        if (startDateTime && logDate < startDateTime) return false;
+        if (endDateTime && logDate > endDateTime) return false;
+        return true;
+      });
+    }
+
+    return filtered;
+  };
+
+  // Apply filters to logs
+  const filteredVehicleLogs = filterLogs(vehicleLogs);
+  const filteredSensorLogs = filterLogs(sensorLogs);
+  const filteredRawLogs = filterLogs(rawLogs);
+
   const widgets = [
     {
       title: "Vehicle Logs",
-      value: stats.vehicle_logs.today,
+      value: stats.vehicle_logs.total,
       icon: (
         <FiActivity className="text-blue-600 dark:text-blue-400" size={24} />
       ),
@@ -34,7 +88,7 @@ const Log = () => {
     },
     {
       title: "Sensor Logs",
-      value: stats.sensor_logs.today,
+      value: stats.sensor_logs.total,
       icon: <FiCpu className="text-green-600 dark:text-green-400" size={24} />,
       trendIcon:
         stats.sensor_logs.percentage_change >= 0 ? (
@@ -47,7 +101,7 @@ const Log = () => {
     },
     {
       title: "Raw Logs",
-      value: stats.raw_logs.today,
+      value: stats.raw_logs.total,
       icon: (
         <FiFileText
           className="text-purple-600 dark:text-purple-400"
@@ -275,7 +329,109 @@ const Log = () => {
 
   return (
     <div className="p-4">
-      <Title title="Logs" subtitle="Real-time log monitoring" />
+      {/* Header with Title and Filters */}
+      <div className="flex items-center justify-between mb-4">
+        <Title title="Logs" subtitle="Real-time log monitoring" />
+
+        {/* Filters Section */}
+        <div className="flex items-center gap-3">
+          {/* Date Range Filter */}
+          <div className="flex items-center gap-2">
+            {/* Start Date */}
+            <DatePickerField
+              value={startDate}
+              onChange={(date) => {
+                setStartDate(date);
+                if (endDate && date && new Date(date) > new Date(endDate)) {
+                  setEndDate("");
+                }
+              }}
+              placeholder="Start Date"
+              maxDate={endDate || new Date().toISOString().split("T")[0]}
+              className="w-40"
+            />
+
+            {/* Start Time */}
+            <TimePickerField
+              value={startTime}
+              onChange={setStartTime}
+              placeholder="00:00"
+              className="w-32"
+            />
+
+            {/* Separator */}
+            <span className="text-gray-500 dark:text-gray-400 text-sm">to</span>
+
+            {/* End Date */}
+            <DatePickerField
+              value={endDate}
+              onChange={setEndDate}
+              placeholder="End Date"
+              minDate={startDate || undefined}
+              className="w-40"
+            />
+
+            {/* End Time */}
+            <TimePickerField
+              value={endTime}
+              onChange={setEndTime}
+              placeholder="23:59"
+              className="w-32"
+            />
+          </div>
+          {/* Vehicle Filter */}
+          <div className="w-52">
+            <VehicleDropdown
+              vehicles={vehicles}
+              selectedVehicle={selectedVehicle}
+              onVehicleChange={setSelectedVehicle}
+              placeholder={
+                vehicleLoading
+                  ? "Loading vehicles..."
+                  : !vehicles || vehicles.length === 0
+                    ? "No vehicles available"
+                    : "All Vehicles"
+              }
+              className="text-sm"
+              disabled={vehicleLoading}
+            />
+          </div>
+
+          {/* Clear Filters Button */}
+          {(selectedVehicle ||
+            startDate ||
+            endDate ||
+            startTime ||
+            endTime) && (
+            <button
+              onClick={() => {
+                setSelectedVehicle("");
+                setStartDate("");
+                setEndDate("");
+                setStartTime("");
+                setEndTime("");
+              }}
+              className="px-3 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 text-sm rounded-xl transition-all flex items-center gap-2 font-medium"
+              title="Clear all filters"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Widget Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
@@ -311,7 +467,7 @@ const Log = () => {
           <div className="p-6">
             <DataTable
               columns={vehicleLogColumns}
-              data={vehicleLogs}
+              data={filteredVehicleLogs}
               searchPlaceholder="Search vehicle logs..."
               searchKeys={["vehicle_code", "system_status"]}
               pageSize={10}
@@ -325,7 +481,7 @@ const Log = () => {
           <div className="p-6">
             <DataTable
               columns={sensorLogColumns}
-              data={sensorLogs}
+              data={filteredSensorLogs}
               searchPlaceholder="Search sensor logs..."
               searchKeys={["vehicle_code", "sensor_code"]}
               pageSize={10}
@@ -338,12 +494,12 @@ const Log = () => {
         {activeTab === "raw" && (
           <div className="p-6">
             <div className="space-y-3">
-              {rawLogs.length === 0 ? (
+              {filteredRawLogs.length === 0 ? (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No raw logs yet. Waiting for data...
                 </p>
               ) : (
-                rawLogs.map((log) => (
+                filteredRawLogs.map((log) => (
                   <div
                     key={log.id}
                     className="bg-gray-50 dark:bg-slate-800/50 rounded-lg p-4 border border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 transition-colors"

@@ -19,33 +19,42 @@ Data dikirim dalam format JSON:
 
 ```json
 {
-  "timestamp": "2025-01-01T08:30:00Z",
+  "timestamp": "2025-11-27T13:55:47.000Z",
   "vehicle_code": "USV-01",
   "sensor_code": "CTD-MIDAS-01",
-  "depth": 25.4,
-  "pressure": 2.53,
-  "temperature": 27.6,
-  "conductivity": 53.2,
-  "salinity": 33.8,
-  "density": 1024.5,
-  "sound_velocity": 1508.3
+  "depth": -0.027,
+  "pressure": -0.027,
+  "temperature": 25.408,
+  "conductivity": 0.002,
+  "salinity": 0.012,
+  "density": 996.95,
+  "sound_velocity": 1497.8
 }
+```
+
+### Contoh Data Real (Format CSV):
+
+```
+Date/Time               Depth (m)  Pressure (M)  Temperature (C)  Conductivity (MS/CM)  Salinity (PSU)  Density (kg/m³)  Sound Velocity (m/s)
+2025/11/27 13:55:47.000  -0.027     -0.027        25.408           0.002                 0.012           996.950          1497.800
+2025/11/27 13:55:47.125  -0.024     -0.024        25.408           0.002                 0.012           996.950          1497.800
+2025/11/27 13:55:47.250  -0.025     -0.025        25.409           0.004                 0.012           996.950          1497.803
 ```
 
 ## Field Description
 
-| Field          | Unit  | Description               | Valid Range      |
-| -------------- | ----- | ------------------------- | ---------------- |
-| timestamp      | -     | Timestamp pembacaan       | ISO 8601 format  |
-| vehicle_code   | -     | Kode kendaraan (USV)      | non-empty string |
-| sensor_code    | -     | Kode sensor               | non-empty string |
-| depth          | m     | Kedalaman sensor          | -10000 to 100    |
-| pressure       | M     | Tekanan air               | -                |
-| temperature    | °C    | Suhu air                  | -2.0 to 35.0     |
-| conductivity   | MS/CM | Konduktivitas listrik air | 0 to 100         |
-| salinity       | PSU   | Salinitas (kadar garam)   | 0 to 45          |
-| density        | kg/m³ | Densitas air              | 990 to 1050      |
-| sound_velocity | m/s   | Kecepatan suara dalam air | 1400 to 1600     |
+| Field          | Unit  | Description                      | Valid Range      | Contoh                   |
+| -------------- | ----- | -------------------------------- | ---------------- | ------------------------ |
+| timestamp      | -     | Timestamp pembacaan              | ISO 8601 format  | 2025-11-27T13:55:47.000Z |
+| vehicle_code   | -     | Kode kendaraan (USV)             | non-empty string | USV-01                   |
+| sensor_code    | -     | Kode sensor                      | non-empty string | CTD-MIDAS-01             |
+| depth          | m     | Kedalaman sensor (- = permukaan) | -100 to 10000    | -0.027                   |
+| pressure       | M     | Tekanan air                      | -100 to 10000    | -0.027                   |
+| temperature    | °C    | Suhu air                         | -2.0 to 40.0     | 25.408                   |
+| conductivity   | MS/CM | Konduktivitas listrik air        | 0 to 100         | 0.002                    |
+| salinity       | PSU   | Salinitas (kadar garam)          | 0 to 45          | 0.012                    |
+| density        | kg/m³ | Densitas air                     | 990 to 1050      | 996.950                  |
+| sound_velocity | m/s   | Kecepatan suara dalam air        | 1400 to 1600     | 1497.800                 |
 
 ## Components
 

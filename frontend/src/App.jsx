@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -30,34 +30,26 @@ const queryClient = new QueryClient({
 import { Header, Sidebar } from "./components/Layout";
 import { Content, Main } from "./components/ui";
 
-// Loading Component
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-  </div>
-);
-
-// Lazy load pages - hanya dimuat ketika diakses
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Tracking = lazy(() => import("./pages/Tracking"));
-const Missions = lazy(() => import("./pages/Missions"));
-const Data = lazy(() => import("./pages/Data"));
-const Log = lazy(() => import("./pages/Log"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Vehicle = lazy(() => import("./pages/Vehicle"));
-const Alerts = lazy(() => import("./pages/Alerts"));
-const Telemetry = lazy(() => import("./pages/Telemetry"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Control = lazy(() => import("./pages/Control"));
-const Battery = lazy(() => import("./pages/Battery"));
-const Sensor = lazy(() => import("./pages/Sensor"));
-const SensorType = lazy(() => import("./pages/SensorType"));
-const Notification = lazy(() => import("./pages/Notification"));
-const User = lazy(() => import("./pages/User"));
-const Role = lazy(() => import("./pages/Role"));
-const Permission = lazy(() => import("./pages/Permission"));
-const MissionsPlanner = lazy(() => import("./pages/MissionPlanner"));
-const SensorMonitoring = lazy(() => import("./pages/SensorMonitoring"));
+// Direct imports - load semua pages into main bundle
+import Dashboard from "./pages/Dashboard";
+import Tracking from "./pages/Tracking";
+import Missions from "./pages/Missions";
+import Data from "./pages/Data";
+import Log from "./pages/Log";
+import Settings from "./pages/Settings";
+import Vehicle from "./pages/Vehicle";
+import Alerts from "./pages/Alerts";
+import Profile from "./pages/Profile";
+import Control from "./pages/Control";
+import Battery from "./pages/Battery";
+import Sensor from "./pages/Sensor";
+import SensorType from "./pages/SensorType";
+import Notification from "./pages/Notification";
+import User from "./pages/User";
+import Role from "./pages/Role";
+import Permission from "./pages/Permission";
+import MissionsPlanner from "./pages/MissionPlanner";
+import CTD from "./pages/SensorMonitoring/CTD";
 
 // Auth Pages - EAGER LOAD untuk avoid chunking issues
 import Login from "./pages/auth/Login";
@@ -148,8 +140,7 @@ function App() {
     "/tracking",
     "/missions",
     "/mission-planner",
-    "/sensor-monitoring",
-    "/telemetry",
+    "/sensor-monitoring/ctd",
     "/control",
     "/battery",
     "/data",
@@ -286,193 +277,177 @@ function App() {
           darkMode={darkMode}
         >
           <Content id="main-content">
-            {/* Add id for skip link target */}
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/tracking"
-                  element={
-                    <ProtectedRoute>
-                      <Tracking
-                        darkMode={darkMode}
-                        selectedVehicle={selectedVehicle}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/missions"
-                  element={
-                    <ProtectedRoute>
-                      <Missions
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/mission-planner"
-                  element={
-                    <ProtectedRoute>
-                      <MissionsPlanner
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/sensor-monitoring"
-                  element={
-                    <ProtectedRoute>
-                      <SensorMonitoring
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/telemetry"
-                  element={
-                    <ProtectedRoute>
-                      <Telemetry
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/control"
-                  element={
-                    <ProtectedRoute>
-                      <Control
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/battery"
-                  element={
-                    <ProtectedRoute>
-                      <Battery
-                        darkMode={darkMode}
-                        isSidebarOpen={isSidebarOpen}
-                      />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/data"
-                  element={
-                    <ProtectedRoute>
-                      <Data darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/sensor"
-                  element={
-                    <ProtectedRoute>
-                      <Sensor darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/sensor-type"
-                  element={
-                    <ProtectedRoute>
-                      <SensorType darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/logs"
-                  element={
-                    <ProtectedRoute>
-                      <Log darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <ProtectedRoute>
-                      <Settings darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/vehicle"
-                  element={
-                    <ProtectedRoute>
-                      <Vehicle darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/alerts"
-                  element={
-                    <ProtectedRoute>
-                      <Alerts darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/notification"
-                  element={
-                    <ProtectedRoute>
-                      <Notification darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/user"
-                  element={
-                    <ProtectedRoute>
-                      <User darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/role"
-                  element={
-                    <ProtectedRoute>
-                      <Role darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/permission"
-                  element={
-                    <ProtectedRoute>
-                      <Permission darkMode={darkMode} />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-            </Suspense>
+            {/* All pages loaded directly - no lazy loading */}
+            <Routes>
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tracking"
+                element={
+                  <ProtectedRoute>
+                    <Tracking
+                      darkMode={darkMode}
+                      selectedVehicle={selectedVehicle}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/missions"
+                element={
+                  <ProtectedRoute>
+                    <Missions
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mission-planner"
+                element={
+                  <ProtectedRoute>
+                    <MissionsPlanner
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sensor-monitoring/ctd"
+                element={
+                  <ProtectedRoute>
+                    <CTD darkMode={darkMode} isSidebarOpen={isSidebarOpen} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/control"
+                element={
+                  <ProtectedRoute>
+                    <Control
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/battery"
+                element={
+                  <ProtectedRoute>
+                    <Battery
+                      darkMode={darkMode}
+                      isSidebarOpen={isSidebarOpen}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/data"
+                element={
+                  <ProtectedRoute>
+                    <Data darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sensor"
+                element={
+                  <ProtectedRoute>
+                    <Sensor darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/sensor-type"
+                element={
+                  <ProtectedRoute>
+                    <SensorType darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/logs"
+                element={
+                  <ProtectedRoute>
+                    <Log darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/vehicle"
+                element={
+                  <ProtectedRoute>
+                    <Vehicle darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/alerts"
+                element={
+                  <ProtectedRoute>
+                    <Alerts darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notification"
+                element={
+                  <ProtectedRoute>
+                    <Notification darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user"
+                element={
+                  <ProtectedRoute>
+                    <User darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/role"
+                element={
+                  <ProtectedRoute>
+                    <Role darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/permission"
+                element={
+                  <ProtectedRoute>
+                    <Permission darkMode={darkMode} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/404" replace />} />
+            </Routes>
           </Content>
         </Main>
       </div>

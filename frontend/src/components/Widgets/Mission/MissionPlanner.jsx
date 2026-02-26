@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import useTitle from "../../../hooks/useTitle";
 import useMissionData from "../../../hooks/useMissionData";
-import { toast } from "../../ui";
+import { toast, LoadingDots } from "../../ui";
 import {
   calculateTotalDistance,
   calculateEstimatedTime,
@@ -11,8 +11,10 @@ import {
   formatTime,
 } from "../../../utils/missionCalculations";
 import MissionSidebar from "./MissionSidebar";
-import MissionMap from "./MissionMap";
 import MissionModals from "./MissionModals";
+
+// Lazy load MissionMap karena library Leaflet sangat berat
+const MissionMap = lazy(() => import("./MissionMap"));
 
 const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
   useTitle("Missions");
@@ -349,7 +351,15 @@ const MissionPlanner = ({ isSidebarOpen, darkMode }) => {
       <MissionSidebar {...sharedProps} />
 
       <div className={`${isSidebarOpen ? "md:ml-68" : "ml-68"} h-full`}>
-        <MissionMap {...sharedProps} />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-full bg-white dark:bg-black">
+              <LoadingDots size="lg" />
+            </div>
+          }
+        >
+          <MissionMap {...sharedProps} />
+        </Suspense>
       </div>
 
       <MissionModals {...sharedProps} />

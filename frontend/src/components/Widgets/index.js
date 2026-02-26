@@ -14,6 +14,9 @@ export {
 // Sensor Widgets
 export { SensorChart, SensorModal, SensorTable } from './Sensor'
 
+// Sensor Monitoring Widgets
+export { CTDTable } from './SensorMonitoring'
+
 // SensorType Widgets
 export { SensorTypeModal, SensorTypeTable } from './SensorType'
 
@@ -31,14 +34,6 @@ export {
 
 // Data Management Widgets
 export { DataHeader, DataStats, DataTable, DataFilters } from './Data'
-
-// Telemetry Widgets
-export {
-  TelemetryCards,
-  TelemetryFilters,
-  TelemetryHeader,
-  TelemetryStatusInfo
-} from './Telemetry'
 
 // User Management Widgets
 export { UserModal, UserTable } from './User'
@@ -60,4 +55,4 @@ export {
 } from './Battery'
 
 // DatePicker Widgets
-export { DatePickerField } from './DatePicker'
+export { DatePickerField, TimePickerField } from './DatePicker'

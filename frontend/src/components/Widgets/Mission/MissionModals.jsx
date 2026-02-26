@@ -105,7 +105,7 @@ const MissionModals = ({
                 No missions found. Create a new mission to get started.
               </div>
             ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-hide">
+              <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
                 {missionData.map((mission) => (
                   <div
                     key={mission.id}

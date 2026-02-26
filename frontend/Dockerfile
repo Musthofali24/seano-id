@@ -25,4 +25,5 @@ EXPOSE 5173
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD bun -e "const http = require('http'); http.get('http://localhost:5173', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-CMD ["bun", "x", "serve", "-s", "dist", "-p", "5173"]
+# Serve with compression enabled for better performance
+CMD ["bun", "x", "serve", "-s", "dist", "-p", "5173", "--cors"]

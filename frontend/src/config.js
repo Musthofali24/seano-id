@@ -79,11 +79,13 @@ export const API_ENDPOINTS = {
   VEHICLES: {
     LIST: `${API_BASE_URL}/vehicles/`,
     BY_ID: id => `${API_BASE_URL}/vehicles/${id}`,
+    DETAIL: id => `${API_BASE_URL}/vehicles/${id}`,
     CREATE: `${API_BASE_URL}/vehicles/`,
     UPDATE: id => `${API_BASE_URL}/vehicles/${id}`,
     DELETE: id => `${API_BASE_URL}/vehicles/${id}`,
     ALERTS: id => `${API_BASE_URL}/vehicles/${id}/alerts`,
     RAW_LOGS: vehicleId => `${API_BASE_URL}/raw-logs/?vehicle_id=${vehicleId}`,
+    LOGS: vehicleId => `${API_BASE_URL}/vehicle-logs/?vehicle_id=${vehicleId}`,
     SENSOR_LOGS: vehicleId =>
       `${API_BASE_URL}/sensor-logs/?vehicle_id=${vehicleId}`,
     ASSIGN_SENSOR: id => `${API_BASE_URL}/vehicles/${id}/sensors`,
@@ -135,7 +137,8 @@ export const API_ENDPOINTS = {
     DELETE: id => `${API_BASE_URL}/missions/${id}`,
     STATS: `${API_BASE_URL}/missions/stats`,
     ONGOING: `${API_BASE_URL}/missions/ongoing`,
-    UPDATE_PROGRESS: id => `${API_BASE_URL}/missions/${id}/progress`
+    UPDATE_PROGRESS: id => `${API_BASE_URL}/missions/${id}/progress`,
+    UPLOAD_TO_VEHICLE: id => `${API_BASE_URL}/missions/${id}/upload-to-vehicle`
   }
 }
 

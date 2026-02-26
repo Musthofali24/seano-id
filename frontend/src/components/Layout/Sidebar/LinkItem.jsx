@@ -71,13 +71,21 @@ const LinkItem = ({
       >
         {text}
       </div>,
-      document.body
+      document.body,
     );
 
   const triggerProps = {
     ref: triggerRef,
     onMouseEnter: openTooltip,
     onMouseLeave: closeTooltip,
+    // Improve touch responsiveness
+    onTouchStart: openTooltip,
+    onTouchEnd: closeTooltip,
+    style: {
+      // Ensure proper touch target size
+      minHeight: "44px",
+      WebkitTapHighlightColor: "transparent",
+    },
   };
 
   if (type === "button") {
@@ -87,12 +95,12 @@ const LinkItem = ({
         <div
           {...triggerProps}
           onClick={handleClick}
-          className={`flex items-center p-2 rounded-lg gap-2 transition-colors duration-200 cursor-pointer
+          className={`flex items-center p-2 rounded-lg gap-2 transition-colors duration-200 cursor-pointer touch-manipulation
           ${!isSidebarOpen ? "justify-center" : ""}
           ${
             isLogout
-              ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-              : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              ? "text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 dark:active:bg-red-900/30"
+              : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600"
           }`}
         >
           <Icon size={size} />
@@ -111,12 +119,12 @@ const LinkItem = ({
         {...triggerProps}
         to={href}
         className={({ isActive }) =>
-          `flex items-center p-2 rounded-lg gap-2 transition-colors duration-200
+          `flex items-center p-2 rounded-lg gap-2 transition-colors duration-200 touch-manipulation
           ${!isSidebarOpen ? "justify-center" : ""}
           ${
             isActive
               ? "bg-blue-600 text-white dark:bg-blue-500"
-              : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+              : "text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 active:bg-gray-200 dark:active:bg-gray-600"
           }`
         }
       >

@@ -48,7 +48,9 @@ const SensorModal = ({ isOpen, onClose, onSubmit, editData }) => {
     const formData = new FormData(e.target);
 
     const sensorData = {
-      name: formData.get("name"),
+      code: formData.get("code"),
+      brand: formData.get("brand"),
+      model: formData.get("model"),
       sensor_type_id: selectedSensorType,
       description: formData.get("description"),
       is_active: editData?.is_active !== undefined ? editData.is_active : true,
@@ -77,17 +79,54 @@ const SensorModal = ({ isOpen, onClose, onSubmit, editData }) => {
     >
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
-          {/* Sensor Name */}
+          {/* Sensor Code - PENTING: Harus sama dengan yang dipakai di MQTT topic */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Sensor Name *
+              Sensor Code *
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                (Used in MQTT topic)
+              </span>
             </label>
             <input
               type="text"
-              name="name"
+              name="code"
               required
-              defaultValue={editData?.name || ""}
-              placeholder="Enter sensor name"
+              defaultValue={editData?.code || ""}
+              placeholder="e.g., CTD-MIDAS-01"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Must match the sensor_code used in MQTT topic:
+              seano/&#123;vehicle_code&#125;/&#123;sensor_code&#125;/data
+            </p>
+          </div>
+
+          {/* Brand */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+              Brand *
+            </label>
+            <input
+              type="text"
+              name="brand"
+              required
+              defaultValue={editData?.brand || ""}
+              placeholder="e.g., MIDAS, ADCP, SonTek"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
+            />
+          </div>
+
+          {/* Model */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
+              Model *
+            </label>
+            <input
+              type="text"
+              name="model"
+              required
+              defaultValue={editData?.model || ""}
+              placeholder="e.g., 3000, WorkHorse 600kHz"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent"
             />
           </div>
@@ -101,7 +140,9 @@ const SensorModal = ({ isOpen, onClose, onSubmit, editData }) => {
               items={sensorTypeOptions}
               selectedItem={selectedSensorType}
               onItemChange={(item) => setSelectedSensorType(item.id || item)}
-              placeholder={loadingTypes ? "Loading sensor types..." : "Select sensor type"}
+              placeholder={
+                loadingTypes ? "Loading sensor types..." : "Select sensor type"
+              }
               className="w-full"
               getItemKey={(item) => item.id}
               renderSelectedItem={(item) => (
@@ -152,19 +193,6 @@ const SensorModal = ({ isOpen, onClose, onSubmit, editData }) => {
               defaultValue={editData?.description || ""}
               placeholder="Enter sensor description"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-fourth focus:border-transparent resize-none"
-            />
-          </div>
-
-          {/* Active Status (Disabled) */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-              Status
-            </label>
-            <input
-              type="text"
-              value="Active"
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-transparent text-gray-400 cursor-not-allowed"
             />
           </div>
         </div>

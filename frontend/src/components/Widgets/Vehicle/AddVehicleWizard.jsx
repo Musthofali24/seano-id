@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { toast } from "../../ui";
+import { toast, LoadingDots } from "../../ui";
 import { ChevronRight, ChevronLeft, Check } from "lucide-react";
 import axiosInstance from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";
@@ -145,7 +145,7 @@ const AddVehicleWizard = ({ isOpen, onClose, onSuccess }) => {
           >
             {isLoading ? (
               <>
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <LoadingDots size="sm" color="white" />
                 Creating...
               </>
             ) : (

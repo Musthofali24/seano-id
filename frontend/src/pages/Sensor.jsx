@@ -41,9 +41,10 @@ const Sensor = () => {
   const handleEditSensor = (sensor) => {
     setEditData({
       id: sensor.id,
-      name: sensor.name,
       code: sensor.code,
-      sensor_type_id: sensor.type,
+      brand: sensor.brand,
+      model: sensor.model,
+      sensor_type_id: sensor.sensor_type_id,
       description: sensor.description,
       is_active: sensor.statusRaw,
     });

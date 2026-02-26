@@ -74,13 +74,6 @@ export const menuGroups = [
         requiredPermission: "tracking.read",
       },
       {
-        href: "/telemetry",
-        icon: MdWifiTethering,
-        text: "Telemetry",
-        size: sizeIcon,
-        requiredPermission: "telemetry.read",
-      },
-      {
         href: "/control",
         icon: IoGameController,
         text: "Control",
@@ -114,13 +107,6 @@ export const menuGroups = [
     userOnly: true,
     items: [
       {
-        href: "/sensor-monitoring",
-        icon: MdOutlineSensors,
-        text: "Sensor Monitoring",
-        size: sizeIcon,
-        requiredPermission: "sensor-monitoring.read",
-      },
-      {
         href: "/battery",
         icon: FaBatteryHalf,
         text: "Battery",
@@ -147,6 +133,19 @@ export const menuGroups = [
         text: "Notification",
         size: sizeIcon,
         requiredPermission: "notifications.read",
+      },
+    ],
+  },
+  {
+    title: "Sensor Monitoring",
+    userOnly: true,
+    items: [
+      {
+        href: "/sensor-monitoring/ctd",
+        icon: MdOutlineSensors,
+        text: "CTD",
+        size: sizeIcon,
+        requiredPermission: "sensor-monitoring.read",
       },
     ],
   },
@@ -938,258 +937,6 @@ export const getSensorTypeWidgetData = (stats, sensorTypes) => {
     },
   ];
 };
-
-// Telemetry Data Cards - Compatible with WidgetCard component
-export const getTelemetryCards = (hasData = true) => [
-  {
-    id: "connection",
-    title: "Connection Status",
-    value: hasData ? "ONLINE" : "N/A",
-    icon: (
-      <HiOutlineStatusOnline
-        size={26}
-        className={hasData ? "text-green-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: <FaArrowRight className="text-gray-400" />,
-    trendText: hasData ? "System connected" : "No data available",
-    type: "status",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Vehicle connectivity",
-  },
-  {
-    id: "mode",
-    title: "Operational Mode",
-    value: hasData ? "AUTONOMOUS" : "N/A",
-    icon: (
-      <TbSpeedboat
-        size={26}
-        className={hasData ? "text-blue-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: <FaArrowRight className="text-gray-400" />,
-    trendText: hasData ? "Auto navigation active" : "No data available",
-    type: "text",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Current operation mode",
-  },
-  {
-    id: "speed",
-    title: "Speed",
-    value: hasData ? `${Math.floor(Math.random() * 25 + 5)} knots` : "N/A",
-    icon: (
-      <MdSpeed
-        size={26}
-        className={hasData ? "text-blue-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.5 ? (
-        <FaArrowTrendUp className="text-green-500" />
-      ) : hasData ? (
-        <FaArrowTrendDown className="text-red-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData
-      ? `${Math.floor(Math.random() * 25 + 5)} knots current speed`
-      : "No data available",
-    type: "metric",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Current velocity",
-  },
-  {
-    id: "heading",
-    title: "Heading",
-    value: hasData ? `${Math.floor(Math.random() * 360)}°` : "N/A",
-    icon: (
-      <TbCompass
-        size={26}
-        className={hasData ? "text-slate-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: <FaArrowRight className="text-gray-400" />,
-    trendText: hasData ? "Navigation direction" : "No data available",
-    type: "metric",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Navigation direction",
-  },
-  {
-    id: "battery",
-    title: "Battery Level",
-    value: hasData ? `${Math.floor(Math.random() * 30 + 70)}%` : "N/A",
-    icon: (
-      <FaBatteryFull
-        size={26}
-        className={hasData ? "text-green-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.3 ? (
-        <FaArrowTrendDown className="text-red-500" />
-      ) : hasData ? (
-        <FaArrowTrendUp className="text-green-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData ? "Power level stable" : "No data available",
-    type: "percentage",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Main power level",
-  },
-  {
-    id: "temperature",
-    title: "Engine Temperature",
-    value: hasData ? `${Math.floor(Math.random() * 20 + 75)}°C` : "N/A",
-    icon: (
-      <FaThermometerHalf
-        size={26}
-        className={hasData ? "text-orange-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.5 ? (
-        <FaArrowTrendUp className="text-red-500" />
-      ) : hasData ? (
-        <FaArrowTrendDown className="text-green-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData ? "Operating temperature" : "No data available",
-    type: "metric",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Engine temperature",
-  },
-  {
-    id: "depth",
-    title: "Current Depth",
-    value: hasData ? `${(Math.random() * 50 + 10).toFixed(1)}m` : "N/A",
-    icon: (
-      <TbArrowsUpDown
-        size={26}
-        className={hasData ? "text-blue-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.5 ? (
-        <FaArrowTrendUp className="text-blue-500" />
-      ) : hasData ? (
-        <FaArrowTrendDown className="text-blue-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData ? "Water depth measurement" : "No data available",
-    type: "metric",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Water depth",
-  },
-  {
-    id: "gps",
-    title: "GPS Signal",
-    value: hasData ? `${Math.floor(Math.random() * 20 + 80)}%` : "N/A",
-    icon: (
-      <TbGps
-        size={26}
-        className={hasData ? "text-green-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.7 ? (
-        <FaArrowTrendDown className="text-red-500" />
-      ) : hasData ? (
-        <FaArrowTrendUp className="text-green-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData ? "Signal strength good" : "No data available",
-    type: "percentage",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "GPS signal strength",
-  },
-  {
-    id: "communication",
-    title: "Communication",
-    value: hasData ? `${Math.floor(Math.random() * 25 + 75)}%` : "N/A",
-    icon: (
-      <MdSignalCellular4Bar
-        size={26}
-        className={hasData ? "text-blue-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon:
-      hasData && Math.random() > 0.6 ? (
-        <FaArrowTrendDown className="text-red-500" />
-      ) : hasData ? (
-        <FaArrowTrendUp className="text-green-500" />
-      ) : (
-        <FaArrowRight className="text-gray-400" />
-      ),
-    trendText: hasData ? "Communication active" : "No data available",
-    type: "percentage",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Communication signal",
-  },
-  {
-    id: "mission_time",
-    title: "Mission Time",
-    value: hasData
-      ? `${Math.floor(Math.random() * 5 + 1)}:${String(
-          Math.floor(Math.random() * 60),
-        ).padStart(2, "0")}`
-      : "N/A",
-    icon: (
-      <FaShip
-        size={26}
-        className={hasData ? "text-slate-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: hasData ? (
-      <FaArrowTrendUp className="text-green-500" />
-    ) : (
-      <FaArrowRight className="text-gray-400" />
-    ),
-    trendText: hasData ? "Mission in progress" : "No data available",
-    type: "time",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Mission duration",
-  },
-  {
-    id: "fuel",
-    title: "Fuel Level",
-    value: hasData ? `${Math.floor(Math.random() * 40 + 60)}%` : "N/A",
-    icon: (
-      <GoDatabase
-        size={26}
-        className={hasData ? "text-green-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: hasData ? (
-      <FaArrowTrendDown className="text-orange-500" />
-    ) : (
-      <FaArrowRight className="text-gray-400" />
-    ),
-    trendText: hasData ? "Fuel consumption normal" : "No data available",
-    type: "percentage",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Remaining fuel",
-  },
-  {
-    id: "navigation",
-    title: "Navigation Target",
-    value: hasData ? "WAYPOINT_3" : "N/A",
-    icon: (
-      <MdNavigation
-        size={26}
-        className={hasData ? "text-blue-500" : "text-gray-400"}
-      />
-    ),
-    trendIcon: <FaArrowRight className="text-gray-400" />,
-    trendText: hasData ? "Following route plan" : "No data available",
-    type: "text",
-    lastUpdate: new Date().toLocaleTimeString(),
-    description: "Current navigation target",
-  },
-];
 
 // User Widget Data - Similar to other widget data patterns
 export const getUserWidgetData = (

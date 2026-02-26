@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import useTitle from "../hooks/useTitle";
-import { Title } from "../components/ui";
+import { Title, toast } from "../components/ui";
 import { API_ENDPOINTS } from "../config";
 import { Modal } from "../components/ui";
 import { LoadingScreen } from "../components/ui";
@@ -112,7 +112,7 @@ const Profile = () => {
         setIsPhotoModalOpen(false);
         setPhotoPreview(null);
         // Show success message
-        alert(
+        toast.success(
           "Photo uploaded successfully! (Backend upload not yet implemented)",
         );
       }, 1000);

@@ -7,11 +7,12 @@ import {
   VehicleQuickView,
   LatestAlerts,
 } from "../components/Widgets";
+import { MissionSuccessRate } from "../components/Widgets/Mission";
 import useTitle from "../hooks/useTitle";
 import useVehicleData from "../hooks/useVehicleData";
 import useMissionData from "../hooks/useMissionData";
 import useNotificationData from "../hooks/useNotificationData";
-import { Title } from "../components/ui";
+import { Title, LoadingDots } from "../components/ui";
 import { WidgetCardSkeleton } from "../components/Skeleton";
 import useLoadingTimeout from "../hooks/useLoadingTimeout";
 import { getOverviewCardsData } from "../constant";
@@ -19,9 +20,6 @@ import { getOverviewCardsData } from "../constant";
 // Lazy load komponen berat (Maps & Charts)
 const OverviewMap = lazy(
   () => import("../components/Widgets/Dashboard/OverviewMap"),
-);
-const MissionAnalytics = lazy(
-  () => import("../components/Widgets/Dashboard/MissionAnalytics"),
 );
 
 function Dashboard({ darkMode }) {
@@ -78,7 +76,7 @@ function Dashboard({ darkMode }) {
         <Suspense
           fallback={
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-96 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <LoadingDots size="md" />
             </div>
           }
         >
@@ -93,15 +91,7 @@ function Dashboard({ darkMode }) {
       {/* Mission Analytic and Mission Progress */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 my-4">
         <RecentMissions />
-        <Suspense
-          fallback={
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 h-96 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }
-        >
-          <MissionAnalytics />
-        </Suspense>
+        <MissionSuccessRate />
       </div>
 
       {/* Latest Alerts */}

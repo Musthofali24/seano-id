@@ -7,6 +7,7 @@ import { HeadingIndicator } from "react-flight-indicators";
 import { motion, AnimatePresence } from "framer-motion";
 import { VehicleDropdown } from "../components/Widgets/Vehicle";
 import SlideToConfirm from "../components/ui/SlideToConfirm";
+import { toast } from "../components/ui";
 import {
   FaCompass,
   FaSatelliteDish,
@@ -159,10 +160,10 @@ const Control = () => {
       ) {
         setMapCenter([lat, lng]);
         setMapZoom(15);
-        // Optionally show a success message
+        toast.success("Location set successfully!");
       } else {
-        alert(
-          "Invalid coordinates. Please use format: latitude, longitude\nExample: -6.2088, 106.8456",
+        toast.error(
+          "Invalid coordinates. Please use format: latitude, longitude. Example: -6.2088, 106.8456",
         );
       }
     }
@@ -313,7 +314,7 @@ const Control = () => {
               exit={{ width: 48, height: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               onClick={() => setIsVesselTelemetryExpanded(true)}
-              className={`absolute left-4 top-4 ${panelCls} rounded-xl p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
+              className={`absolute left-4 top-4 ${panelCls} rounded-full p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
               title="Vessel Telemetry"
             >
               <FaCompass className="text-blue-500 dark:text-white text-xl" />
@@ -426,13 +427,13 @@ const Control = () => {
               exit={{ width: 48, height: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               onClick={() => setIsSearchExpanded(true)}
-              className={`absolute top-4 ${panelCls} rounded-xl p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
+              className="absolute top-4 bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 p-3 rounded-full shadow-lg transition-all border border-gray-200 dark:border-gray-600 flex items-center justify-center pointer-events-auto"
               style={{
                 left: isVesselTelemetryExpanded ? "350px" : "80px",
               }}
               title="Search Coordinates"
             >
-              <FaSearch className="text-blue-500 dark:text-white text-xl" />
+              <FaSearch className="text-base" />
             </motion.button>
           ) : (
             <motion.section
@@ -495,7 +496,7 @@ const Control = () => {
               exit={{ width: 48, height: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               onClick={() => setIsThrustControlExpanded(true)}
-              className={`absolute left-1/2 bottom-20 -translate-x-1/2 ${panelCls} rounded-xl p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
+              className={`absolute left-1/2 bottom-5 -translate-x-1/2 ${panelCls} rounded-full p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
               title="Thrust Control"
             >
               <FaPowerOff className="text-red-500 text-xl" />
@@ -508,7 +509,7 @@ const Control = () => {
               animate={{ width: 600, opacity: 1 }}
               exit={{ width: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className={`absolute left-1/2 bottom-20 -translate-x-1/2 ${panelCls} rounded-xl p-4 shadow-lg pointer-events-auto`}
+              className={`absolute left-1/2 bottom-5 -translate-x-1/2 ${panelCls} rounded-xl p-4 shadow-lg pointer-events-auto`}
             >
               <div className="flex items-center justify-between mb-4">
                 <h2
@@ -617,7 +618,7 @@ const Control = () => {
               exit={{ width: 48, height: 48, opacity: 0 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               onClick={() => setIsMissionControlExpanded(true)}
-              className={`absolute right-4 top-4 ${panelCls} rounded-xl p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
+              className={`absolute right-4 top-4 ${panelCls} rounded-full p-3 shadow-lg pointer-events-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors`}
               title="Mission Control"
             >
               <FaCog className="text-blue-500 dark:text-white text-xl" />
@@ -825,19 +826,6 @@ const Control = () => {
             </motion.section>
           )}
         </AnimatePresence>
-
-        {/* ——— BOTTOM STATUS BAR (floating) ——— */}
-        <footer
-          className={`absolute bottom-4 left-4 right-4 ${panelCls} rounded-lg flex items-center justify-between px-4 py-2 text-xs ${muteCls} shadow-lg pointer-events-auto`}
-        >
-          <span>
-            FAILSAFE: <span className="text-green-400 font-medium">READY</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <FaSignal className="text-green-400" /> LINK: 94% SIG STRENGTH
-          </span>
-          <span>MAVLINK 2.0 | ARDUPILOT ROVER 4.2.1 | UTC 14:22:08</span>
-        </footer>
       </div>
     </div>
   );

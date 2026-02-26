@@ -3,7 +3,7 @@ import { FaEdit, FaTrash, FaDownload } from "react-icons/fa";
 import { DataTable as BaseDataTable } from "../../ui";
 import axios from "../../../utils/axiosConfig";
 import { API_ENDPOINTS } from "../../../config";
-import { toast } from "../../ui";
+import { toast, LoadingDots } from "../../ui";
 
 const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
   const [rawLogs, setRawLogs] = useState([]);
@@ -248,7 +248,7 @@ const DataTable = ({ hasActiveFilters, handleResetFilters }) => {
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <LoadingDots size="lg" />
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">

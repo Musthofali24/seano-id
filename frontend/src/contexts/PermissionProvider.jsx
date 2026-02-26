@@ -48,7 +48,6 @@ export function PermissionProvider({ children }) {
       return [
         "tracking.read",
         "missions.read",
-        "telemetry.read",
         "control.read",
         "battery.read",
         "sensor-monitoring.read",
@@ -72,7 +71,6 @@ export function PermissionProvider({ children }) {
     return [
       "tracking.read",
       "missions.read",
-      "telemetry.read",
       "control.read",
       "logs.read",
       "alerts.read",

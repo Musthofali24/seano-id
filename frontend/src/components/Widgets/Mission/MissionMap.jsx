@@ -23,6 +23,7 @@ import {
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaX } from "react-icons/fa6";
+import { toast } from "../../ui";
 
 // Fix default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -196,8 +197,8 @@ const MissionMap = ({
         setShowSearchInput(false);
         setSearchQuery("");
       } else {
-        alert(
-          "Invalid coordinates. Please use format: latitude, longitude\nExample: -6.2088, 106.8456",
+        toast.error(
+          "Invalid coordinates. Please use format: latitude, longitude. Example: -6.2088, 106.8456",
         );
       }
     }
@@ -484,7 +485,7 @@ const MissionMap = ({
 
               // Show user notification
               setTimeout(() => {
-                alert(
+                toast.warning(
                   "Zone has been modified! Generated waypoints have been cleared. Please click 'Generate Waypoints' again to create new waypoints for the updated zone.",
                 );
               }, 100);
@@ -1069,25 +1070,20 @@ const MissionMap = ({
                 onClick={() => setIsSettingHome(!isSettingHome)}
                 className={`${
                   isSettingHome
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-50"
-                } p-2 text-sm border border-gray-300 rounded transition-colors`}
-                style={{
-                  display: "block",
-                  textDecoration: "none",
-                  lineHeight: "1.4",
-                  textAlign: "center",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-white dark:bg-black hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                } p-3 rounded-full shadow-lg transition-all border ${
+                  isSettingHome
+                    ? "border-blue-500"
+                    : "border-gray-200 dark:border-gray-600"
+                }`}
                 title={
                   isSettingHome
                     ? "Click on map to set home"
                     : "Set Home Location"
                 }
               >
-                <FaHome />
+                <FaHome className="text-base" />
               </button>
             </div>
           </div>
@@ -1112,7 +1108,7 @@ const MissionMap = ({
       </MapContainer>
 
       {/* Floating Guide Button */}
-      <div className="absolute bottom-6 right-6 z-1000 pointer-events-auto">
+      <div className="absolute bottom-16 right-6 z-1000 pointer-events-auto">
         <AnimatePresence>
           {showGuide && (
             <>

@@ -33,35 +33,18 @@ export default defineConfig({
   },
   assetsInclude: ['**/*.svg'],
   build: {
-    commonjsOptions: {
-      include: [/react-flight-indicators/, /node_modules/],
-      transformMixedEsModules: true
-    },
+    // Simple build tanpa chunking untuk reliability
+    minify: 'esbuild',
+    // Keep CSS together
+    cssCodeSplit: false,
+    cssMinify: true,
+    // Support different browsers
+    target: ['es2015', 'chrome58', 'firefox57', 'safari11'],
+    // Disable chunking completely
     rollupOptions: {
       output: {
-        // Optimize chunk size
-        manualChunks: undefined,
-        chunkFileNames: 'assets/[name]-[hash].js',
-        entryFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: 'assets/[name]-[hash].[ext]'
+        manualChunks: undefined
       }
-    },
-    // Optimize build - use esbuild (faster & built-in)
-    minify: 'esbuild',
-    // Better CSS handling
-    cssCodeSplit: true,
-    cssMinify: true,
-    // Reduce chunk size for better mobile performance
-    chunkSizeWarningLimit: 400,
-    // No sourcemaps for production
-    sourcemap: false,
-    // Target modern browsers for smaller bundle
-    target: 'es2020',
-    // Enable module preload polyfill
-    modulePreload: {
-      polyfill: true
-    },
-    // Aggressive tree shaking
-    reportCompressedSize: false
+    }
   }
 })

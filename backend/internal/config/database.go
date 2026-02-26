@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -29,11 +28,8 @@ func ConnectDB() (*gorm.DB, error) {
 			Logger: logger.Default.LogMode(logger.Info),
 		})
 		if err == nil {
-			fmt.Println("Database connected")
 			return db, nil
 		}
-
-		fmt.Printf("Waiting for DB... (%d/10)\n", i)
 		time.Sleep(2 * time.Second)
 	}
 
@@ -45,6 +41,5 @@ func MigrateDB(db *gorm.DB, models ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Database migrated successfully")
 	return nil
 }

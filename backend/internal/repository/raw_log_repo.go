@@ -44,8 +44,6 @@ func (r *RawLogRepository) GetRawLogs(query model.RawLogQuery) ([]model.RawLog, 
 	
 	if query.Limit > 0 {
 		db = db.Limit(query.Limit)
-	} else {
-		db = db.Limit(100) // Default limit
 	}
 	
 	if query.Offset > 0 {

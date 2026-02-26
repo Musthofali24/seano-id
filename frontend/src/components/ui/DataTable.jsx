@@ -189,7 +189,7 @@ const DataTable = ({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 custom-scrollbar">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-transparent">
             <tr>

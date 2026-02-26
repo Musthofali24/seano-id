@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Modal } from "../../ui";
+import { Dropdown } from "../";
 import { useAuthContext } from "../../../hooks/useAuthContext";
 
 const VehicleModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
@@ -166,19 +167,52 @@ const VehicleModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
             <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
               Status *
             </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-fourth focus:border-transparent"
-            >
-              {statusOptions.map((status) => (
-                <option key={status.id} value={status.id}>
+            <Dropdown
+              items={statusOptions}
+              selectedItem={
+                statusOptions.find((s) => s.id === formData.status) ||
+                statusOptions[0]
+              }
+              onItemChange={(status) =>
+                setFormData((prev) => ({ ...prev, status: status.id }))
+              }
+              placeholder="Select status"
+              getItemKey={(item) => item.id}
+              renderSelectedItem={(status) => (
+                <span className="font-medium text-gray-900 dark:text-white">
                   {status.name}
-                </option>
-              ))}
-            </select>
+                </span>
+              )}
+              renderItem={(status, isSelected) => (
+                <>
+                  <div className="flex-1">
+                    <div className="text-gray-900 dark:text-white font-medium">
+                      {status.name}
+                    </div>
+                    {status.description && (
+                      <div className="text-gray-600 dark:text-gray-300 text-sm">
+                        {status.description}
+                      </div>
+                    )}
+                  </div>
+                  {isSelected && (
+                    <div className="text-[#018190] dark:text-white">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </>
+              )}
+            />
           </div>
         </div>
 
@@ -200,8 +234,8 @@ const VehicleModal = ({ isOpen, onClose, onSubmit, editData = null }) => {
             {loading
               ? "Saving..."
               : editData
-              ? "Update Vehicle"
-              : "Add Vehicle"}
+                ? "Update Vehicle"
+                : "Add Vehicle"}
           </button>
         </div>
       </form>

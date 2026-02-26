@@ -27,11 +27,11 @@ const Mission = () => {
       {/* Mission Stats Widget */}
       <MissionStats />
 
-      {/* Top Section - Two Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EnergyConsumptionTrends />
-        <MissionSuccessRate />
-      </div>
+      {/* Mission Success Rate - Donut Chart */}
+      <MissionSuccessRate />
+
+      {/* Energy Consumption Trends */}
+      <EnergyConsumptionTrends />
 
       {/* Bottom Section - Mission Logs */}
       <div className="">

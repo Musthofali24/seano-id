@@ -1,6 +1,13 @@
 import { FaRoute } from "react-icons/fa";
+import { Dropdown } from "../";
 
 const MissionParameters = ({ missionParams, setMissionParams }) => {
+  const actionOptions = [
+    { id: "waypoint", name: "Waypoint" },
+    { id: "loiter", name: "Loiter" },
+    { id: "rtl", name: "Return Home" },
+    { id: "land", name: "Land" },
+  ];
   return (
     <div
       className="w-full p-4 bg-white dark:bg-transparent border-t border-gray-200 dark:border-slate-600"
@@ -21,21 +28,48 @@ const MissionParameters = ({ missionParams, setMissionParams }) => {
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
             Action
           </label>
-          <select
-            value={missionParams.action}
-            onChange={(e) =>
+          <Dropdown
+            items={actionOptions}
+            selectedItem={
+              actionOptions.find((a) => a.id === missionParams.action) ||
+              actionOptions[0]
+            }
+            onItemChange={(action) =>
               setMissionParams((prev) => ({
                 ...prev,
-                action: e.target.value,
+                action: action.id,
               }))
             }
-            className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#018190] focus:border-transparent transition-all"
-          >
-            <option value="waypoint">Waypoint</option>
-            <option value="loiter">Loiter</option>
-            <option value="rtl">Return Home</option>
-            <option value="land">Land</option>
-          </select>
+            placeholder="Select action"
+            getItemKey={(item) => item.id}
+            renderSelectedItem={(action) => (
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
+                {action.name}
+              </span>
+            )}
+            renderItem={(action, isSelected) => (
+              <>
+                <span className="text-gray-900 dark:text-white font-medium text-sm">
+                  {action.name}
+                </span>
+                {isSelected && (
+                  <div className="text-[#018190] dark:text-white">
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                )}
+              </>
+            )}
+          />
         </div>
 
         {/* Speed Parameter */}

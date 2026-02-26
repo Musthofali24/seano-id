@@ -17,11 +17,16 @@ const SensorTable = ({
   const [selectedIds, setSelectedIds] = useState([]);
 
   const transformedData = sensorData.map((sensor) => {
+    const sensorTypeName = sensor.sensor_type?.name || sensor.type || "Unknown";
+
     return {
       id: sensor.id,
-      name: sensor.name || `Sensor ${sensor.id}`,
+      brand: sensor.brand || "Unknown",
+      model: sensor.model || "Unknown",
+      displayName: `${sensor.brand} ${sensor.model}`,
       code: sensor.code || `SNS-${String(sensor.id).padStart(3, "0")}`,
-      type: sensor.sensor_type_id || sensor.type || "Unknown",
+      type: sensorTypeName,
+      sensor_type_id: sensor.sensor_type_id || sensor.sensor_type?.id,
       description: sensor.description || "No description",
       status: sensor.is_active ? "Active" : "Inactive",
       statusRaw: sensor.is_active,
@@ -34,20 +39,34 @@ const SensorTable = ({
       updated: sensor.updated_at
         ? new Date(sensor.updated_at).toLocaleDateString()
         : "Unknown",
-      typeIcon: getSensorTypeIcon(sensor.sensor_type_id || sensor.type),
+      typeIcon: getSensorTypeIcon(sensorTypeName.toLowerCase()),
     };
   });
 
   function getSensorTypeIcon(type) {
+    const typeLower = String(type).toLowerCase();
     const icons = {
       hidrografi: "🌊",
+      hydrography: "🌊",
       oseanografi: "🌀",
+      oceanography: "🌀",
+      ctd: "🌡️",
+      adcp: "🌊",
       pressure: "📊",
       ph: "🧪",
       turbidity: "💧",
       default: "📡",
     };
-    return icons[type] || icons.default;
+
+    // Try exact match first
+    if (icons[typeLower]) return icons[typeLower];
+
+    // Try partial match
+    for (const key in icons) {
+      if (typeLower.includes(key)) return icons[key];
+    }
+
+    return icons.default;
   }
 
   // Handle select all checkbox
@@ -119,16 +138,16 @@ const SensorTable = ({
       : []),
     {
       header: "Sensor",
-      accessorKey: "name",
+      accessorKey: "displayName",
       cell: (row) => (
         <div className="flex items-center gap-3">
           <span className="text-lg">{row.typeIcon}</span>
           <div>
             <div className="font-medium text-gray-900 dark:text-white">
-              {row.name}
+              {row.brand} {row.model}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {row.code}
+              Code: {row.code}
             </div>
           </div>
         </div>
@@ -209,7 +228,7 @@ const SensorTable = ({
           )}
           {onDelete && hasPermission("sensors.manage") && (
             <button
-              onClick={() => onDelete(row.id, row.name)}
+              onClick={() => onDelete(row.id, row.displayName)}
               className="inline-flex items-center justify-center p-2 text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 transition-all rounded-lg cursor-pointer shadow-sm hover:shadow-md"
               title="Delete sensor"
             >
@@ -256,8 +275,8 @@ const SensorTable = ({
       <DataTable
         columns={columns}
         data={transformedData}
-        searchPlaceholder="Search sensors by name, code, or type..."
-        searchKeys={["name", "code", "type", "status"]}
+        searchPlaceholder="Search sensors by brand, model, code, or type..."
+        searchKeys={["brand", "model", "displayName", "code", "type", "status"]}
         pageSize={10}
         showPagination={true}
         emptyMessage="No sensors found. Click 'Add Sensor' to create one."

@@ -42,8 +42,6 @@ export const PERMISSIONS = {
   MISSIONS_READ: 'missions.read',
   MISSIONS_UPDATE: 'missions.update',
   MISSIONS_DELETE: 'missions.delete',
-  TELEMETRY_READ: 'telemetry.read',
-  TELEMETRY_EXPORT: 'telemetry.export',
 
   // Data Monitoring
   LOGS_READ: 'logs.read',
